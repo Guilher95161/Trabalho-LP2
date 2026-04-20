@@ -245,15 +245,16 @@ public class MenuTerminal {
     private void menuAdministrador(Administrador a) {
         while (true) {
             System.out.println("\n--- MENU ADMINISTRADOR ---");
-            System.out.println("[1] Listar todos os usuarios");
-            System.out.println("[2] Criar oportunidade");
-            System.out.println("[3] Ver oportunidades");
-            System.out.println("[4] Encerrar oportunidade");
-            System.out.println("[5] Ver solicitacoes pendentes");
-            System.out.println("[6] Avaliar solicitacao");
-            System.out.println("[7] Criar grupo estudantil");
-            System.out.println("[8] Ver grupos");
-            System.out.println("[9] Gerenciar membros de grupo");
+            System.out.println("[1] Cadastrar Usuário");
+            System.out.println("[2] Listar todos os usuarios");
+            System.out.println("[3] Criar oportunidade");
+            System.out.println("[4] Ver oportunidades");
+            System.out.println("[5] Encerrar oportunidade");
+            System.out.println("[6] Ver solicitacoes pendentes");
+            System.out.println("[7] Avaliar solicitacao");
+            System.out.println("[8] Criar grupo estudantil");
+            System.out.println("[9] Ver grupos");
+            System.out.println("[10] Gerenciar membros de grupo");
             System.out.println("[0] Sair");
             System.out.print("Opcao: ");
 
@@ -261,30 +262,33 @@ public class MenuTerminal {
 
             switch (op) {
                 case "1":
-                    listarTodosUsuarios();
+                    cadastrarUsuario();
                     break;
                 case "2":
-                    criarOportunidadeAdmin();
+                    listarTodosUsuarios();
                     break;
                 case "3":
-                    listarOportunidades();
+                    criarOportunidadeAdmin();
                     break;
                 case "4":
-                    encerrarOportunidade();
+                    listarOportunidades();
                     break;
                 case "5":
-                    listarSolicitacoesPendentes();
+                    encerrarOportunidade();
                     break;
                 case "6":
-                    avaliarSolicitacao();
+                    listarSolicitacoesPendentes();
                     break;
                 case "7":
-                    criarGrupo();
+                    avaliarSolicitacao();
                     break;
                 case "8":
-                    listarGrupos();
+                    criarGrupo();
                     break;
                 case "9":
+                    listarGrupos();
+                    break;
+                case "10":
                     gerenciarGrupo();
                     break;
                 case "0":
