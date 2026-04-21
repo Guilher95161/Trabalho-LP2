@@ -112,6 +112,16 @@ public class RepositorioCentral {
         return new ArrayList<>(grupos);
     }
 
+    public List<GrupoEstudantil> findGrupoByUsuario(Usuario u){
+        List<GrupoEstudantil> lista = new ArrayList<>();
+        for (GrupoEstudantil g : grupos){
+            if(u.equals(g.getResponsavel())){
+                lista.add(g);
+            }
+        }
+        return lista;
+    }
+
     public GrupoEstudantil findGrupoById(int id) {
         for (GrupoEstudantil g : grupos){
             if (g.getId() == id){

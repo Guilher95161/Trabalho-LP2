@@ -111,7 +111,12 @@ public class GerenciadorCentral {
         return grupoService.listarTodos();
     }
 
+    public List<GrupoEstudantil> listarGrupoPorUsuario(Usuario u){
+        return grupoService.listarPorUsuario(u);
+    }
+
     public GrupoEstudantil buscarGrupoPorId(int id) {
         return grupoService.buscarPorId(id);
     }
+
 }

@@ -201,7 +201,7 @@ public class MenuTerminal {
                     listarGrupo();
                     break;
                 case "6":
-                    gerenciarGrupo();
+                    gerenciarGrupo(doc);
                     break;
                 case "0":
                     return;
@@ -301,7 +301,7 @@ public class MenuTerminal {
                     listarGrupo();
                     break;
                 case "11":
-                    gerenciarGrupo();
+                    gerenciarGrupo(a);
                     break;
                 case "0":
                     return;
@@ -521,6 +521,19 @@ public class MenuTerminal {
         System.out.println("Grupo criado com sucesso!");
     }
 
+    private boolean listarGrupoPorUsuario(Usuario u){
+        List<GrupoEstudantil> lista = gerenciador.listarGrupoPorUsuario(u);
+        if (lista.isEmpty()) {
+            System.out.println("Usuário não é responsável por nenhum grupo.");
+            return false;
+        }
+        System.out.println("-- Grupos --");
+        for (GrupoEstudantil g : lista) {
+            System.out.println(g);
+        }
+        return true;
+    }
+
     private void listarGrupos() {
         List<GrupoEstudantil> lista = gerenciador.listarGrupos();
         if (lista.isEmpty()) {
@@ -559,8 +572,15 @@ public class MenuTerminal {
 
     }
 
-    private void gerenciarGrupo() {
-        listarGrupos();
+    private void gerenciarGrupo(Usuario u) {
+        if (u instanceof Administrador){
+            listarGrupos();
+        }
+        else{
+            if(!listarGrupoPorUsuario(u)){
+                return;
+            }
+        }
         System.out.print("ID do grupo: ");
         int id = lerInt();
         GrupoEstudantil g = gerenciador.buscarGrupoPorId(id);
@@ -569,6 +589,8 @@ public class MenuTerminal {
             System.out.println("Grupo nao encontrado.");
             return;
         }
+
+
 
         System.out.println("[1] Adicionar membro  [2] Remover membro  [3] Definir cargo");
         System.out.print("Opcao: ");

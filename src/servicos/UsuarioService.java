@@ -29,7 +29,7 @@ public class UsuarioService {
 
     public boolean cadastrarUsuario(Usuario u) {
         Usuario existente = repositorio.findUsuarioByEmail(u.getEmail());
-        if (existente==null) {
+        if (existente!=null) {
             return false;
         }
         repositorio.salvarUsuario(u);
