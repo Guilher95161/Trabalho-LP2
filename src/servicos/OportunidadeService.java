@@ -5,9 +5,6 @@ import repositorio.RepositorioCentral;
 
 import java.util.List;
 
-/**
- * Contém todas as regras de negócio relacionadas à gestão de oportunidades.
- */
 public class OportunidadeService {
 
     private final RepositorioCentral repositorio;
@@ -24,49 +21,45 @@ public class OportunidadeService {
         return repositorio.findAllOportunidades();
     }
 
-    /**
-     * Busca uma oportunidade pelo seu ID.
-     *
-     * @return a {@link Oportunidade} encontrada, ou {@code null} se não existir.
-     */
     public Oportunidade buscarPorId(int id) {
-        return repositorio.findOportunidadeById(id).orElse(null);
+        return repositorio.findOportunidadeById(id);
     }
 
-    /**
-     * Inscreve um discente em uma oportunidade aberta.
-     * Regra de negócio: a inscrição só é realizada se a oportunidade existir e estiver com status "ABERTA".
-     */
     public void inscreverDiscente(int oportunidadeId, Discente d) {
-        repositorio.findOportunidadeById(oportunidadeId).ifPresent(o -> {
-            if ("ABERTA".equals(o.getStatus())) {
-                o.inscreverDiscente(d);
+        Oportunidade op = repositorio.findOportunidadeById(oportunidadeId);
+
+        if(op != null){
+            if("ABERTA".equals(op.getStatus()) && op.getInscritos().size() < op.getVagas()){
+                op.inscreverDiscente(d);
             }
-        });
+        }
     }
 
-    /**
-     * Cancela a inscrição de um discente em uma oportunidade.
-     */
     public void cancelarInscricao(int oportunidadeId, Discente d) {
-        repositorio.findOportunidadeById(oportunidadeId).ifPresent(o -> o.cancelarInscricao(d));
+        Oportunidade op = repositorio.findOportunidadeById(oportunidadeId);
+
+        if(op != null && op.getStatus().equals("ABERTA")){
+            op.cancelarInscricao(d);
+        }
+
     }
 
-    /**
-     * Encerra uma oportunidade e gera automaticamente certificados para todos os discentes inscritos.
-     * Regra de negócio: ao encerrar, cada inscrito recebe um {@link Certificado} e tem suas horas
-     * acumuladas incrementadas pela carga horária da oportunidade.
+    /*
+     Encerra uma oportunidade e gera automaticamente certificados para todos os discentes inscritos.
+     Regra de negócio: ao encerrar, cada inscrito recebe um {@link Certificado} e tem suas horas
+     acumuladas incrementadas pela carga horária da oportunidade.
      */
     public void encerrarOportunidade(int oportunidadeId) {
-        repositorio.findOportunidadeById(oportunidadeId).ifPresent(o -> {
-            o.encerrar();
+        Oportunidade op = repositorio.findOportunidadeById(oportunidadeId);
+        if(op != null && op.getStatus().equals("ABERTA")){
+            op.encerrar();
 
             String dataHoje = java.time.LocalDate.now().toString();
-            for (Discente d : o.getInscritos()) {
-                Certificado cert = new Certificado(o.getTitulo(), o.getCargaHoraria(), dataHoje);
+            for (Discente d : op.getInscritos()) {
+                Certificado cert = new Certificado(op.getTitulo(), op.getCargaHoraria(), dataHoje);
                 d.adicionarCertificado(cert);
-                d.adicionarHoras(o.getCargaHoraria());
+                d.adicionarHoras(op.getCargaHoraria());
             }
-        });
+        }
     }
 }

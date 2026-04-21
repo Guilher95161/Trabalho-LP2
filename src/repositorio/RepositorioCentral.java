@@ -3,13 +3,7 @@ package repositorio;
 import entidades.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
-/**
- * Simula um banco de dados em memória.
- * Responsabilidade única: armazenar e fornecer acesso às entidades do sistema.
- * Não contém nenhuma regra de negócio.
- */
 public class RepositorioCentral {
 
     private List<Usuario> usuarios = new ArrayList<>();
@@ -17,10 +11,7 @@ public class RepositorioCentral {
     private List<SolicitacaoAproveitamento> solicitacoes = new ArrayList<>();
     private List<GrupoEstudantil> grupos = new ArrayList<>();
 
-
-    // -------------------------------------------------------------------------
     // Usuários
-    // -------------------------------------------------------------------------
 
     public void salvarUsuario(Usuario u) {
         usuarios.add(u);
@@ -30,16 +21,22 @@ public class RepositorioCentral {
         return new ArrayList<>(usuarios);
     }
 
-    public Optional<Usuario> findUsuarioByEmail(String email) {
-        return usuarios.stream()
-                .filter(u -> u.getEmail().equals(email))
-                .findFirst();
+    public Usuario findUsuarioByEmail(String email) {
+        for (Usuario u : usuarios){
+            if (u.getEmail().equals(email)){
+                return u;
+            }
+        }
+        return null;
     }
 
-    public Optional<Usuario> findUsuarioByEmailESenha(String email, String senha) {
-        return usuarios.stream()
-                .filter(u -> u.getEmail().equals(email) && u.getSenha().equals(senha))
-                .findFirst();
+    public Usuario findUsuarioByEmailESenha(String email, String senha) {
+        for (Usuario u : usuarios){
+            if (u.getEmail().equals(email) && u.getSenha().equals(senha)){
+                return u;
+            }
+        }
+        return null;
     }
 
     public List<Discente> findAllDiscentes() {
@@ -59,9 +56,7 @@ public class RepositorioCentral {
         return lista;
     }
 
-    // -------------------------------------------------------------------------
     // Oportunidades
-    // -------------------------------------------------------------------------
 
     public void salvarOportunidade(Oportunidade o) {
         oportunidades.add(o);
@@ -71,15 +66,15 @@ public class RepositorioCentral {
         return new ArrayList<>(oportunidades);
     }
 
-    public Optional<Oportunidade> findOportunidadeById(int id) {
-        return oportunidades.stream()
-                .filter(o -> o.getId() == id)
-                .findFirst();
+    public Oportunidade findOportunidadeById(int id) {
+        for (Oportunidade o : oportunidades) {
+            if (o.getId() == id)
+                return o;
+        }
+        return null;
     }
 
-    // -------------------------------------------------------------------------
     // Solicitações de Aproveitamento
-    // -------------------------------------------------------------------------
 
     public void salvarSolicitacao(SolicitacaoAproveitamento s) {
         solicitacoes.add(s);
@@ -89,23 +84,25 @@ public class RepositorioCentral {
         return new ArrayList<>(solicitacoes);
     }
 
-    public Optional<SolicitacaoAproveitamento> findSolicitacaoById(int id) {
-        return solicitacoes.stream()
-                .filter(s -> s.getId() == id)
-                .findFirst();
+    public SolicitacaoAproveitamento findSolicitacaoById(int id) {
+        for(SolicitacaoAproveitamento solicitacao : solicitacoes){
+            if (solicitacao.getId() == id){
+                return solicitacao;
+            }
+        }
+        return null;
     }
 
     public List<SolicitacaoAproveitamento> findSolicitacoesPendentes() {
         List<SolicitacaoAproveitamento> lista = new ArrayList<>();
         for (SolicitacaoAproveitamento s : solicitacoes) {
-            if ("PENDENTE".equals(s.getStatus())) lista.add(s);
+            if ("PENDENTE".equals(s.getStatus()))
+                lista.add(s);
         }
         return lista;
     }
 
-    // -------------------------------------------------------------------------
     // Grupos Estudantis
-    // -------------------------------------------------------------------------
 
     public void salvarGrupo(GrupoEstudantil g) {
         grupos.add(g);
@@ -115,9 +112,12 @@ public class RepositorioCentral {
         return new ArrayList<>(grupos);
     }
 
-    public Optional<GrupoEstudantil> findGrupoById(int id) {
-        return grupos.stream()
-                .filter(g -> g.getId() == id)
-                .findFirst();
+    public GrupoEstudantil findGrupoById(int id) {
+        for (GrupoEstudantil g : grupos){
+            if (g.getId() == id){
+                return g;
+            }
+        }
+        return null;
     }
 }

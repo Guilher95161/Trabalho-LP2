@@ -5,17 +5,8 @@ import repositorio.RepositorioCentral;
 
 import java.util.List;
 
-/**
- * <b>Facade</b> do sistema de extensão universitária.
- *
- * <p>Esta classe não possui lógica de negócio nem armazena dados diretamente.
- * Sua única responsabilidade é receber as chamadas da camada de interface
- * ({@code MenuTerminal}) e delegar para o service correto.
- *
- * <pre>
- *   MenuTerminal  →  GerenciadorCentral (Facade)  →  XxxService  →  RepositorioCentral
- * </pre>
- */
+//MenuTerminal  →  GerenciadorCentral  →  XxxService  →  RepositorioCentral
+
 public class GerenciadorCentral {
 
     private final UsuarioService usuarioService;
@@ -32,9 +23,7 @@ public class GerenciadorCentral {
         this.grupoService         = new GrupoService(repositorio);
     }
 
-    // -------------------------------------------------------------------------
     // Delegações → UsuarioService
-    // -------------------------------------------------------------------------
 
     public boolean cadastrarUsuario(Usuario u) {
         return usuarioService.cadastrarUsuario(u);
@@ -64,9 +53,7 @@ public class GerenciadorCentral {
         return usuarioService.buscarDiscentePorIndice(idx);
     }
 
-    // -------------------------------------------------------------------------
     // Delegações → OportunidadeService
-    // -------------------------------------------------------------------------
 
     public void criarOportunidade(Oportunidade o) {
         oportunidadeService.criarOportunidade(o);
@@ -92,9 +79,7 @@ public class GerenciadorCentral {
         oportunidadeService.encerrarOportunidade(oportunidadeId);
     }
 
-    // -------------------------------------------------------------------------
     // Delegações → AproveitamentoService
-    // -------------------------------------------------------------------------
 
     public void criarSolicitacao(SolicitacaoAproveitamento s) {
         aproveitamentoService.criarSolicitacao(s);
@@ -116,9 +101,7 @@ public class GerenciadorCentral {
         aproveitamentoService.avaliarSolicitacao(s, aprovado, parecer);
     }
 
-    // -------------------------------------------------------------------------
     // Delegações → GrupoService
-    // -------------------------------------------------------------------------
 
     public void criarGrupo(GrupoEstudantil g) {
         grupoService.criarGrupo(g);

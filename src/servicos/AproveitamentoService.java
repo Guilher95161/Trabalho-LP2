@@ -5,9 +5,6 @@ import repositorio.RepositorioCentral;
 
 import java.util.List;
 
-/**
- * Contém todas as regras de negócio relacionadas ao aproveitamento de horas complementares.
- */
 public class AproveitamentoService {
 
     private final RepositorioCentral repositorio;
@@ -28,24 +25,13 @@ public class AproveitamentoService {
         return repositorio.findSolicitacoesPendentes();
     }
 
-    /**
-     * Busca uma solicitação pelo seu ID.
-     *
-     * @return a {@link SolicitacaoAproveitamento} encontrada, ou {@code null} se não existir.
-     */
     public SolicitacaoAproveitamento buscarPorId(int id) {
-        return repositorio.findSolicitacaoById(id).orElse(null);
+        return repositorio.findSolicitacaoById(id);
     }
 
-    /**
-     * Avalia uma solicitação de aproveitamento.
-     * Regra de negócio: se aprovada, as horas pleiteadas são adicionadas ao histórico do solicitante.
-     *
-     * @param s        a solicitação a ser avaliada.
-     * @param aprovado {@code true} para deferir, {@code false} para indeferir.
-     * @param parecer  justificativa do avaliador.
-     */
     public void avaliarSolicitacao(SolicitacaoAproveitamento s, boolean aprovado, String parecer) {
+        if (!s.getStatus().equals("PENDENTE"))
+            return;
         s.avaliarSolicitacao(aprovado, parecer);
         if (aprovado) {
             s.getSolicitante().adicionarHoras(s.getCargaHorariaPleitada());
