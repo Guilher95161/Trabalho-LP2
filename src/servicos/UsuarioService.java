@@ -4,7 +4,6 @@ import entidades.*;
 import repositorio.RepositorioCentral;
 
 import java.util.List;
-import java.util.Optional;
 
 //Contém todas as regras de negócio relacionadas à gestão de usuários.
 

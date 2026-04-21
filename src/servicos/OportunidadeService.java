@@ -44,11 +44,6 @@ public class OportunidadeService {
 
     }
 
-    /*
-     Encerra uma oportunidade e gera automaticamente certificados para todos os discentes inscritos.
-     Regra de negócio: ao encerrar, cada inscrito recebe um {@link Certificado} e tem suas horas
-     acumuladas incrementadas pela carga horária da oportunidade.
-     */
     public void encerrarOportunidade(int oportunidadeId) {
         Oportunidade op = repositorio.findOportunidadeById(oportunidadeId);
         if(op != null && op.getStatus().equals("ABERTA")){
