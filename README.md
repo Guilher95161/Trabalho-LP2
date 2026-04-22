@@ -118,12 +118,33 @@ src/
 * `src/repositorio`: armazenamento central em memória
 * `src/servicos`: regras de negócio e orquestração
 
-## Fluxo geral da aplicação
+---
 
-1. O usuário escolhe entre login, cadastro ou encerramento do sistema.
-2. Após o login, o menu exibido varia conforme o papel do usuário.
-3. As operações são encaminhadas pela interface de terminal para os serviços do sistema.
-4. Todos os dados são mantidos apenas em memória durante a execução.
+## Exemplo de Fluxo de Teste
+
+Para validar as principais funcionalidades do sistema, siga este roteiro:
+
+1.  **Criação de Oportunidade (Docente):**
+    * Faça login com o usuário `doc@ufma.br` (senha: `doc123`).
+    * Selecione a opção **[1] Criar oportunidade**.
+    * Preencha os dados (ex: Titulo: "Projeto Java", CH: 40, Vagas: 5).
+    * Saia do menu (Opção `0`).
+
+2.  **Inscrição e Solicitação (Discente):**
+    * Faça login com `aluno1@ufma.br` (senha: `aluno123`).
+    * Selecione **[2] Inscrever-se em oportunidade** e digite o ID da oportunidade criada.
+    * Selecione **[4] Solicitar aproveitamento de horas** para enviar um curso externo (ex: "Curso de Git", 20h).
+    * Saia do menu.
+
+3.  **Avaliação e Encerramento (Gestor/Docente):**
+    * Entre como Gestor (`coord1@ufma.br`) para **[2] Avaliar solicitação** de aproveitamento.
+    * Entre como Docente (`doc@ufma.br`) para **[3] Encerrar oportunidade**. Isso gerará automaticamente o certificado para o aluno inscrito.
+
+4.  **Verificação Final (Discente):**
+    * Retorne ao login de `aluno1@ufma.br`.
+    * Verifique em **[7] Meus certificados** e **[8] Minhas horas cumpridas** se o sistema contabilizou corretamente as horas da oportunidade encerrada e do curso aprovado.
+
+---
 
 ## Limitações atuais
 
