@@ -112,7 +112,7 @@ public class MenuTerminal {
         }
 
         boolean ok = gerenciador.cadastrarUsuario(novo);
-        if(ok)
+        if (ok)
             System.out.println("Cadastrado realizado com sucesso!");
         else
             System.out.println("Email já cadastrado.");
@@ -177,7 +177,8 @@ public class MenuTerminal {
             System.out.println("[2] Ver oportunidades");
             System.out.println("[3] Encerrar oportunidade");
             System.out.println("[4] Ver grupos");
-            System.out.println("[5] Gerenciar membros de grupo");
+            System.out.println("[5] Ver grupo");
+            System.out.println("[6] Gerenciar membros de grupo");
             System.out.println("[0] Sair");
             System.out.print("Opcao: ");
 
@@ -197,7 +198,10 @@ public class MenuTerminal {
                     listarGrupos();
                     break;
                 case "5":
-                    gerenciarGrupo();
+                    listarGrupo();
+                    break;
+                case "6":
+                    gerenciarGrupo(doc);
                     break;
                 case "0":
                     return;
@@ -215,6 +219,7 @@ public class MenuTerminal {
             System.out.println("[2] Avaliar solicitacao");
             System.out.println("[3] Criar grupo estudantil");
             System.out.println("[4] Ver grupos");
+            System.out.println("[5] Ver grupo");
             System.out.println("[0] Sair");
             System.out.print("Opcao: ");
 
@@ -232,6 +237,9 @@ public class MenuTerminal {
                     break;
                 case "4":
                     listarGrupos();
+                    break;
+                case "5":
+                    listarGrupo();
                     break;
                 case "0":
                     return;
@@ -245,47 +253,55 @@ public class MenuTerminal {
     private void menuAdministrador(Administrador a) {
         while (true) {
             System.out.println("\n--- MENU ADMINISTRADOR ---");
-            System.out.println("[1] Listar todos os usuarios");
-            System.out.println("[2] Criar oportunidade");
-            System.out.println("[3] Ver oportunidades");
-            System.out.println("[4] Encerrar oportunidade");
-            System.out.println("[5] Ver solicitacoes pendentes");
-            System.out.println("[6] Avaliar solicitacao");
-            System.out.println("[7] Criar grupo estudantil");
-            System.out.println("[8] Ver grupos");
-            System.out.println("[9] Gerenciar membros de grupo");
-            System.out.println("[0] Sair");
+            System.out.println("[01] Cadastrar Usuário");
+            System.out.println("[02] Listar todos os usuarios");
+            System.out.println("[03] Criar oportunidade");
+            System.out.println("[04] Ver oportunidades");
+            System.out.println("[05] Encerrar oportunidade");
+            System.out.println("[06] Ver solicitacoes pendentes");
+            System.out.println("[07] Avaliar solicitacao");
+            System.out.println("[08] Criar grupo estudantil");
+            System.out.println("[09] Ver grupos");
+            System.out.println("[10] Ver grupo");
+            System.out.println("[11] Gerenciar membros de grupo");
+            System.out.println("[00] Sair");
             System.out.print("Opcao: ");
 
             String op = sc.nextLine().trim();
 
             switch (op) {
                 case "1":
-                    listarTodosUsuarios();
+                    cadastrarUsuario();
                     break;
                 case "2":
-                    criarOportunidadeAdmin();
+                    listarTodosUsuarios();
                     break;
                 case "3":
-                    listarOportunidades();
+                    criarOportunidadeAdmin();
                     break;
                 case "4":
-                    encerrarOportunidade();
+                    listarOportunidades();
                     break;
                 case "5":
-                    listarSolicitacoesPendentes();
+                    encerrarOportunidade();
                     break;
                 case "6":
-                    avaliarSolicitacao();
+                    listarSolicitacoesPendentes();
                     break;
                 case "7":
-                    criarGrupo();
+                    avaliarSolicitacao();
                     break;
                 case "8":
-                    listarGrupos();
+                    criarGrupo();
                     break;
                 case "9":
-                    gerenciarGrupo();
+                    listarGrupos();
+                    break;
+                case "10":
+                    listarGrupo();
+                    break;
+                case "11":
+                    gerenciarGrupo(a);
                     break;
                 case "0":
                     return;
@@ -297,6 +313,7 @@ public class MenuTerminal {
     }
 
     // Métodos do Negócio
+    // Oportunidade
 
     private void listarOportunidades() {
         List<Oportunidade> lista = gerenciador.listarOportunidades();
@@ -314,7 +331,7 @@ public class MenuTerminal {
         System.out.print("Titulo: ");
         String titulo = sc.nextLine().trim();
         System.out.print("Carga horaria: ");
-        int ch = lerInt();
+        int ch = lerIntMaiorQueZero();
         System.out.print("Vagas: ");
         int vagas = lerInt();
 
@@ -375,11 +392,13 @@ public class MenuTerminal {
         System.out.println("Inscricao cancelada.");
     }
 
+    //Solicitação de Aproveitamento
+
     private void solicitarAproveitamento(Discente d) {
         System.out.print("Descricao do curso/atividade: ");
         String desc = sc.nextLine().trim();
         System.out.print("Carga horaria pleiteada: ");
-        int ch = lerInt();
+        int ch = lerIntMaiorQueZero();
 
         SolicitacaoAproveitamento s = new SolicitacaoAproveitamento(d, desc, ch);
         gerenciador.criarSolicitacao(s);
@@ -391,7 +410,7 @@ public class MenuTerminal {
         String parecerInfo;
         for (SolicitacaoAproveitamento s : gerenciador.listarSolicitacoes()) {
             if (s.getSolicitante().equals(d)) {
-                if(s.getParecer().isEmpty())
+                if (s.getParecer().isEmpty())
                     parecerInfo = "";
                 else
                     parecerInfo = "| Parecer: " + s.getParecer();
@@ -407,7 +426,7 @@ public class MenuTerminal {
     private void reenviarSolicitacao(Discente d) {
         verSolicitacoesDiscente(d);
         System.out.print("ID da solicitacao indeferida: ");
-        int id = lerInt();
+        int id = lerIntMaiorQueZero();
 
         SolicitacaoAproveitamento s = gerenciador.buscarSolicitacaoPorId(id);
 
@@ -472,6 +491,8 @@ public class MenuTerminal {
         System.out.println("Solicitacao avaliada: " + s.getStatus());
     }
 
+    // Grupo Estudantil
+
     private void criarGrupo() {
         List<Docente> docentes = gerenciador.listarDocentes();
         if (docentes.isEmpty()) {
@@ -500,6 +521,19 @@ public class MenuTerminal {
         System.out.println("Grupo criado com sucesso!");
     }
 
+    private boolean listarGrupoPorUsuario(Usuario u){
+        List<GrupoEstudantil> lista = gerenciador.listarGrupoPorUsuario(u);
+        if (lista.isEmpty()) {
+            System.out.println("Usuário não é responsável por nenhum grupo.");
+            return false;
+        }
+        System.out.println("-- Grupos --");
+        for (GrupoEstudantil g : lista) {
+            System.out.println(g);
+        }
+        return true;
+    }
+
     private void listarGrupos() {
         List<GrupoEstudantil> lista = gerenciador.listarGrupos();
         if (lista.isEmpty()) {
@@ -512,8 +546,41 @@ public class MenuTerminal {
         }
     }
 
-    private void gerenciarGrupo() {
+    private void listarGrupo(){
         listarGrupos();
+        System.out.println("ID do grupo a ser selecionado: ");
+        int id = lerInt();
+        GrupoEstudantil g = gerenciador.buscarGrupoPorId(id);
+
+        if (g == null) {
+            System.out.println("Grupo nao encontrado.");
+            return;
+        }
+
+        List<Discente> membros = g.getMembros();
+        List<String> cargos = g.getCargos();
+        if (membros.isEmpty() || cargos.isEmpty()) {
+            System.out.println("Nenhum membro cadastrado.");
+            return;
+        }
+
+        System.out.println("Membros: ");
+        for (int i = 0; i < membros.size(); i++) {
+            System.out.println("[" + i + "] " + membros.get(i).getNome() + " Cargo: " + cargos.get(i));
+        }
+
+
+    }
+
+    private void gerenciarGrupo(Usuario u) {
+        if (u instanceof Administrador){
+            listarGrupos();
+        }
+        else{
+            if(!listarGrupoPorUsuario(u)){
+                return;
+            }
+        }
         System.out.print("ID do grupo: ");
         int id = lerInt();
         GrupoEstudantil g = gerenciador.buscarGrupoPorId(id);
@@ -522,6 +589,8 @@ public class MenuTerminal {
             System.out.println("Grupo nao encontrado.");
             return;
         }
+
+
 
         System.out.println("[1] Adicionar membro  [2] Remover membro  [3] Definir cargo");
         System.out.print("Opcao: ");
@@ -557,12 +626,12 @@ public class MenuTerminal {
                 System.out.println("Membro removido.");
                 break;
             case "3":
-                System.out.print("Cargo (ex: DIRETOR, TESOUREIRO): ");
-                String cargo = sc.nextLine().trim();
                 if(g.getCargo(d).equals("NAO_MEMBRO")){
-                    System.out.println("Discente não pertence ao grupo");
+                    System.out.println("Discente não é membro do grupo estudantil");
                     break;
                 }
+                System.out.print("Cargo (ex: DIRETOR, TESOUREIRO): ");
+                String cargo = sc.nextLine().trim();
                 g.definirCargo(d, cargo);
                 System.out.println("Cargo definido com sucesso.");
                 break;
@@ -580,13 +649,35 @@ public class MenuTerminal {
         }
     }
 
-    // Métodos de I/O
+// Métodos de I/O
 
     private int lerInt() {
-        try {
-            return Integer.parseInt(sc.nextLine().trim());
-        } catch (NumberFormatException e) {
-            return -1;
+        while (true) {
+            try {
+                int valor = Integer.parseInt(sc.nextLine().trim());
+                if (valor >= 0) {
+                    return valor;
+                } else {
+                    System.out.print("Valor inválido. Digite um número maior ou igual a 0: ");
+                }
+            } catch (NumberFormatException e) {
+                System.out.print("Entrada inválida. Por favor, digite um número inteiro: ");
+            }
+        }
+    }
+
+    private int lerIntMaiorQueZero() {
+        while (true) {
+            try {
+                int valor = Integer.parseInt(sc.nextLine().trim());
+                if (valor > 0) {
+                    return valor;
+                } else {
+                    System.out.print("Valor inválido. Digite um número maior que 0: ");
+                }
+            } catch (NumberFormatException e) {
+                System.out.print("Entrada inválida. Por favor, digite um número inteiro: ");
+            }
         }
     }
 }

@@ -56,6 +56,10 @@ public class GrupoEstudantil {
         }
     }
 
+    public List<String> getCargos(){
+        return cargos;
+    }
+
     public String getCargo(Discente d) {
         int idx = membros.indexOf(d);
         if (idx >= 0)
