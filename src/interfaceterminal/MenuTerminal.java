@@ -1,18 +1,27 @@
 package interfaceterminal;
 
 import entidades.*;
-import servicos.GerenciadorCentral;
+import servicos.AproveitamentoService;
+import servicos.GrupoService;
+import servicos.OportunidadeService;
+import servicos.UsuarioService;
 
 import java.util.List;
 import java.util.Scanner;
 
 public class MenuTerminal {
 
-    private GerenciadorCentral gerenciador;
-    private Scanner sc;
+    private final UsuarioService usuarioService;
+    private final OportunidadeService oportunidadeService;
+    private final AproveitamentoService aproveitamentoService;
+    private final GrupoService grupoService;
+    private final Scanner sc;
 
-    public MenuTerminal(GerenciadorCentral gerenciador) {
-        this.gerenciador = gerenciador;
+    public MenuTerminal(UsuarioService usuarioService, OportunidadeService oportunidadeService, AproveitamentoService aproveitamentoService, GrupoService grupoService) {
+        this.usuarioService = usuarioService;
+        this.oportunidadeService = oportunidadeService;
+        this.aproveitamentoService = aproveitamentoService;
+        this.grupoService = grupoService;
         this.sc = new Scanner(System.in);
     }
 
@@ -53,7 +62,7 @@ public class MenuTerminal {
         System.out.print("Senha: ");
         String senha = sc.nextLine().trim();
 
-        Usuario u = gerenciador.buscarPorEmailSenha(email, senha);
+        Usuario u = usuarioService.autenticar(email, senha);
 
         if (u == null) {
             System.out.println("Email ou senha invalidos.");
@@ -111,7 +120,7 @@ public class MenuTerminal {
                 return;
         }
 
-        boolean ok = gerenciador.cadastrarUsuario(novo);
+        boolean ok = usuarioService.cadastrarUsuario(novo);
         if (ok)
             System.out.println("Cadastrado realizado com sucesso!");
         else
@@ -316,7 +325,7 @@ public class MenuTerminal {
     // Oportunidade
 
     private void listarOportunidades() {
-        List<Oportunidade> lista = gerenciador.listarOportunidades();
+        List<Oportunidade> lista = oportunidadeService.listarTodas();
         if (lista.isEmpty()) {
             System.out.println("Nenhuma oportunidade cadastrada.");
             return;
@@ -335,12 +344,12 @@ public class MenuTerminal {
         System.out.print("Vagas: ");
         int vagas = lerInt();
 
-        gerenciador.criarOportunidade(new Oportunidade(titulo, ch, vagas, doc));
+        oportunidadeService.criarOportunidade(new Oportunidade(titulo, ch, vagas, doc));
         System.out.println("Oportunidade criada com sucesso!");
     }
 
     private void criarOportunidadeAdmin() {
-        List<Docente> docentes = gerenciador.listarDocentes();
+        List<Docente> docentes = usuarioService.listarDocentes();
         if (docentes.isEmpty()) {
             System.out.println("Nenhum docente cadastrado.");
             return;
@@ -353,7 +362,7 @@ public class MenuTerminal {
 
         System.out.print("Opcao: ");
         int idx = lerInt();
-        Docente doc = gerenciador.buscarDocentePorId(idx);
+        Docente doc = usuarioService.buscarDocentePorIndice(idx);
 
         if (doc == null) {
             System.out.println("Docente invalido.");
@@ -366,14 +375,14 @@ public class MenuTerminal {
     private void encerrarOportunidade() {
         System.out.print("ID da oportunidade: ");
         int id = lerInt();
-        Oportunidade o = gerenciador.buscarOportunidadePorId(id);
+        Oportunidade o = oportunidadeService.buscarPorId(id);
 
         if (o == null) {
             System.out.println("Oportunidade nao encontrada.");
             return;
         }
 
-        gerenciador.encerrarOportunidade(id);
+        oportunidadeService.encerrarOportunidade(id);
         System.out.println("Oportunidade encerrada. Certificados gerados para " + o.getInscritos().size() + " inscritos.");
     }
 
@@ -381,14 +390,14 @@ public class MenuTerminal {
         listarOportunidades();
         System.out.print("ID da oportunidade: ");
         int id = lerInt();
-        gerenciador.inscreverDiscente(id, d);
+        oportunidadeService.inscreverDiscente(id, d);
         System.out.println("Inscricao realizada com sucesso!");
     }
 
     private void cancelarInscricao(Discente d) {
         System.out.print("ID da oportunidade: ");
         int id = lerInt();
-        gerenciador.cancelarInscricao(id, d);
+        oportunidadeService.cancelarInscricao(id, d);
         System.out.println("Inscricao cancelada.");
     }
 
@@ -401,14 +410,14 @@ public class MenuTerminal {
         int ch = lerIntMaiorQueZero();
 
         SolicitacaoAproveitamento s = new SolicitacaoAproveitamento(d, desc, ch);
-        gerenciador.criarSolicitacao(s);
+        aproveitamentoService.criarSolicitacao(s);
         System.out.println("Solicitacao registrada com status PENDENTE.");
     }
 
     private void verSolicitacoesDiscente(Discente d) {
         boolean encontrou = false;
         String parecerInfo;
-        for (SolicitacaoAproveitamento s : gerenciador.listarSolicitacoes()) {
+        for (SolicitacaoAproveitamento s : aproveitamentoService.listarTodas()) {
             if (s.getSolicitante().equals(d)) {
                 if (s.getParecer().isEmpty())
                     parecerInfo = "";
@@ -428,7 +437,7 @@ public class MenuTerminal {
         System.out.print("ID da solicitacao indeferida: ");
         int id = lerIntMaiorQueZero();
 
-        SolicitacaoAproveitamento s = gerenciador.buscarSolicitacaoPorId(id);
+        SolicitacaoAproveitamento s = aproveitamentoService.buscarPorId(id);
 
         if (s == null || !s.getSolicitante().equals(d)) {
             System.out.println("Solicitacao invalida.");
@@ -458,7 +467,7 @@ public class MenuTerminal {
     }
 
     private void listarSolicitacoesPendentes() {
-        List<SolicitacaoAproveitamento> lista = gerenciador.listarSolicitacoesPendentes();
+        List<SolicitacaoAproveitamento> lista = aproveitamentoService.listarPendentes();
         if (lista.isEmpty()) {
             System.out.println("Nenhuma solicitacao pendente.");
             return;
@@ -473,7 +482,7 @@ public class MenuTerminal {
         listarSolicitacoesPendentes();
         System.out.print("ID da solicitacao: ");
         int id = lerInt();
-        SolicitacaoAproveitamento s = gerenciador.buscarSolicitacaoPorId(id);
+        SolicitacaoAproveitamento s = aproveitamentoService.buscarPorId(id);
 
         if (s == null) {
             System.out.println("Solicitacao nao encontrada.");
@@ -487,14 +496,14 @@ public class MenuTerminal {
         System.out.print("Parecer: ");
         String parecer = sc.nextLine().trim();
 
-        gerenciador.avaliarSolicitacao(s, op.equals("1"), parecer);
+        aproveitamentoService.avaliarSolicitacao(s, op.equals("1"), parecer);
         System.out.println("Solicitacao avaliada: " + s.getStatus());
     }
 
     // Grupo Estudantil
 
     private void criarGrupo() {
-        List<Docente> docentes = gerenciador.listarDocentes();
+        List<Docente> docentes = usuarioService.listarDocentes();
         if (docentes.isEmpty()) {
             System.out.println("Nenhum docente cadastrado.");
             return;
@@ -510,19 +519,19 @@ public class MenuTerminal {
 
         System.out.print("Opcao: ");
         int idx = lerInt();
-        Docente doc = gerenciador.buscarDocentePorId(idx);
+        Docente doc = usuarioService.buscarDocentePorIndice(idx);
 
         if (doc == null) {
             System.out.println("Docente invalido.");
             return;
         }
 
-        gerenciador.criarGrupo(new GrupoEstudantil(nome, doc));
+        grupoService.criarGrupo(new GrupoEstudantil(nome, doc));
         System.out.println("Grupo criado com sucesso!");
     }
 
     private boolean listarGrupoPorUsuario(Usuario u){
-        List<GrupoEstudantil> lista = gerenciador.listarGrupoPorUsuario(u);
+        List<GrupoEstudantil> lista = grupoService.listarPorUsuario(u);
         if (lista.isEmpty()) {
             System.out.println("Usuário não é responsável por nenhum grupo.");
             return false;
@@ -535,7 +544,7 @@ public class MenuTerminal {
     }
 
     private void listarGrupos() {
-        List<GrupoEstudantil> lista = gerenciador.listarGrupos();
+        List<GrupoEstudantil> lista = grupoService.listarTodos();
         if (lista.isEmpty()) {
             System.out.println("Nenhum grupo cadastrado.");
             return;
@@ -550,7 +559,7 @@ public class MenuTerminal {
         listarGrupos();
         System.out.println("ID do grupo a ser selecionado: ");
         int id = lerInt();
-        GrupoEstudantil g = gerenciador.buscarGrupoPorId(id);
+        GrupoEstudantil g = grupoService.buscarPorId(id);
 
         if (g == null) {
             System.out.println("Grupo nao encontrado.");
@@ -583,7 +592,7 @@ public class MenuTerminal {
         }
         System.out.print("ID do grupo: ");
         int id = lerInt();
-        GrupoEstudantil g = gerenciador.buscarGrupoPorId(id);
+        GrupoEstudantil g = grupoService.buscarPorId(id);
 
         if (g == null) {
             System.out.println("Grupo nao encontrado.");
@@ -596,7 +605,7 @@ public class MenuTerminal {
         System.out.print("Opcao: ");
         String op = sc.nextLine().trim();
 
-        List<Discente> discentes = gerenciador.listarDiscentes();
+        List<Discente> discentes = usuarioService.listarDiscentes();
         if (discentes.isEmpty()) {
             System.out.println("Nenhum discente cadastrado no sistema.");
             return;
@@ -609,7 +618,7 @@ public class MenuTerminal {
 
         System.out.print("Selecione discente: ");
         int idx = lerInt();
-        Discente d = gerenciador.buscarDiscentePorId(idx);
+        Discente d = usuarioService.buscarDiscentePorIndice(idx);
 
         if (d == null) {
             System.out.println("Discente invalido.");
@@ -642,7 +651,7 @@ public class MenuTerminal {
     }
 
     private void listarTodosUsuarios() {
-        List<Usuario> lista = gerenciador.listarUsuarios();
+        List<Usuario> lista = usuarioService.listarTodos();
         System.out.println("-- Usuarios Cadastrados --");
         for (Usuario u : lista) {
             System.out.println(u);

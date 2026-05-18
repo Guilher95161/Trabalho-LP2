@@ -137,7 +137,7 @@ Para validar as principais funcionalidades do sistema, siga este roteiro:
     * Saia do menu.
 
 3.  **Avaliação e Encerramento (Gestor/Docente):**
-    * Entre como Gestor (`coord1@ufma.br`) para **[2] Avaliar solicitação** de aproveitamento.
+    * Entre como Gestor (`coord1@ufma.br`) com senha `coord123` para **[2] Avaliar solicitação** de aproveitamento.
     * Entre como Docente (`doc@ufma.br`) para **[3] Encerrar oportunidade**. Isso gerará automaticamente o certificado para o aluno inscrito.
 
 4.  **Verificação Final (Discente):**
