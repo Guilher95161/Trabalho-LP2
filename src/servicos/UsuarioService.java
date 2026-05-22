@@ -36,7 +36,19 @@ public class UsuarioService {
     }
 
     public Usuario autenticar(String email, String senha) {
-        return repositorio.findUsuarioByEmailESenha(email, senha);
+        Usuario u = repositorio.findUsuarioByEmailESenha(email,senha);
+        if (u != null && !u.isAtivo()){
+            System.out.println("Erro: esta conta foi desativada.");
+            return null;
+        }
+        return u;
+    }
+
+    public void desativarUsuario(String email){
+        Usuario u =  repositorio.findUsuarioByEmail(email);
+        if (u != null){
+            u.desativarConta();
+        }
     }
 
     public List<Usuario> listarTodos() {

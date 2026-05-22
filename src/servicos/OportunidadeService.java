@@ -1,8 +1,10 @@
 package servicos;
 
 import entidades.*;
+import entidades.enums.StatusOportunidade;
 import repositorio.RepositorioCentral;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class OportunidadeService {
@@ -26,12 +28,39 @@ public class OportunidadeService {
     }
 
     public void inscreverDiscente(int oportunidadeId, Discente d) {
-        Oportunidade op = repositorio.findOportunidadeById(oportunidadeId);
 
-        if(op != null){
-            if("ABERTA".equals(op.getStatus()) && op.getInscritos().size() < op.getVagas()){
-                op.inscreverDiscente(d);
+        if (!d.isAtivo()){
+            System.out.println("Erro: Discente com conta desativada!");
+            return;
+        }
+
+        Oportunidade op = repositorio.findOportunidadeById(oportunidadeId);
+        if(op != null && op.getStatus() == entidades.enums.StatusOportunidade.ABERTA){
+            op.solicitarInscricao(d);
+        }
+    }
+
+    public void aprovarOportunidade(int id){
+        Oportunidade op = repositorio.findOportunidadeById(id);
+        if (op != null){
+            op.aprovarProposta();
+        }
+    }
+
+    public List<Oportunidade> listarAguardandoAprovacao(){
+        List<Oportunidade> aguardando = new ArrayList<Oportunidade>();
+        for( Oportunidade op : repositorio.findAllOportunidades()){
+            if (op.getStatus() == StatusOportunidade.AGUARDANDO_APROVACAO){
+                aguardando.add(op);
             }
+        }
+        return aguardando;
+    }
+
+    public void avaliarInscricao(int oportunidadeId, Discente d, boolean aprovar) {
+        Oportunidade op = repositorio.findOportunidadeById(oportunidadeId);
+        if( op != null && op.getStatus() == entidades.enums.StatusOportunidade.ABERTA){
+            op.avaliarInscricao(d,aprovar);
         }
     }
 
@@ -46,11 +75,11 @@ public class OportunidadeService {
 
     public void encerrarOportunidade(int oportunidadeId) {
         Oportunidade op = repositorio.findOportunidadeById(oportunidadeId);
-        if(op != null && op.getStatus().equals("ABERTA")){
+        if(op != null && op.getStatus() ==  entidades.enums.StatusOportunidade.ABERTA){
             op.encerrar();
 
             String dataHoje = java.time.LocalDate.now().toString();
-            for (Discente d : op.getInscritos()) {
+            for (Discente d : op.getInscritosAprovados()) {
                 Certificado cert = new Certificado(op.getTitulo(), op.getCargaHoraria(), dataHoje);
                 d.adicionarCertificado(cert);
                 d.adicionarHoras(op.getCargaHoraria());

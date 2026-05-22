@@ -1,6 +1,7 @@
 package interfaceterminal;
 
 import entidades.*;
+import entidades.enums.StatusOportunidade;
 import servicos.AproveitamentoService;
 import servicos.GrupoService;
 import servicos.OportunidadeService;
@@ -46,7 +47,7 @@ public class MenuTerminal {
                     break;
                 case "0":
                     System.out.println("Encerrando...");
-                    return; // Sai do método, encerrando o loop principal
+                    return;
                 default:
                     System.out.println("Opcao invalida. Tente novamente.");
                     break;
@@ -132,14 +133,17 @@ public class MenuTerminal {
     private void menuDiscente(Discente d) {
         while (true) {
             System.out.println("\n--- MENU DISCENTE: " + d.getNome() + " ---");
-            System.out.println("[1] Ver oportunidades abertas");
-            System.out.println("[2] Inscrever-se em oportunidade");
-            System.out.println("[3] Cancelar inscricao");
-            System.out.println("[4] Solicitar aproveitamento de horas");
-            System.out.println("[5] Ver minhas solicitacoes");
-            System.out.println("[6] Reenviar solicitacao indeferida");
-            System.out.println("[7] Meus certificados");
-            System.out.println("[8] Minhas horas cumpridas");
+            System.out.println("[01] Ver oportunidades abertas");
+            System.out.println("[02] Inscrever-se em oportunidade");
+            System.out.println("[03] Cancelar inscricao");
+            System.out.println("[04] Solicitar aproveitamento de horas");
+            System.out.println("[05] Ver minhas solicitacoes");
+            System.out.println("[06] Reenviar solicitacao indeferida");
+            System.out.println("[07] Meus certificados");
+            System.out.println("[08] Minhas horas cumpridas");
+            System.out.println("[09] Propor nova oportunidade de extensão");
+            System.out.println("[10] Solicitar criação de grupo estudantil");
+            System.out.println("[11] Gerenciar inscritos em minha oportunidade");
             System.out.println("[0] Sair");
             System.out.print("Opcao: ");
 
@@ -170,6 +174,15 @@ public class MenuTerminal {
                 case "8":
                     System.out.println("Horas cumpridas: " + d.getHorasCumpridas() + "h");
                     break;
+                case "9":
+                    proporOportunidade(d);
+                    break;
+                case "10":
+                    solicitarCriacaoGrupo(d);
+                    break;
+                case "11":
+                    avaliarInscricoesOportunidade(d);
+                    break;
                 case "0":
                     return;
                 default:
@@ -186,8 +199,9 @@ public class MenuTerminal {
             System.out.println("[2] Ver oportunidades");
             System.out.println("[3] Encerrar oportunidade");
             System.out.println("[4] Ver grupos");
-            System.out.println("[5] Ver grupo");
+            System.out.println("[5] Gerenciar membros de grupo");
             System.out.println("[6] Gerenciar membros de grupo");
+            System.out.println("[7] Avaliar inscricoes pendentes em minhas oportunidades");
             System.out.println("[0] Sair");
             System.out.print("Opcao: ");
 
@@ -195,7 +209,7 @@ public class MenuTerminal {
 
             switch (op) {
                 case "1":
-                    criarOportunidade(doc);
+                    criarOportunidade(doc, StatusOportunidade.ABERTA);
                     break;
                 case "2":
                     listarOportunidades();
@@ -212,6 +226,9 @@ public class MenuTerminal {
                 case "6":
                     gerenciarGrupo(doc);
                     break;
+                case "7":
+                    avaliarInscricoesOportunidade(doc);
+                    break;
                 case "0":
                     return;
                 default:
@@ -225,10 +242,9 @@ public class MenuTerminal {
         while (true) {
             System.out.println("\n--- MENU GESTOR: " + g.getNome() + " ---");
             System.out.println("[1] Ver solicitacoes pendentes");
-            System.out.println("[2] Avaliar solicitacao");
-            System.out.println("[3] Criar grupo estudantil");
+            System.out.println("[2] Avaliar solicitacao de horas cumpridas");
+            System.out.println("[3] Ver solicitacoes de criação de grupos");
             System.out.println("[4] Ver grupos");
-            System.out.println("[5] Ver grupo");
             System.out.println("[0] Sair");
             System.out.print("Opcao: ");
 
@@ -242,13 +258,10 @@ public class MenuTerminal {
                     avaliarSolicitacao();
                     break;
                 case "3":
-                    criarGrupo();
+                    avaliarSolicitacaoGrupos();
                     break;
                 case "4":
                     listarGrupos();
-                    break;
-                case "5":
-                    listarGrupo();
                     break;
                 case "0":
                     return;
@@ -264,15 +277,17 @@ public class MenuTerminal {
             System.out.println("\n--- MENU ADMINISTRADOR ---");
             System.out.println("[01] Cadastrar Usuário");
             System.out.println("[02] Listar todos os usuarios");
-            System.out.println("[03] Criar oportunidade");
-            System.out.println("[04] Ver oportunidades");
-            System.out.println("[05] Encerrar oportunidade");
-            System.out.println("[06] Ver solicitacoes pendentes");
-            System.out.println("[07] Avaliar solicitacao");
-            System.out.println("[08] Criar grupo estudantil");
-            System.out.println("[09] Ver grupos");
-            System.out.println("[10] Ver grupo");
-            System.out.println("[11] Gerenciar membros de grupo");
+            System.out.println("[03] Desativar Usuario");
+            System.out.println("[04] Avaliar solicitacao de criação de grupos");
+            System.out.println("[05] Criar oportunidade");
+            System.out.println("[06] Ver oportunidades");
+            System.out.println("[07] Encerrar oportunidade");
+            System.out.println("[08] Ver solicitacoes pendentes");
+            System.out.println("[09] Avaliar solicitacao");
+            System.out.println("[10] Criar grupo estudantil");
+            System.out.println("[11] Ver grupos");
+            System.out.println("[12] Ver grupo");
+            System.out.println("[13] Gerenciar membros de grupo");
             System.out.println("[00] Sair");
             System.out.print("Opcao: ");
 
@@ -286,30 +301,36 @@ public class MenuTerminal {
                     listarTodosUsuarios();
                     break;
                 case "3":
-                    criarOportunidadeAdmin();
+                    desativarUsuario();
                     break;
                 case "4":
-                    listarOportunidades();
+                    avaliarSolicitacaoGrupos();
                     break;
                 case "5":
-                    encerrarOportunidade();
+                    criarOportunidadeAdmin();
                     break;
                 case "6":
-                    listarSolicitacoesPendentes();
+                    listarOportunidades();
                     break;
                 case "7":
-                    avaliarSolicitacao();
+                    encerrarOportunidade();
                     break;
                 case "8":
-                    criarGrupo();
+                    listarSolicitacoesPendentes();
                     break;
                 case "9":
-                    listarGrupos();
+                    avaliarSolicitacao();
                     break;
                 case "10":
-                    listarGrupo();
+                    criarGrupo();
                     break;
                 case "11":
+                    listarGrupos();
+                    break;
+                case "12":
+                    listarGrupo();
+                    break;
+                case "13":
                     gerenciarGrupo(a);
                     break;
                 case "0":
@@ -322,7 +343,41 @@ public class MenuTerminal {
     }
 
     // Métodos do Negócio
+
+    //Usuário
+
+    private void desativarUsuario() {
+        System.out.println("Insira o email do usuário a desativar: ");
+        String email = sc.nextLine().trim();
+        usuarioService.desativarUsuario(email);
+        System.out.println("Desativado com sucesso!");
+    }
+
     // Oportunidade
+
+    private void proporOportunidade(Discente d){
+        System.out.println("--- Propor Oportunidade ---");
+        criarOportunidade(d,StatusOportunidade.AGUARDANDO_APROVACAO);
+        System.out.println("A sua proposta foi enviada para aprovação docente");
+    }
+
+    private void aprovarOportunidadesPendentes(){
+        List<Oportunidade> pendentes = oportunidadeService.listarAguardandoAprovacao();
+        if (pendentes.isEmpty()){
+            System.out.println("Não há propostas pendentes");
+            return;
+        }
+        for(Oportunidade p : pendentes){
+            System.out.println(p);
+        }
+
+        System.out.println("ID da oportunidade a aprovar (ou 0 para cancelar): ");
+        int id = lerInt();
+        if(id>0){
+            oportunidadeService.aprovarOportunidade(id);
+            System.out.println("Oportunidade publicada com sucesso!");
+        }
+    }
 
     private void listarOportunidades() {
         List<Oportunidade> lista = oportunidadeService.listarTodas();
@@ -336,7 +391,7 @@ public class MenuTerminal {
         }
     }
 
-    private void criarOportunidade(Docente doc) {
+    private void criarOportunidade(Usuario responsavel, StatusOportunidade status) {
         System.out.print("Titulo: ");
         String titulo = sc.nextLine().trim();
         System.out.print("Carga horaria: ");
@@ -344,8 +399,10 @@ public class MenuTerminal {
         System.out.print("Vagas: ");
         int vagas = lerInt();
 
-        oportunidadeService.criarOportunidade(new Oportunidade(titulo, ch, vagas, doc));
-        System.out.println("Oportunidade criada com sucesso!");
+        oportunidadeService.criarOportunidade(new Oportunidade(titulo, ch, vagas, responsavel, status));
+        if (status == StatusOportunidade.ABERTA){
+            System.out.println("Oportunidade aberta com sucesso!");
+        }
     }
 
     private void criarOportunidadeAdmin() {
@@ -369,7 +426,55 @@ public class MenuTerminal {
             return;
         }
 
-        criarOportunidade(doc);
+        System.out.print("Titulo: ");
+        String titulo = sc.nextLine().trim();
+        System.out.print("Carga horaria: ");
+        int ch = lerIntMaiorQueZero();
+        System.out.print("Vagas: ");
+        int vagas = lerInt();
+
+        criarOportunidade(doc,StatusOportunidade.ABERTA);
+    }
+
+    private void avaliarInscricoesOportunidade(Usuario responsavel){
+        listarOportunidades();
+        System.out.println("Insira o ID da sua oportunidade: ");
+        int id = lerInt();
+        Oportunidade op = oportunidadeService.buscarPorId(id);
+
+        if(op == null || !op.getResponsavel().equals(responsavel)){
+            System.out.println("Oportunidade invalida ou voce nao é o responsavel.");
+            return;
+        }
+
+        List<Discente> espera = op.getFilaEspera();
+        if (espera.isEmpty()){
+            System.out.println("Não há discentes na fila de espera");
+            return;
+        }
+
+        System.out.println("Fila de Espera: ");
+        for (int i = 0; i < espera.size(); i++) {
+            System.out.println("[" + i + "] " + espera.get(i).getNome());
+        }
+
+        System.out.println("Selecione o indice do discente: ");
+        int idx = lerInt();
+        if (idx>=0 && idx<espera.size()){
+            Discente disc = espera.get(idx);
+            System.out.println("Aprovar inscrição?(1-Sim, 0-Não): ");
+            int resposta = lerInt();
+            if (resposta==1){
+                oportunidadeService.avaliarInscricao(id,disc,true);
+            }else if(resposta==0){
+                oportunidadeService.avaliarInscricao(id,disc,false);
+            }else{
+                System.out.println("Opcao invalida.");
+            }
+        }else{
+            System.out.println("Indice invalido");
+        }
+
     }
 
     private void encerrarOportunidade() {
@@ -383,7 +488,7 @@ public class MenuTerminal {
         }
 
         oportunidadeService.encerrarOportunidade(id);
-        System.out.println("Oportunidade encerrada. Certificados gerados para " + o.getInscritos().size() + " inscritos.");
+        System.out.println("Oportunidade encerrada. Certificados gerados para " + o.getInscritosAprovados().size() + " inscritos.");
     }
 
     private void inscreverEmOportunidade(Discente d) {
@@ -391,7 +496,7 @@ public class MenuTerminal {
         System.out.print("ID da oportunidade: ");
         int id = lerInt();
         oportunidadeService.inscreverDiscente(id, d);
-        System.out.println("Inscricao realizada com sucesso!");
+        System.out.println("Pedido de inscrição enviado com sucesso!");
     }
 
     private void cancelarInscricao(Discente d) {
@@ -501,6 +606,54 @@ public class MenuTerminal {
     }
 
     // Grupo Estudantil
+
+    private void solicitarCriacaoGrupo(Discente d) {
+        System.out.println("Nome do Grupo: ");
+        String nome = sc.nextLine().trim();
+        System.out.println("Descrição/Objetivos: ");
+        String desc = sc.nextLine().trim();
+
+        List<Docente> docentes = usuarioService.listarDocentes();
+        System.out.println("Selecione o docente que aceitou ser o responsavel: ");
+        for(int i =0;i<docentes.size();i++){
+            System.out.println("[" + i + "]" + docentes.get(i).getNome());
+        }
+        System.out.println("Opcao: ");
+        int idx = lerInt();
+        Docente doc = usuarioService.buscarDocentePorIndice(idx);
+
+        if(doc==null){
+            System.out.println("Docente nao encontrado.");
+            return;
+        }
+
+        SolicitacaoGrupoEstudantil s = new SolicitacaoGrupoEstudantil(d,nome,desc,doc);
+        grupoService.solicitarCriacaoGrupo(s);
+        System.out.println("Solicitacao enviada ao gestor/adm");
+    }
+
+    private void avaliarSolicitacaoGrupos(){
+        List<SolicitacaoGrupoEstudantil> pendentes = grupoService.listarSolicitacoesPendentes();
+        if(pendentes.isEmpty()){
+            System.out.println("Não ná solicitaç~eos de grupos pendentes");
+            return;
+        }
+        for(SolicitacaoGrupoEstudantil p : pendentes){
+            System.out.println(p);
+        }
+
+        System.out.println("Id da solicitacao: ");
+        int id = lerInt();
+        System.out.println("[1] Aprovar(Criar Grupo) [2] Rejeitar");
+        int resultado = lerInt();
+        if(resultado==1){
+            grupoService.avaliarSolicitacaoGrupo(id,true);
+        }else if(resultado==2){
+            grupoService.avaliarSolicitacaoGrupo(id,false);
+        }else{
+            System.out.println("Opcao invalido.");
+        }
+    }
 
     private void criarGrupo() {
         List<Docente> docentes = usuarioService.listarDocentes();

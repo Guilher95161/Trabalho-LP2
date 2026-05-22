@@ -10,7 +10,7 @@ public class RepositorioCentral {
     private List<Oportunidade> oportunidades = new ArrayList<>();
     private List<SolicitacaoAproveitamento> solicitacoes = new ArrayList<>();
     private List<GrupoEstudantil> grupos = new ArrayList<>();
-
+    private List<SolicitacaoGrupoEstudantil> solicitacoesGrupos = new ArrayList<>();
     // Usuários
 
     public void salvarUsuario(Usuario u) {
@@ -126,6 +126,23 @@ public class RepositorioCentral {
         for (GrupoEstudantil g : grupos){
             if (g.getId() == id){
                 return g;
+            }
+        }
+        return null;
+    }
+
+    public void salvarSolicitacaoGrupo(SolicitacaoGrupoEstudantil s) {
+        solicitacoesGrupos.add(s);
+    }
+
+    public List<SolicitacaoGrupoEstudantil> findAllSolicitacoesGrupo() {
+        return new ArrayList<>(solicitacoesGrupos);
+    }
+
+    public SolicitacaoGrupoEstudantil findSolicitacaoGrupoById(int id) {
+        for (SolicitacaoGrupoEstudantil solicitacaoGrupo : solicitacoesGrupos) {
+            if (solicitacaoGrupo.getId() == id){
+                return solicitacaoGrupo;
             }
         }
         return null;
