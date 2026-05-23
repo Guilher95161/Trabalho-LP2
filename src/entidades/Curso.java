@@ -3,15 +3,8 @@ package entidades;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Representa o curso de graduacao (RF007).
- *
- * Mantem todas as versoes do PPC (RF008 - historico) e permite vincular discentes
- * a versoes especificas (RF0009 - alunos de PPCs diferentes coexistem).
- *
- * Note: a carga horaria de extensao NAO mora mais aqui. Ela mora em cada Ppc.
- * O Curso e apenas a identidade institucional (codigo + nome).
- */
+// Curso de graduacao - so identidade (codigo + nome). A carga horaria de
+// extensao fica em cada versao do PPC, nao aqui, porque pode mudar com o tempo.
 public class Curso {
     private static int contador = 1;
 
@@ -35,21 +28,15 @@ public class Curso {
     public void setNome(String nome)     { this.nome = nome; }
     public void setCodigo(String codigo) { this.codigo = codigo; }
 
-    /**
-     * Adiciona uma nova versao do PPC. Desativa a versao anterior (se houver),
-     * preservando-a no historico.
-     */
+    // Vira a versao vigente; a antiga fica como historica.
     public void adicionarVersaoPpc(Ppc novaVersao) {
-        // Desativa a versao atualmente ativa (mantida no historico)
         for (Ppc p : versoesPpc) {
             if (p.isAtiva()) p.desativar();
         }
         versoesPpc.add(novaVersao);
     }
 
-    /**
-     * Retorna a versao mais recente do PPC (a unica ativa). null se nao houver.
-     */
+    // null se o curso ainda nao tem PPC cadastrado.
     public Ppc getPpcAtual() {
         for (int i = versoesPpc.size() - 1; i >= 0; i--) {
             Ppc p = versoesPpc.get(i);
@@ -58,9 +45,6 @@ public class Curso {
         return null;
     }
 
-    /**
-     * Busca uma versao especifica do PPC (por ano de vigencia).
-     */
     public Ppc buscarPpcPorAno(String anoVigencia) {
         for (Ppc p : versoesPpc) {
             if (p.getAnoVigencia().equalsIgnoreCase(anoVigencia)) return p;

@@ -87,16 +87,40 @@ public class OportunidadeService {
         }
     }
 
-    /**
-     * RF012 - cancela uma oportunidade. So permite quando ainda nao foi ENCERRADA.
-     * Retorna true em sucesso.
-     */
     public boolean cancelarOportunidade(int oportunidadeId) {
         Oportunidade op = repositorio.findOportunidadeById(oportunidadeId);
         if (op == null) return false;
         return op.cancelar();
     }
 
+    public boolean submeterRascunho(int id) {
+        Oportunidade op = repositorio.findOportunidadeById(id);
+        if (op == null) return false;
+        return op.submeterRascunho();
+    }
+
+    public boolean editarRascunho(int id, String titulo, String descricao,
+                                  entidades.enums.ModalidadeOportunidade modalidade,
+                                  String periodoRealizacao,
+                                  int cargaHoraria, int vagas) {
+        Oportunidade op = repositorio.findOportunidadeById(id);
+        if (op == null) return false;
+        return op.editarSeRascunho(titulo, descricao, modalidade, periodoRealizacao, cargaHoraria, vagas);
+    }
+
+    public List<Oportunidade> listarRascunhosDe(Usuario responsavel) {
+        List<Oportunidade> rascunhos = new ArrayList<>();
+        for (Oportunidade op : repositorio.findAllOportunidades()) {
+            if (op.getStatus() == StatusOportunidade.RASCUNHO
+                && op.getResponsavel().equals(responsavel)) {
+                rascunhos.add(op);
+            }
+        }
+        return rascunhos;
+    }
+
+    // Atencao: emite o certificado mas NAO da as horas. As horas so caem
+    // na conta do aluno depois que o aproveitamento for deferido.
     public void certificarDiscentes(int oportunidadeId, List<Discente> selecionados) {
         Oportunidade op = repositorio.findOportunidadeById(oportunidadeId);
         if (op == null || op.getStatus() != StatusOportunidade.ENCERRADA) return;
@@ -111,14 +135,13 @@ public class OportunidadeService {
                 op.getUceVinculada()
             );
             d.adicionarCertificado(cert);
-            // Horas só são adicionadas após deferimento do aproveitamento
         }
     }
 
     public boolean substituirParticipante(int oportunidadeId, Discente aRemover, Discente substituto) {
         Oportunidade op = repositorio.findOportunidadeById(oportunidadeId);
         if (op == null) return false;
-        // Substituicao permitida enquanto a oportunidade nao foi encerrada
+        // So vale antes do encerramento - depois disso a substituicao perde sentido.
         if (op.getStatus() != StatusOportunidade.ABERTA
                 && op.getStatus() != StatusOportunidade.EM_EXECUCAO) return false;
         return op.substituirParticipante(aRemover, substituto);
@@ -136,15 +159,13 @@ public class OportunidadeService {
         return total;
     }
 
-    // RF009 - soma horas concluidas (deferidas) que vieram de oportunidades UCE
-    // Conta apenas certificados de UCE cujo aproveitamento ja foi deferido
+    // Soma as horas de certificados de UCE que ja tiveram aproveitamento deferido.
+    // A flag aproveitamentoSolicitado por si so nao basta - ela fica true tanto para
+    // pendente quanto para deferido. Por isso vamos buscar a solicitacao DEFERIDA.
     public int calcularHorasUceConcluidas(Discente d) {
         int total = 0;
         for (Certificado c : d.getCertificados()) {
             if (c.isUce() && c.isAproveitamentoSolicitado()) {
-                // aproveitamentoSolicitado fica true e nao volta a false quando deferido;
-                // como precisamos do estado final, conferimos via solicitacoes
-                // (alternativa: marcar deferimento direto no certificado)
                 if (foiDeferida(d, c)) total += c.getCargaHoraria();
             }
         }

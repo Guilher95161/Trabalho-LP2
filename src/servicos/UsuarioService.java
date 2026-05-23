@@ -3,9 +3,8 @@ package servicos;
 import entidades.*;
 import repositorio.RepositorioCentral;
 
+import java.util.ArrayList;
 import java.util.List;
-
-//Contém todas as regras de negócio relacionadas à gestão de usuários.
 
 public class UsuarioService {
 
@@ -18,10 +17,8 @@ public class UsuarioService {
         popularDadosIniciais();
     }
 
-//Registra os usuários pré-cadastrados no sistema.
-
+    // Cadastra usuarios de teste para nao precisar criar tudo na mao a cada execucao.
     private void popularDadosIniciais() {
-        // Vincula os discentes de teste ao PPC atual do primeiro curso (CC/2020)
         Curso cursoPadrao = cursoService.listarTodos().isEmpty() ? null : cursoService.listarTodos().get(0);
         Ppc ppcPadrao = (cursoPadrao != null) ? cursoPadrao.getPpcAtual() : null;
         repositorio.salvarUsuario(new Administrador("Administrador", "0000", "admin@ufma.br", "admin123"));
@@ -69,6 +66,24 @@ public class UsuarioService {
         return repositorio.findAllDocentes();
     }
 
+    // Listas filtradas - usadas para selecoes onde o usuario inativo nao deve aparecer
+    // (ex: adicionar membro a grupo, escolher docente responsavel de oportunidade).
+    public List<Discente> listarDiscentesAtivos() {
+        List<Discente> ativos = new ArrayList<>();
+        for (Discente d : repositorio.findAllDiscentes()) {
+            if (d.isAtivo()) ativos.add(d);
+        }
+        return ativos;
+    }
+
+    public List<Docente> listarDocentesAtivos() {
+        List<Docente> ativos = new ArrayList<>();
+        for (Docente d : repositorio.findAllDocentes()) {
+            if (d.isAtivo()) ativos.add(d);
+        }
+        return ativos;
+    }
+
     public Docente buscarDocentePorIndice(int idx) {
         List<Docente> docentes = listarDocentes();
         if (idx >= 0 && idx < docentes.size()) {
@@ -82,6 +97,18 @@ public class UsuarioService {
         if (idx >= 0 && idx < discentes.size()) {
             return discentes.get(idx);
         }
+        return null;
+    }
+
+    public Docente buscarDocenteAtivoPorIndice(int idx) {
+        List<Docente> docentes = listarDocentesAtivos();
+        if (idx >= 0 && idx < docentes.size()) return docentes.get(idx);
+        return null;
+    }
+
+    public Discente buscarDiscenteAtivoPorIndice(int idx) {
+        List<Discente> discentes = listarDiscentesAtivos();
+        if (idx >= 0 && idx < discentes.size()) return discentes.get(idx);
         return null;
     }
 }

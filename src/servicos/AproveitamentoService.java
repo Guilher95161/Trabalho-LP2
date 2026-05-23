@@ -69,7 +69,8 @@ public class AproveitamentoService {
         if (s == null || !s.getSolicitante().equals(solicitante)) return false;
         if (s.getStatus() != StatusSolicitacao.PENDENTE) return false;
         s.cancelar();
-        s.getCertificado().liberarAproveitamento(); // certificado pode ser reenviado
+        // Libera o certificado para que o aluno possa abrir uma nova solicitacao depois.
+        s.getCertificado().liberarAproveitamento();
         return true;
     }
 }

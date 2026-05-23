@@ -5,7 +5,8 @@ public abstract class Usuario {
     private String matricula;
     private String email;
     private String senha;
-    private String tipo; // "DISCENTE", "DOCENTE", "COORDENADOR", "COMISSAO", "ADMINISTRADOR"
+    // Valores possiveis: "DISCENTE", "DOCENTE", "COORDENADOR", "COMISSAO", "ADMINISTRADOR".
+    private String tipo;
     private boolean ativo;
 
     public Usuario(String nome, String matricula, String email, String senha, String tipo) {
@@ -63,7 +64,7 @@ public abstract class Usuario {
         return "[" + tipo + " - " + status + "] " + nome + " (" + email + ")";
     }
 
-    // Email e a chave unica de um usuario no sistema; equals/hashCode usam ele
+    // Dois usuarios sao iguais se tem o mesmo email - o email e o login.
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

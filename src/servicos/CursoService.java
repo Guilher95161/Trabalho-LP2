@@ -8,16 +8,11 @@ import repositorio.RepositorioCentral;
 
 import java.util.List;
 
-/**
- * RF007/RF008/RF0009 - servico para gerenciar Cursos, versoes do PPC e UCEs.
- *
- * Regras:
- * - Atualizar carga horaria do PPC = criar NOVA versao (preserva historico).
- * - Cada versao do PPC tem suas proprias UCEs.
- * - Multiplos PPCs coexistem (turmas 2020 e 2025 do mesmo curso).
- */
+// Gerencia cursos, suas versoes de PPC e as UCEs de cada versao.
+// Atualizar carga = nova versao (a antiga vira historica, nunca e sobrescrita).
 public class CursoService {
 
+    // Usado quando um discente ainda nao foi vinculado a um PPC.
     public static final int CARGA_PADRAO = 310;
 
     private final RepositorioCentral repositorio;
@@ -29,7 +24,7 @@ public class CursoService {
 
     private void popularDadosIniciais() {
         Curso cc = new Curso("CC", "Ciencia da Computacao");
-        // Versao inicial do PPC (sem autor - cadastro do sistema)
+        // PPC inicial sem autor - foi seedado pelo proprio sistema.
         Ppc ppc2020 = new Ppc(cc, "2020", 310, null);
         ppc2020.adicionarUce(new UnidadeCurricular("EXT0001", "Atividades de Extensao I", 60));
         ppc2020.adicionarUce(new UnidadeCurricular("EXT0002", "Atividades de Extensao II", 60));
@@ -69,16 +64,14 @@ public class CursoService {
         return repositorio.removerCurso(id);
     }
 
-    // ==== PPC (RF007 + RF008) ====
+    // ==== PPC ====
 
-    /**
-     * Adiciona uma nova versao do PPC ao curso. Desativa a versao anterior
-     * (mas preserva no historico).
-     */
+    // Cria uma nova versao do PPC e a torna vigente. A antiga continua acessivel
+    // pelo historico, com os discentes ja vinculados a ela.
     public boolean cadastrarNovaVersaoPpc(int cursoId, String anoVigencia, int horas, Usuario autor) {
         Curso c = repositorio.findCursoById(cursoId);
         if (c == null || horas <= 0) return false;
-        if (c.buscarPpcPorAno(anoVigencia) != null) return false; // duplicidade
+        if (c.buscarPpcPorAno(anoVigencia) != null) return false;
         Ppc nova = new Ppc(c, anoVigencia, horas, autor);
         c.adicionarVersaoPpc(nova);
         return true;
@@ -99,7 +92,7 @@ public class CursoService {
         return (c != null) ? c.getVersoesPpc() : null;
     }
 
-    // ==== UCE (RF0009) ====
+    // ==== UCE ====
 
     public boolean cadastrarUce(Ppc ppc, String codigo, String nome, int cargaHoraria) {
         if (ppc == null || cargaHoraria <= 0) return false;

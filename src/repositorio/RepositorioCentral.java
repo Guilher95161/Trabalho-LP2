@@ -3,47 +3,44 @@ package repositorio;
 import entidades.*;
 import entidades.enums.StatusSolicitacao;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
+// Persistencia em memoria. Usa LinkedHashMap em vez de ArrayList para que
+// as buscas por chave sejam O(1) e a ordem de cadastro seja preservada.
 public class RepositorioCentral {
 
-    private List<Usuario> usuarios = new ArrayList<>();
-    private List<Oportunidade> oportunidades = new ArrayList<>();
-    private List<SolicitacaoAproveitamento> solicitacoes = new ArrayList<>();
-    private List<GrupoEstudantil> grupos = new ArrayList<>();
-    private List<SolicitacaoGrupoEstudantil> solicitacoesGrupos = new ArrayList<>();
-    private List<Curso> cursos = new ArrayList<>();
-    // Usuários
+    private Map<String,  Usuario>                    usuarios            = new LinkedHashMap<>();
+    private Map<Integer, Oportunidade>               oportunidades       = new LinkedHashMap<>();
+    private Map<Integer, SolicitacaoAproveitamento>  solicitacoes        = new LinkedHashMap<>();
+    private Map<Integer, GrupoEstudantil>            grupos              = new LinkedHashMap<>();
+    private Map<Integer, SolicitacaoGrupoEstudantil> solicitacoesGrupos  = new LinkedHashMap<>();
+    private Map<String,  Curso>                      cursos              = new LinkedHashMap<>();
+
+    // ==== Usuarios ====
 
     public void salvarUsuario(Usuario u) {
-        usuarios.add(u);
+        usuarios.put(u.getEmail(), u);
     }
 
     public List<Usuario> findAllUsuarios() {
-        return new ArrayList<>(usuarios);
+        return new ArrayList<>(usuarios.values());
     }
 
     public Usuario findUsuarioByEmail(String email) {
-        for (Usuario u : usuarios){
-            if (u.getEmail().equals(email)){
-                return u;
-            }
-        }
-        return null;
+        return usuarios.get(email);
     }
 
     public Usuario findUsuarioByEmailESenha(String email, String senha) {
-        for (Usuario u : usuarios){
-            if (u.getEmail().equals(email) && u.getSenha().equals(senha)){
-                return u;
-            }
-        }
+        Usuario u = usuarios.get(email);
+        if (u != null && u.getSenha().equals(senha)) return u;
         return null;
     }
 
     public List<Discente> findAllDiscentes() {
         List<Discente> lista = new ArrayList<>();
-        for (Usuario u : usuarios) {
+        for (Usuario u : usuarios.values()) {
             if (u instanceof Discente) lista.add((Discente) u);
         }
         return lista;
@@ -51,132 +48,109 @@ public class RepositorioCentral {
 
     public List<Docente> findAllDocentes() {
         List<Docente> lista = new ArrayList<>();
-        for (Usuario u : usuarios) {
-            if (u instanceof Docente)
-                lista.add((Docente) u);
+        for (Usuario u : usuarios.values()) {
+            if (u instanceof Docente) lista.add((Docente) u);
         }
         return lista;
     }
 
-    // Oportunidades
+    // ==== Oportunidades ====
 
     public void salvarOportunidade(Oportunidade o) {
-        oportunidades.add(o);
+        oportunidades.put(o.getId(), o);
     }
 
     public List<Oportunidade> findAllOportunidades() {
-        return new ArrayList<>(oportunidades);
+        return new ArrayList<>(oportunidades.values());
     }
 
     public Oportunidade findOportunidadeById(int id) {
-        for (Oportunidade o : oportunidades) {
-            if (o.getId() == id)
-                return o;
-        }
-        return null;
+        return oportunidades.get(id);
     }
 
-    // Solicitações de Aproveitamento
+    // ==== Solicitacoes de Aproveitamento ====
 
     public void salvarSolicitacao(SolicitacaoAproveitamento s) {
-        solicitacoes.add(s);
+        solicitacoes.put(s.getId(), s);
     }
 
     public List<SolicitacaoAproveitamento> findAllSolicitacoes() {
-        return new ArrayList<>(solicitacoes);
+        return new ArrayList<>(solicitacoes.values());
     }
 
     public SolicitacaoAproveitamento findSolicitacaoById(int id) {
-        for(SolicitacaoAproveitamento solicitacao : solicitacoes){
-            if (solicitacao.getId() == id){
-                return solicitacao;
-            }
-        }
-        return null;
+        return solicitacoes.get(id);
     }
 
     public List<SolicitacaoAproveitamento> findSolicitacoesPendentes() {
         List<SolicitacaoAproveitamento> lista = new ArrayList<>();
-        for (SolicitacaoAproveitamento s : solicitacoes) {
-            if (s.getStatus() == StatusSolicitacao.PENDENTE)
-                lista.add(s);
+        for (SolicitacaoAproveitamento s : solicitacoes.values()) {
+            if (s.getStatus() == StatusSolicitacao.PENDENTE) lista.add(s);
         }
         return lista;
     }
 
-    // Grupos Estudantis
+    // ==== Grupos Estudantis ====
 
     public void salvarGrupo(GrupoEstudantil g) {
-        grupos.add(g);
+        grupos.put(g.getId(), g);
     }
 
     public List<GrupoEstudantil> findAllGrupos() {
-        return new ArrayList<>(grupos);
+        return new ArrayList<>(grupos.values());
     }
 
-    public List<GrupoEstudantil> findGrupoByUsuario(Usuario u){
+    public List<GrupoEstudantil> findGrupoByUsuario(Usuario u) {
         List<GrupoEstudantil> lista = new ArrayList<>();
-        for (GrupoEstudantil g : grupos){
-            if(u.equals(g.getResponsavel())){
-                lista.add(g);
-            }
+        for (GrupoEstudantil g : grupos.values()) {
+            if (u.equals(g.getResponsavel())) lista.add(g);
         }
         return lista;
     }
 
     public GrupoEstudantil findGrupoById(int id) {
-        for (GrupoEstudantil g : grupos){
-            if (g.getId() == id){
-                return g;
-            }
-        }
-        return null;
+        return grupos.get(id);
     }
 
+    // ==== Solicitacoes de Grupo ====
+
     public void salvarSolicitacaoGrupo(SolicitacaoGrupoEstudantil s) {
-        solicitacoesGrupos.add(s);
+        solicitacoesGrupos.put(s.getId(), s);
     }
 
     public List<SolicitacaoGrupoEstudantil> findAllSolicitacoesGrupo() {
-        return new ArrayList<>(solicitacoesGrupos);
+        return new ArrayList<>(solicitacoesGrupos.values());
     }
 
     public SolicitacaoGrupoEstudantil findSolicitacaoGrupoById(int id) {
-        for (SolicitacaoGrupoEstudantil solicitacaoGrupo : solicitacoesGrupos) {
-            if (solicitacaoGrupo.getId() == id){
-                return solicitacaoGrupo;
-            }
-        }
-        return null;
+        return solicitacoesGrupos.get(id);
     }
 
-    // Cursos (PPC)
+    // ==== Cursos (PPC) ====
 
     public void salvarCurso(Curso c) {
-        cursos.add(c);
+        cursos.put(c.getCodigo().toUpperCase(), c);
     }
 
     public List<Curso> findAllCursos() {
-        return new ArrayList<>(cursos);
+        return new ArrayList<>(cursos.values());
     }
 
     public Curso findCursoById(int id) {
-        for (Curso c : cursos) {
+        for (Curso c : cursos.values()) {
             if (c.getId() == id) return c;
         }
         return null;
     }
 
     public Curso findCursoByCodigo(String codigo) {
-        for (Curso c : cursos) {
-            if (c.getCodigo().equalsIgnoreCase(codigo)) return c;
-        }
-        return null;
+        if (codigo == null) return null;
+        return cursos.get(codigo.toUpperCase());
     }
 
     public boolean removerCurso(int id) {
         Curso c = findCursoById(id);
         if (c == null) return false;
-        return cursos.remove(c);
+        return cursos.remove(c.getCodigo().toUpperCase()) != null;
     }
 }

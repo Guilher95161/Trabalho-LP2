@@ -4,7 +4,9 @@ import entidades.enums.ModalidadeOportunidade;
 import entidades.enums.StatusOportunidade;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 public class Oportunidade {
     private static int contador = 1;
@@ -19,13 +21,16 @@ public class Oportunidade {
     private Usuario responsavel;
     private StatusOportunidade status;
 
-    // RF009/RF0009 - Unidade Curricular de Extensao
+    // Marcacao opcional como UCE. uceVinculada referencia a UCE concreta de um PPC;
+    // quando nao temos a UCE no sistema, cai no texto livre componenteCurricular.
     private boolean uce;
-    private UnidadeCurricular uceVinculada;  // referencia uma UCE de algum PPC; null se nao for UCE
-    private String componenteCurricular;     // texto livre - usado quando nao ha UCE concreta no PPC
+    private UnidadeCurricular uceVinculada;
+    private String componenteCurricular;
 
-    private List<Discente> filaEspera;
-    private List<Discente> inscritosAprovados;
+    // Set garante unicidade no proprio tipo e da contains O(1).
+    // LinkedHashSet mantem a ordem de chegada (FIFO da fila de espera).
+    private Set<Discente> filaEspera;
+    private Set<Discente> inscritosAprovados;
 
     public Oportunidade(String titulo, String descricao, ModalidadeOportunidade modalidade,
                         String periodoRealizacao, int cargaHoraria, int vagas,
@@ -42,8 +47,8 @@ public class Oportunidade {
         this.uce = false;
         this.uceVinculada = null;
         this.componenteCurricular = null;
-        this.filaEspera = new ArrayList<>();
-        this.inscritosAprovados = new ArrayList<>();
+        this.filaEspera = new LinkedHashSet<>();
+        this.inscritosAprovados = new LinkedHashSet<>();
     }
 
     public int getId()                      { return id; }
@@ -62,14 +67,14 @@ public class Oportunidade {
         return componenteCurricular;
     }
 
-    // RF009 - marca como UCE com texto livre (sem vinculo a um PPC especifico)
+    // Versao texto livre - util quando o PPC ainda nao tem essa UCE cadastrada.
     public void marcarComoUce(String componenteCurricular) {
         this.uce = true;
         this.componenteCurricular = componenteCurricular;
         this.uceVinculada = null;
     }
 
-    // RF0009 - marca como UCE vinculada a uma UCE concreta de um PPC
+    // Versao vinculada a uma UCE concreta de algum PPC.
     public void marcarComoUce(UnidadeCurricular u) {
         this.uce = true;
         this.uceVinculada = u;
@@ -82,11 +87,13 @@ public class Oportunidade {
         this.componenteCurricular = null;
     }
 
+    // Devolvem List (e nao Set) porque varios pontos do menu precisam de .get(idx).
+    // Imutavel para evitar que alguem altere a fila por fora.
     public List<Discente> getFilaEspera() {
-        return Collections.unmodifiableList(filaEspera);
+        return Collections.unmodifiableList(new ArrayList<>(filaEspera));
     }
     public List<Discente> getInscritosAprovados() {
-        return Collections.unmodifiableList(inscritosAprovados);
+        return Collections.unmodifiableList(new ArrayList<>(inscritosAprovados));
     }
 
     public void aprovarProposta() {
@@ -95,8 +102,37 @@ public class Oportunidade {
         }
     }
 
+    // Tira do rascunho. Discente precisa passar pela aprovacao docente;
+    // os demais perfis vao direto para ABERTA.
+    public boolean submeterRascunho() {
+        if (this.status != StatusOportunidade.RASCUNHO) return false;
+        if (this.responsavel instanceof Discente) {
+            this.status = StatusOportunidade.AGUARDANDO_APROVACAO;
+        } else {
+            this.status = StatusOportunidade.ABERTA;
+        }
+        return true;
+    }
+
+    // Edicao so e permitida enquanto o rascunho nao foi submetido.
+    public boolean editarSeRascunho(String titulo, String descricao,
+                                    ModalidadeOportunidade modalidade,
+                                    String periodoRealizacao,
+                                    int cargaHoraria, int vagas) {
+        if (this.status != StatusOportunidade.RASCUNHO) return false;
+        this.titulo = titulo;
+        this.descricao = descricao;
+        this.modalidade = modalidade;
+        this.periodoRealizacao = periodoRealizacao;
+        this.cargaHoraria = cargaHoraria;
+        this.vagas = vagas;
+        return true;
+    }
+
     public void solicitarInscricao(Discente discente) {
-        if (!filaEspera.contains(discente) && !inscritosAprovados.contains(discente)) {
+        // Se o discente ja esta aprovado nao faz sentido voltar para a fila.
+        // Estar duas vezes na fila o Set ja resolve sozinho.
+        if (!inscritosAprovados.contains(discente)) {
             filaEspera.add(discente);
         }
     }
@@ -115,7 +151,8 @@ public class Oportunidade {
         inscritosAprovados.remove(discente);
     }
 
-    // Remove aprovado com justificativa e aprova substituto da fila de espera
+    // Tira um aprovado da lista e promove alguem que estava esperando.
+    // A justificativa fica a cargo de quem chama (gravada no menu).
     public boolean substituirParticipante(Discente aRemover, Discente substituto) {
         if (!inscritosAprovados.contains(aRemover)) return false;
         if (!filaEspera.contains(substituto)) return false;
@@ -132,15 +169,13 @@ public class Oportunidade {
     }
 
     public void encerrar() {
-        // Pode ser encerrada tanto de ABERTA quanto de EM_EXECUCAO
+        // Aceita tanto ABERTA quanto EM_EXECUCAO - as duas representam atividade ainda viva.
         if (this.status == StatusOportunidade.ABERTA || this.status == StatusOportunidade.EM_EXECUCAO) {
             this.status = StatusOportunidade.ENCERRADA;
         }
     }
 
-    /**
-     * RF012 - cancela a oportunidade. So permite enquanto nao foi ENCERRADA.
-     */
+    // Cancelar nao faz sentido se ja terminou ou ja foi cancelada antes.
     public boolean cancelar() {
         if (this.status == StatusOportunidade.ENCERRADA
                 || this.status == StatusOportunidade.CANCELADA) {

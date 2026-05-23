@@ -4,10 +4,16 @@ public class Certificado {
     private String tituloAtividade;
     private int cargaHoraria;
     private String data;
+
+    // True quando ja existe um pedido de aproveitamento pendente/aceito para este certificado.
+    // Evita que o aluno envie o mesmo certificado duas vezes.
     private boolean aproveitamentoSolicitado;
-    private boolean uce;                     // RF009 - se a oportunidade original era UCE
-    private String componenteCurricular;     // codigo + nome (snapshot, mesmo se UCE for editada depois)
-    private UnidadeCurricular uceVinculada;  // RF0009 - referencia opcional a UCE concreta de um PPC
+
+    // Cópia do componente curricular no momento da emissão - se a UCE for editada
+    // depois, o certificado guarda o estado original (snapshot).
+    private boolean uce;
+    private String componenteCurricular;
+    private UnidadeCurricular uceVinculada;
 
     public Certificado(String tituloAtividade, int cargaHoraria, String data) {
         this.tituloAtividade = tituloAtividade;

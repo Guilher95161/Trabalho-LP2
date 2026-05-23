@@ -1,16 +1,14 @@
 package entidades;
 
-/**
- * RF0009 - Unidade Curricular de Extensao (UCE).
- * Cada PPC pode ter sua propria lista de UCEs com cargas horarias especificas.
- */
+// Unidade Curricular de Extensao - cada PPC tem sua propria lista de UCEs,
+// porque a carga horaria pode variar entre versoes do curso.
 public class UnidadeCurricular {
     private static int contador = 1;
 
     private int id;
     private String codigo;       // ex: "EXT0001"
     private String nome;         // ex: "Atividades de Extensao I"
-    private int cargaHoraria;    // horas que essa UCE vale
+    private int cargaHoraria;
 
     public UnidadeCurricular(String codigo, String nome, int cargaHoraria) {
         this.id = contador++;

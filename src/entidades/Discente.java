@@ -6,7 +6,8 @@ import java.util.List;
 public class Discente extends Usuario {
     private int horasCumpridas;
     private List<Certificado> certificados;
-    private Ppc ppc; // RF0009 - vinculo com versao especifica do PPC
+    // Versao especifica do PPC - dois alunos do mesmo curso podem estar em PPCs diferentes.
+    private Ppc ppc;
 
     public Discente(String nome, String matricula, String email, String senha) {
         super(nome, matricula, email, senha, "DISCENTE");
@@ -33,7 +34,7 @@ public class Discente extends Usuario {
         this.ppc = ppc;
     }
 
-    // Helper - retorna o Curso atraves do PPC (compatibilidade com codigo antigo)
+    // Atalho - o curso esta acessivel pelo PPC.
     public Curso getCurso() {
         return (ppc != null) ? ppc.getCurso() : null;
     }

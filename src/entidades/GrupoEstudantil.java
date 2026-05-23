@@ -3,69 +3,82 @@ package entidades;
 import entidades.enums.CargoGrupo;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class GrupoEstudantil {
     private static int contador = 1;
 
     private int id;
     private String nome;
+    private String descricao;
     private Docente responsavel;
-    private List<Discente> membros;
-    private List<CargoGrupo> cargos;
+
+    // Map em vez de duas listas paralelas membros/cargos - mais dificil de quebrar.
+    private Map<Discente, CargoGrupo> membrosECargos;
+
     private List<HistoricoCargo> historicoCargos;
 
-    public GrupoEstudantil(String nome, Docente responsavel) {
+    public GrupoEstudantil(String nome, String descricao, Docente responsavel) {
         this.id = contador++;
         this.nome = nome;
+        this.descricao = descricao;
         this.responsavel = responsavel;
-        this.membros = new ArrayList<>();
-        this.cargos = new ArrayList<>();
+        this.membrosECargos = new LinkedHashMap<>();
         this.historicoCargos = new ArrayList<>();
+    }
+
+    // Usado quando nao se conhece a descricao na hora da criacao.
+    public GrupoEstudantil(String nome, Docente responsavel) {
+        this(nome, "", responsavel);
     }
 
     public int getId()              { return id; }
     public String getNome()         { return nome; }
+    public String getDescricao()    { return descricao; }
     public Docente getResponsavel() { return responsavel; }
-    public List<Discente> getMembros()          { return membros; }
-    public List<CargoGrupo> getCargos()         { return cargos; }
     public List<HistoricoCargo> getHistoricoCargos() { return historicoCargos; }
 
+    public void setDescricao(String descricao) { this.descricao = descricao; }
+
+    public List<Discente> getMembros() {
+        return new ArrayList<>(membrosECargos.keySet());
+    }
+
+    public List<CargoGrupo> getCargos() {
+        return new ArrayList<>(membrosECargos.values());
+    }
+
     public boolean isMembro(Discente d) {
-        return membros.contains(d);
+        return membrosECargos.containsKey(d);
     }
 
     public void adicionarMembro(Discente d) {
-        if (!membros.contains(d)) {
-            membros.add(d);
-            cargos.add(CargoGrupo.MEMBRO);
+        if (!membrosECargos.containsKey(d)) {
+            membrosECargos.put(d, CargoGrupo.MEMBRO);
             historicoCargos.add(new HistoricoCargo(d, CargoGrupo.MEMBRO, hoje()));
         }
     }
 
     public void removerMembro(Discente d) {
-        int idx = membros.indexOf(d);
-        if (idx >= 0) {
+        if (membrosECargos.containsKey(d)) {
             encerrarEntradaAtual(d);
-            membros.remove(idx);
-            cargos.remove(idx);
+            membrosECargos.remove(d);
         }
     }
 
     public void definirCargo(Discente d, CargoGrupo cargo) {
-        int idx = membros.indexOf(d);
-        if (idx >= 0) {
+        if (membrosECargos.containsKey(d)) {
             encerrarEntradaAtual(d);
-            cargos.set(idx, cargo);
+            membrosECargos.put(d, cargo);
             historicoCargos.add(new HistoricoCargo(d, cargo, hoje()));
         }
     }
 
-    // Retorna null se o discente não é membro
+    // Retorna null se o discente nao e membro do grupo.
     public CargoGrupo getCargo(Discente d) {
-        int idx = membros.indexOf(d);
-        if (idx >= 0) return cargos.get(idx);
-        return null;
+        return membrosECargos.get(d);
     }
 
     public List<HistoricoCargo> getHistoricoDeDiscente(Discente d) {
@@ -76,7 +89,7 @@ public class GrupoEstudantil {
         return resultado;
     }
 
-    // Fecha a entrada ainda aberta (dataFim == null) para esse discente
+    // Fecha a entrada aberta (dataFim == null) que ainda existir para esse discente.
     private void encerrarEntradaAtual(Discente d) {
         for (int i = historicoCargos.size() - 1; i >= 0; i--) {
             HistoricoCargo h = historicoCargos.get(i);
@@ -93,6 +106,7 @@ public class GrupoEstudantil {
 
     @Override
     public String toString() {
-        return "[" + id + "] " + nome + " | Resp: " + responsavel.getNome() + " | Membros: " + membros.size();
+        String desc = (descricao != null && !descricao.isEmpty()) ? " | " + descricao : "";
+        return "[" + id + "] " + nome + desc + " | Resp: " + responsavel.getNome() + " | Membros: " + membrosECargos.size();
     }
 }

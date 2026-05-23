@@ -4,25 +4,19 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * RF007/RF008/RF0009 - Versao do Projeto Pedagogico do Curso.
- *
- * Cada Curso pode ter varias versoes (RF008 - historico) e diferentes alunos
- * podem estar vinculados a versoes diferentes (RF0009 - turmas 2020 e 2025).
- *
- * Uma versao define: carga horaria total exigida e lista de UCEs especificas.
- */
+// Uma versao do PPC. Cada curso pode ter varias (turma 2020, turma 2025...)
+// e cada versao traz sua propria carga horaria e suas proprias UCEs.
 public class Ppc {
     private static int contador = 1;
 
     private int id;
-    private Curso curso;                         // a qual curso esta versao pertence
+    private Curso curso;
     private String anoVigencia;                  // ex: "2020", "2025.1"
     private int horasExtensaoNecessarias;
     private LocalDate dataCadastro;
-    private Usuario autorAlteracao;              // quem cadastrou/editou
+    private Usuario autorAlteracao;
     private List<UnidadeCurricular> uces;
-    private boolean ativa;                       // false quando substituida por nova versao
+    private boolean ativa;                       // false quando ja foi substituida por outra versao
 
     public Ppc(Curso curso, String anoVigencia, int horasExtensaoNecessarias,
                Usuario autorAlteracao) {
