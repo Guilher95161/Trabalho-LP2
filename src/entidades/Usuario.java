@@ -5,7 +5,7 @@ public abstract class Usuario {
     private String matricula;
     private String email;
     private String senha;
-    private String tipo; // "DISCENTE", "DOCENTE", "GESTOR", "ADMINISTRADOR"
+    private String tipo; // "DISCENTE", "DOCENTE", "COORDENADOR", "COMISSAO", "ADMINISTRADOR"
     private boolean ativo;
 
     public Usuario(String nome, String matricula, String email, String senha, String tipo) {

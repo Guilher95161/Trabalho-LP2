@@ -1,6 +1,7 @@
 package repositorio;
 
 import entidades.*;
+import entidades.enums.StatusSolicitacao;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -96,7 +97,7 @@ public class RepositorioCentral {
     public List<SolicitacaoAproveitamento> findSolicitacoesPendentes() {
         List<SolicitacaoAproveitamento> lista = new ArrayList<>();
         for (SolicitacaoAproveitamento s : solicitacoes) {
-            if ("PENDENTE".equals(s.getStatus()))
+            if (s.getStatus() == StatusSolicitacao.PENDENTE)
                 lista.add(s);
         }
         return lista;

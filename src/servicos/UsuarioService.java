@@ -22,7 +22,8 @@ public class UsuarioService {
         repositorio.salvarUsuario(new Administrador("Administrador", "0000", "admin@ufma.br", "admin123"));
         repositorio.salvarUsuario(new Discente("João",   "0001", "aluno1@ufma.br", "aluno123"));
         repositorio.salvarUsuario(new Discente("Maria",  "0002", "aluno2@ufma.br", "aluno123"));
-        repositorio.salvarUsuario(new Gestor("Josefina", "0003", "coord1@ufma.br", "coord123"));
+        repositorio.salvarUsuario(new Coordenador("Josefina", "0003", "coord1@ufma.br", "coord123"));
+        repositorio.salvarUsuario(new Comissao("Carlos", "0005", "comissao1@ufma.br", "com123"));
         repositorio.salvarUsuario(new Docente("Josélio", "0004", "doc@ufma.br",    "doc123"));
     }
 

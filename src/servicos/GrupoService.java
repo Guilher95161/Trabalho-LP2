@@ -1,8 +1,10 @@
 package servicos;
 
+import entidades.Discente;
 import entidades.GrupoEstudantil;
 import entidades.SolicitacaoGrupoEstudantil;
 import entidades.Usuario;
+import entidades.enums.CargoGrupo;
 import entidades.enums.StatusSolicitacao;
 import repositorio.RepositorioCentral;
 
@@ -38,7 +40,7 @@ public class GrupoService {
                 solicitacao.aprovar();
                 GrupoEstudantil novoGrupo = new GrupoEstudantil(solicitacao.getNomeGrupo(),solicitacao.getDocenteResponsavel());
                 novoGrupo.adicionarMembro(solicitacao.getSolicitante());
-                novoGrupo.definirCargo(solicitacao.getSolicitante(), "PRESIDENTE/FUNDADOR");
+                novoGrupo.definirCargo(solicitacao.getSolicitante(), CargoGrupo.PRESIDENTE);
                 criarGrupo(novoGrupo);
             }else{
                 solicitacao.reprovar();
@@ -60,5 +62,13 @@ public class GrupoService {
 
     public GrupoEstudantil buscarPorId(int id) {
         return repositorio.findGrupoById(id);
+    }
+
+    public boolean isLider(Discente d) {
+        for (GrupoEstudantil g : repositorio.findAllGrupos()) {
+            CargoGrupo cargo = g.getCargo(d);
+            if (cargo != null && cargo != CargoGrupo.MEMBRO) return true;
+        }
+        return false;
     }
 }
