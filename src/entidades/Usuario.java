@@ -62,4 +62,18 @@ public abstract class Usuario {
         String status = ativo ? "ATIVO" : "INATIVO";
         return "[" + tipo + " - " + status + "] " + nome + " (" + email + ")";
     }
+
+    // Email e a chave unica de um usuario no sistema; equals/hashCode usam ele
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Usuario)) return false;
+        Usuario outro = (Usuario) o;
+        return email != null && email.equals(outro.email);
+    }
+
+    @Override
+    public int hashCode() {
+        return (email == null) ? 0 : email.hashCode();
+    }
 }

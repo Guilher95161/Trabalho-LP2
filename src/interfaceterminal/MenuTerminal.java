@@ -6,6 +6,7 @@ import entidades.enums.ModalidadeOportunidade;
 import entidades.enums.StatusOportunidade;
 import entidades.enums.StatusSolicitacao;
 import servicos.AproveitamentoService;
+import servicos.CursoService;
 import servicos.GrupoService;
 import servicos.OportunidadeService;
 import servicos.UsuarioService;
@@ -20,13 +21,22 @@ public class MenuTerminal {
     private final OportunidadeService oportunidadeService;
     private final AproveitamentoService aproveitamentoService;
     private final GrupoService grupoService;
+    private final CursoService cursoService;
     private final Scanner sc;
 
-    public MenuTerminal(UsuarioService usuarioService, OportunidadeService oportunidadeService, AproveitamentoService aproveitamentoService, GrupoService grupoService) {
+    // Usuario atualmente logado - usado para registrar autor de alteracoes (RF008)
+    private Usuario usuarioLogadoAtual = null;
+
+    public MenuTerminal(UsuarioService usuarioService,
+                        OportunidadeService oportunidadeService,
+                        AproveitamentoService aproveitamentoService,
+                        GrupoService grupoService,
+                        CursoService cursoService) {
         this.usuarioService = usuarioService;
         this.oportunidadeService = oportunidadeService;
         this.aproveitamentoService = aproveitamentoService;
         this.grupoService = grupoService;
+        this.cursoService = cursoService;
         this.sc = new Scanner(System.in);
     }
 
@@ -74,6 +84,7 @@ public class MenuTerminal {
             return;
         }
 
+        usuarioLogadoAtual = u;
         System.out.println("Bem-vindo, " + u.getNome() + "!");
 
         switch (u.getTipo()) {
@@ -96,6 +107,7 @@ public class MenuTerminal {
                 System.out.println("Tipo de usuario desconhecido.");
                 break;
         }
+        usuarioLogadoAtual = null;
     }
 
     private void autoCadastrar(){
@@ -108,14 +120,68 @@ public class MenuTerminal {
         System.out.print("Senha: ");
         String senha = sc.nextLine().trim();
 
-        Usuario novo;
-        novo = new Discente(nome, matricula, email, senha);
+        Ppc ppc = selecionarPpc();
+        // Permite cadastro sem PPC vinculado; o painel cai no fallback padrao
+
+        Discente novo = new Discente(nome, matricula, email, senha, ppc);
 
         boolean ok = usuarioService.cadastrarUsuario(novo);
         if (ok)
             System.out.println("Cadastro realizado com sucesso!");
         else
             System.out.println("Email já cadastrado.");
+    }
+
+    /**
+     * RF0009 - seleciona um PPC especifico para o discente, suportando turmas
+     * de PPCs diferentes (ex: 2020 e 2025) coexistindo no sistema.
+     */
+    private Ppc selecionarPpc() {
+        List<Curso> cursos = cursoService.listarTodos();
+        if (cursos.isEmpty()) {
+            System.out.println("(Nenhum curso cadastrado - cadastro seguira sem PPC vinculado)");
+            return null;
+        }
+        System.out.println("Selecione o curso:");
+        for (int i = 0; i < cursos.size(); i++) {
+            System.out.println("[" + i + "] " + cursos.get(i));
+        }
+        System.out.println("[-1] Nao selecionar agora");
+        System.out.print("Opcao: ");
+        String entrada = sc.nextLine().trim();
+        Curso curso;
+        try {
+            int idx = Integer.parseInt(entrada);
+            if (idx == -1) return null;
+            curso = cursoService.buscarPorIndice(idx);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+        if (curso == null) return null;
+
+        List<Ppc> versoes = curso.getVersoesPpc();
+        if (versoes.isEmpty()) {
+            System.out.println("(Curso sem PPC cadastrado)");
+            return null;
+        }
+        if (versoes.size() == 1) {
+            return versoes.get(0); // unica opcao - vincula direto
+        }
+        System.out.println("Selecione a versao do PPC:");
+        for (int i = 0; i < versoes.size(); i++) {
+            Ppc p = versoes.get(i);
+            String tag = p.isAtiva() ? " (VIGENTE)" : " (HISTORICA)";
+            System.out.println("[" + i + "] " + p.getAnoVigencia() + " - " +
+                               p.getHorasExtensaoNecessarias() + "h" + tag);
+        }
+        System.out.print("Opcao: ");
+        try {
+            int idxPpc = Integer.parseInt(sc.nextLine().trim());
+            if (idxPpc >= 0 && idxPpc < versoes.size()) return versoes.get(idxPpc);
+        } catch (NumberFormatException e) {
+            // ignora
+        }
+        return null;
     }
 
     private void cadastrarUsuario() {
@@ -135,7 +201,8 @@ public class MenuTerminal {
 
         switch (tipo) {
             case "1":
-                novo = new Discente(nome, matricula, email, senha);
+                Ppc ppc = selecionarPpc();
+                novo = new Discente(nome, matricula, email, senha, ppc);
                 break;
             case "2":
                 novo = new Docente(nome, matricula, email, senha);
@@ -236,13 +303,15 @@ public class MenuTerminal {
             System.out.println("[1] Criar oportunidade");
             System.out.println("[2] Ver oportunidades");
             System.out.println("[3] Aprovar propostas de oportunidades de discentes");
-            System.out.println("[4] Encerrar oportunidade");
-            System.out.println("[5] Ver grupos");
-            System.out.println("[6] Ver membros de grupo");
-            System.out.println("[7] Gerenciar membros de grupo");
-            System.out.println("[8] Ver historico de cargos de um grupo");
-            System.out.println("[9] Avaliar inscricoes pendentes em minhas oportunidades");
-            System.out.println("[10] Substituir participante");
+            System.out.println("[4] Iniciar execucao de oportunidade");
+            System.out.println("[5] Encerrar oportunidade");
+            System.out.println("[6] Cancelar oportunidade");
+            System.out.println("[7] Ver grupos");
+            System.out.println("[8] Ver membros de grupo");
+            System.out.println("[9] Gerenciar membros de grupo");
+            System.out.println("[10] Ver historico de cargos de um grupo");
+            System.out.println("[11] Avaliar inscricoes pendentes em minhas oportunidades");
+            System.out.println("[12] Substituir participante");
             System.out.println("[0] Sair");
             System.out.print("Opcao: ");
 
@@ -259,24 +328,30 @@ public class MenuTerminal {
                     aprovarOportunidadesPendentes();
                     break;
                 case "4":
-                    encerrarOportunidade();
+                    iniciarExecucaoOportunidade();
                     break;
                 case "5":
-                    listarGrupos();
+                    encerrarOportunidade();
                     break;
                 case "6":
-                    listarGrupo();
+                    cancelarOportunidade(doc);
                     break;
                 case "7":
-                    gerenciarGrupo(doc);
+                    listarGrupos();
                     break;
                 case "8":
-                    verHistoricoCargos();
+                    listarGrupo();
                     break;
                 case "9":
-                    avaliarInscricoesOportunidade(doc);
+                    gerenciarGrupo(doc);
                     break;
                 case "10":
+                    verHistoricoCargos();
+                    break;
+                case "11":
+                    avaliarInscricoesOportunidade(doc);
+                    break;
+                case "12":
                     substituirParticipante(doc);
                     break;
                 case "0":
@@ -297,6 +372,7 @@ public class MenuTerminal {
             System.out.println("[4] Avaliar solicitacoes de criacao de grupos");
             System.out.println("[5] Criar Grupo Estudantil");
             System.out.println("[6] Ver grupos");
+            System.out.println("[7] Gerenciar Cursos (PPC)");
             System.out.println("[0] Sair");
             System.out.print("Opcao: ");
 
@@ -320,6 +396,9 @@ public class MenuTerminal {
                     break;
                 case "6":
                     listarGrupos();
+                    break;
+                case "7":
+                    menuGerenciarCursos();
                     break;
                 case "0":
                     return;
@@ -366,15 +445,18 @@ public class MenuTerminal {
             System.out.println("[05] Criar oportunidade");
             System.out.println("[06] Ver oportunidades");
             System.out.println("[07] Aprovar propostas de oportunidades de discentes");
-            System.out.println("[08] Encerrar oportunidade");
-            System.out.println("[09] Ver solicitacoes pendentes de aproveitamento");
-            System.out.println("[10] Avaliar solicitacao de aproveitamento");
-            System.out.println("[11] Criar grupo estudantil");
-            System.out.println("[12] Ver grupos");
-            System.out.println("[13] Ver grupo");
-            System.out.println("[14] Gerenciar membros de grupo");
-            System.out.println("[15] Ver historico de cargos de um grupo");
-            System.out.println("[16] Substituir participante em oportunidade");
+            System.out.println("[08] Iniciar execucao de oportunidade");
+            System.out.println("[09] Encerrar oportunidade");
+            System.out.println("[10] Cancelar oportunidade");
+            System.out.println("[11] Ver solicitacoes pendentes de aproveitamento");
+            System.out.println("[12] Avaliar solicitacao de aproveitamento");
+            System.out.println("[13] Criar grupo estudantil");
+            System.out.println("[14] Ver grupos");
+            System.out.println("[15] Ver grupo");
+            System.out.println("[16] Gerenciar membros de grupo");
+            System.out.println("[17] Ver historico de cargos de um grupo");
+            System.out.println("[18] Substituir participante em oportunidade");
+            System.out.println("[19] Gerenciar Cursos (PPC)");
             System.out.println("[0]  Sair");
             System.out.print("Opcao: ");
 
@@ -403,31 +485,40 @@ public class MenuTerminal {
                     aprovarOportunidadesPendentes();
                     break;
                 case "8":
-                    encerrarOportunidade();
+                    iniciarExecucaoOportunidade();
                     break;
                 case "9":
-                    listarSolicitacoesPendentes();
+                    encerrarOportunidade();
                     break;
                 case "10":
-                    avaliarSolicitacao();
+                    cancelarOportunidade(a);
                     break;
                 case "11":
-                    criarGrupo();
+                    listarSolicitacoesPendentes();
                     break;
                 case "12":
-                    listarGrupos();
+                    avaliarSolicitacao();
                     break;
                 case "13":
-                    listarGrupo();
+                    criarGrupo();
                     break;
                 case "14":
-                    gerenciarGrupo(a);
+                    listarGrupos();
                     break;
                 case "15":
-                    verHistoricoCargos();
+                    listarGrupo();
                     break;
                 case "16":
+                    gerenciarGrupo(a);
+                    break;
+                case "17":
+                    verHistoricoCargos();
+                    break;
+                case "18":
                     substituirParticipante(a);
+                    break;
+                case "19":
+                    menuGerenciarCursos();
                     break;
                 case "0":
                     return;
@@ -520,12 +611,69 @@ public class MenuTerminal {
         System.out.print("Vagas: ");
         int vagas = lerInt();
 
-        oportunidadeService.criarOportunidade(
-            new Oportunidade(titulo, descricao, modalidade, periodo, ch, vagas, responsavel, status)
-        );
+        Oportunidade nova = new Oportunidade(titulo, descricao, modalidade, periodo, ch, vagas, responsavel, status);
+
+        // RF009/RF0009 - opcionalmente vincular como UCE (somente quando criada por Docente/Coordenador/Admin)
+        if (!(responsavel instanceof Discente)) {
+            System.out.print("Esta oportunidade e uma UCE (Unidade Curricular de Extensao)? (s/n): ");
+            String resp = sc.nextLine().trim().toLowerCase();
+            if (resp.equals("s")) {
+                System.out.println("[1] Vincular a uma UCE concreta de um PPC (recomendado)");
+                System.out.println("[2] Apenas indicar componente curricular como texto livre");
+                System.out.print("Opcao: ");
+                String tipoUce = sc.nextLine().trim();
+                if (tipoUce.equals("1")) {
+                    UnidadeCurricular u = selecionarUceDePpc();
+                    if (u != null) nova.marcarComoUce(u);
+                } else if (tipoUce.equals("2")) {
+                    System.out.print("Codigo/nome do componente curricular: ");
+                    String cc = sc.nextLine().trim();
+                    if (!cc.isEmpty()) nova.marcarComoUce(cc);
+                }
+            }
+        }
+
+        oportunidadeService.criarOportunidade(nova);
         if (status == StatusOportunidade.ABERTA) {
             System.out.println("Oportunidade aberta com sucesso!");
         }
+    }
+
+    // RF0009 - escolhe uma UCE concreta de algum PPC do sistema
+    private UnidadeCurricular selecionarUceDePpc() {
+        List<Curso> cursos = cursoService.listarTodos();
+        if (cursos.isEmpty()) { System.out.println("Nenhum curso cadastrado."); return null; }
+        System.out.println("Selecione o curso:");
+        for (int i = 0; i < cursos.size(); i++) {
+            System.out.println("[" + i + "] " + cursos.get(i));
+        }
+        System.out.print("Opcao: ");
+        int idxCurso = lerInt();
+        Curso c = cursoService.buscarPorIndice(idxCurso);
+        if (c == null) return null;
+
+        List<Ppc> versoes = c.getVersoesPpc();
+        if (versoes.isEmpty()) { System.out.println("Curso sem PPC."); return null; }
+        System.out.println("Selecione o PPC:");
+        for (int i = 0; i < versoes.size(); i++) {
+            System.out.println("[" + i + "] " + versoes.get(i).getAnoVigencia()
+                              + (versoes.get(i).isAtiva() ? " (vigente)" : " (historica)"));
+        }
+        System.out.print("Opcao: ");
+        int idxPpc = lerInt();
+        if (idxPpc < 0 || idxPpc >= versoes.size()) return null;
+        Ppc ppc = versoes.get(idxPpc);
+
+        List<UnidadeCurricular> uces = ppc.getUces();
+        if (uces.isEmpty()) { System.out.println("PPC sem UCEs."); return null; }
+        System.out.println("Selecione a UCE:");
+        for (int i = 0; i < uces.size(); i++) {
+            System.out.println("[" + i + "] " + uces.get(i));
+        }
+        System.out.print("Opcao: ");
+        int idxUce = lerInt();
+        if (idxUce >= 0 && idxUce < uces.size()) return uces.get(idxUce);
+        return null;
     }
 
     private void criarOportunidadeAdmin() {
@@ -590,6 +738,48 @@ public class MenuTerminal {
             System.out.println("Indice invalido");
         }
 
+    }
+
+    private void iniciarExecucaoOportunidade() {
+        listarOportunidades();
+        System.out.print("ID da oportunidade a iniciar execucao: ");
+        int id = lerInt();
+        boolean ok = oportunidadeService.iniciarExecucao(id);
+        if (ok)
+            System.out.println("Oportunidade marcada como EM_EXECUCAO.");
+        else
+            System.out.println("Nao foi possivel iniciar execucao (oportunidade inexistente ou nao esta ABERTA).");
+    }
+
+    /**
+     * RF012 - cancela uma oportunidade. So permite enquanto nao foi encerrada/cancelada.
+     * Pede motivo obrigatorio para registro.
+     */
+    private void cancelarOportunidade(Usuario solicitante) {
+        listarOportunidades();
+        System.out.print("ID da oportunidade a cancelar: ");
+        int id = lerInt();
+        Oportunidade op = oportunidadeService.buscarPorId(id);
+        if (op == null) {
+            System.out.println("Oportunidade nao encontrada.");
+            return;
+        }
+        if (!(solicitante instanceof Administrador) && !op.getResponsavel().equals(solicitante)) {
+            System.out.println("Voce nao e o responsavel por esta oportunidade.");
+            return;
+        }
+        String motivo;
+        while (true) {
+            System.out.print("Motivo do cancelamento (obrigatorio): ");
+            motivo = sc.nextLine().trim();
+            if (!motivo.isEmpty()) break;
+            System.out.println("Motivo nao pode ser vazio.");
+        }
+        boolean ok = oportunidadeService.cancelarOportunidade(id);
+        if (ok)
+            System.out.println("Oportunidade cancelada. Motivo registrado: " + motivo);
+        else
+            System.out.println("Nao foi possivel cancelar (ja encerrada ou ja cancelada).");
     }
 
     private void encerrarOportunidade() {
@@ -750,8 +940,16 @@ public class MenuTerminal {
                 if (s.getParecer().isEmpty())
                     parecerInfo = "";
                 else
-                    parecerInfo = "| Parecer: " + s.getParecer();
-                System.out.println(s + parecerInfo);
+                    parecerInfo = " | Parecer: " + s.getParecer();
+                String prazoInfo = "";
+                if (s.getStatus() == StatusSolicitacao.INDEFERIDA) {
+                    if (s.podeReenviar()) {
+                        prazoInfo = " | Reenvio restante: " + s.diasRestantesReenvio() + " dia(s)";
+                    } else {
+                        prazoInfo = " | Prazo de reenvio expirado";
+                    }
+                }
+                System.out.println(s + parecerInfo + prazoInfo);
                 encontrou = true;
             }
         }
@@ -775,9 +973,15 @@ public class MenuTerminal {
             System.out.println("Apenas solicitacoes INDEFERIDAS podem ser reenviadas.");
             return;
         }
+        if (!s.podeReenviar()) {
+            System.out.println("Prazo de " + SolicitacaoAproveitamento.PRAZO_REENVIO_DIAS +
+                               " dias para reenvio expirado. Abra uma nova solicitacao.");
+            return;
+        }
 
         s.reenviar();
         System.out.println("Solicitacao reenviada com o mesmo certificado: " + s.getCertificado().getTituloAtividade());
+        System.out.println("Dias restantes desde indeferimento: " + s.diasRestantesReenvio());
     }
 
     private void verCertificados(Discente d) {
@@ -848,15 +1052,7 @@ public class MenuTerminal {
             return;
         }
 
-        System.out.println("[1] Deferir  [2] Indeferir");
-        System.out.print("Opcao: ");
-        String op = sc.nextLine().trim();
-
-        System.out.print("Parecer: ");
-        String parecer = sc.nextLine().trim();
-
-        aproveitamentoService.avaliarSolicitacao(s, op.equals("1"), parecer);
-        System.out.println("Solicitacao avaliada: " + s.getStatus());
+        coletarDecisaoEAvaliar(s);
     }
 
     private void avaliarSolicitacao() {
@@ -870,14 +1066,38 @@ public class MenuTerminal {
             return;
         }
 
+        coletarDecisaoEAvaliar(s);
+    }
+
+    /**
+     * RF021 - coleta decisao + parecer. Parecer e obrigatorio em caso de indeferimento.
+     */
+    private void coletarDecisaoEAvaliar(SolicitacaoAproveitamento s) {
         System.out.println("[1] Deferir  [2] Indeferir");
         System.out.print("Opcao: ");
         String op = sc.nextLine().trim();
 
-        System.out.print("Parecer: ");
-        String parecer = sc.nextLine().trim();
+        if (!op.equals("1") && !op.equals("2")) {
+            System.out.println("Opcao invalida. Avaliacao cancelada.");
+            return;
+        }
+        boolean aprovar = op.equals("1");
 
-        aproveitamentoService.avaliarSolicitacao(s, op.equals("1"), parecer);
+        String parecer;
+        if (aprovar) {
+            System.out.print("Parecer (opcional): ");
+            parecer = sc.nextLine().trim();
+        } else {
+            // RF021 - parecer obrigatorio em caso de reprovacao
+            while (true) {
+                System.out.print("Parecer (OBRIGATORIO para indeferimento): ");
+                parecer = sc.nextLine().trim();
+                if (!parecer.isEmpty()) break;
+                System.out.println("Parecer nao pode ser vazio em caso de indeferimento.");
+            }
+        }
+
+        aproveitamentoService.avaliarSolicitacao(s, aprovar, parecer);
         System.out.println("Solicitacao avaliada: " + s.getStatus());
     }
 
@@ -1100,17 +1320,26 @@ public class MenuTerminal {
     }
 
     private void exibirPainelProgresso(Discente d) {
-        final int TOTAL_NECESSARIO = 310;
+        Ppc ppc = d.getPpc();
+        int totalNecessario = (ppc != null) ? ppc.getHorasExtensaoNecessarias() : CursoService.CARGA_PADRAO;
         int concluidas = d.getHorasCumpridas();
+        int horasUce   = oportunidadeService.calcularHorasUceConcluidas(d);
         int pendentes  = oportunidadeService.calcularHorasPendentes(d);
 
         System.out.println("\n========== PAINEL DE PROGRESSO ==========");
-        System.out.println("Horas concluidas : " + concluidas + "h");
-        System.out.println("Horas pendentes  : " + pendentes  + "h  (inscrito e aprovado, oportunidade ainda aberta)");
-        System.out.println("Total necessario : " + TOTAL_NECESSARIO + "h");
+        if (ppc != null) {
+            System.out.println("Curso            : " + ppc.getCurso().getCodigo() + " - " + ppc.getCurso().getNome());
+            System.out.println("PPC vigente p/voce : " + ppc.getAnoVigencia()
+                              + (ppc.isAtiva() ? " (vigente)" : " (historica)"));
+        } else {
+            System.out.println("PPC              : (nao vinculado - usando carga padrao)");
+        }
+        System.out.println("Horas concluidas : " + concluidas + "h  (sendo " + horasUce + "h de UCE)");
+        System.out.println("Horas pendentes  : " + pendentes  + "h  (inscrito e aprovado, oportunidade ainda em andamento)");
+        System.out.println("Total necessario : " + totalNecessario + "h");
         System.out.println();
         System.out.print("Progresso: ");
-        exibirBarraProgresso(concluidas, TOTAL_NECESSARIO);
+        exibirBarraProgresso(concluidas, totalNecessario);
 
         System.out.println("\n-- Meus Certificados --");
         if (d.getCertificados().isEmpty()) {
@@ -1174,6 +1403,179 @@ public class MenuTerminal {
         System.out.println("-- Usuarios Cadastrados --");
         for (Usuario u : lista) {
             System.out.println(u);
+        }
+    }
+
+    // RF007/RF008/RF0009 - Gerenciamento de Cursos, PPCs e UCEs
+    private void menuGerenciarCursos() {
+        while (true) {
+            System.out.println("\n--- GERENCIAR CURSOS / PPCs / UCEs ---");
+            System.out.println("[1] Listar cursos");
+            System.out.println("[2] Cadastrar curso");
+            System.out.println("[3] Editar nome de curso");
+            System.out.println("[4] Remover curso");
+            System.out.println("[5] Cadastrar nova versao de PPC (RF008)");
+            System.out.println("[6] Ver historico de PPCs de um curso");
+            System.out.println("[7] Gerenciar UCEs de um PPC (RF0009)");
+            System.out.println("[0] Voltar");
+            System.out.print("Opcao: ");
+
+            String op = lerOpcao();
+            switch (op) {
+                case "1": listarCursos(); break;
+                case "2": cadastrarCurso(); break;
+                case "3": editarNomeCurso(); break;
+                case "4": removerCurso(); break;
+                case "5": cadastrarNovaVersaoPpc(); break;
+                case "6": verHistoricoPpc(); break;
+                case "7": menuGerenciarUces(); break;
+                case "0": return;
+                default: System.out.println("Opcao invalida.");
+            }
+        }
+    }
+
+    private void listarCursos() {
+        List<Curso> cursos = cursoService.listarTodos();
+        if (cursos.isEmpty()) {
+            System.out.println("Nenhum curso cadastrado.");
+            return;
+        }
+        System.out.println("-- Cursos --");
+        for (Curso c : cursos) System.out.println(c);
+    }
+
+    private void cadastrarCurso() {
+        System.out.print("Codigo do curso (ex: CC, MAT, FIS): ");
+        String codigo = sc.nextLine().trim();
+        System.out.print("Nome do curso: ");
+        String nome = sc.nextLine().trim();
+
+        boolean ok = cursoService.cadastrarCurso(new Curso(codigo, nome));
+        if (ok) {
+            System.out.println("Curso cadastrado com sucesso! Cadastre agora a primeira versao do PPC dele em [5].");
+        } else {
+            System.out.println("Codigo de curso ja existente.");
+        }
+    }
+
+    private void editarNomeCurso() {
+        listarCursos();
+        System.out.print("ID do curso: ");
+        int id = lerInt();
+        System.out.print("Novo nome: ");
+        String nome = sc.nextLine().trim();
+        boolean ok = cursoService.atualizarNome(id, nome);
+        System.out.println(ok ? "Nome atualizado." : "Curso nao encontrado ou nome invalido.");
+    }
+
+    private void removerCurso() {
+        listarCursos();
+        System.out.print("ID do curso a remover: ");
+        int id = lerInt();
+        boolean ok = cursoService.removerCurso(id);
+        System.out.println(ok ? "Curso removido." : "Curso nao encontrado.");
+    }
+
+    // RF008 - Nova versao do PPC. Quem cadastra fica registrado como autor.
+    private void cadastrarNovaVersaoPpc() {
+        listarCursos();
+        System.out.print("ID do curso: ");
+        int idCurso = lerInt();
+        Curso c = cursoService.buscarPorId(idCurso);
+        if (c == null) { System.out.println("Curso nao encontrado."); return; }
+
+        System.out.print("Ano/versao do PPC (ex: 2025.1): ");
+        String ano = sc.nextLine().trim();
+        System.out.print("Carga horaria de extensao exigida (horas): ");
+        int horas = lerIntMaiorQueZero();
+
+        // Autor da alteracao = usuario logado (capturado em iniciar - aqui usamos null
+        // se nao foi possivel, mas o ideal e propagar a referencia)
+        Usuario autor = usuarioLogadoAtual;
+        boolean ok = cursoService.cadastrarNovaVersaoPpc(idCurso, ano, horas, autor);
+        if (ok) System.out.println("Nova versao do PPC cadastrada e marcada como vigente.");
+        else    System.out.println("Falha: ano ja existe ou dados invalidos.");
+    }
+
+    // RF008 - Historico completo de PPCs de um curso
+    private void verHistoricoPpc() {
+        listarCursos();
+        System.out.print("ID do curso: ");
+        int idCurso = lerInt();
+        Curso c = cursoService.buscarPorId(idCurso);
+        if (c == null) { System.out.println("Curso nao encontrado."); return; }
+
+        List<Ppc> versoes = c.getVersoesPpc();
+        if (versoes.isEmpty()) {
+            System.out.println("Nenhum PPC cadastrado para este curso.");
+            return;
+        }
+        System.out.println("-- Historico de PPCs de " + c.getCodigo() + " --");
+        for (Ppc p : versoes) System.out.println(p);
+    }
+
+    // RF0009 - UCEs de um PPC especifico
+    private void menuGerenciarUces() {
+        listarCursos();
+        System.out.print("ID do curso: ");
+        int idCurso = lerInt();
+        Curso c = cursoService.buscarPorId(idCurso);
+        if (c == null) { System.out.println("Curso nao encontrado."); return; }
+
+        List<Ppc> versoes = c.getVersoesPpc();
+        if (versoes.isEmpty()) { System.out.println("Curso sem PPC."); return; }
+
+        System.out.println("-- Versoes do PPC --");
+        for (int i = 0; i < versoes.size(); i++) {
+            System.out.println("[" + i + "] " + versoes.get(i));
+        }
+        System.out.print("Selecione a versao do PPC: ");
+        int idxPpc = lerInt();
+        if (idxPpc < 0 || idxPpc >= versoes.size()) {
+            System.out.println("Versao invalida.");
+            return;
+        }
+        Ppc ppc = versoes.get(idxPpc);
+
+        while (true) {
+            System.out.println("\n--- UCEs DO PPC " + ppc.getCurso().getCodigo() + "/" + ppc.getAnoVigencia() + " ---");
+            System.out.println("[1] Listar UCEs");
+            System.out.println("[2] Cadastrar UCE");
+            System.out.println("[3] Remover UCE");
+            System.out.println("[0] Voltar");
+            System.out.print("Opcao: ");
+
+            String op = lerOpcao();
+            switch (op) {
+                case "1":
+                    if (ppc.getUces().isEmpty()) {
+                        System.out.println("Nenhuma UCE cadastrada.");
+                    } else {
+                        for (UnidadeCurricular u : ppc.getUces()) System.out.println(u);
+                    }
+                    break;
+                case "2":
+                    System.out.print("Codigo (ex: EXT0001): ");
+                    String cod = sc.nextLine().trim();
+                    System.out.print("Nome: ");
+                    String nome = sc.nextLine().trim();
+                    System.out.print("Carga horaria: ");
+                    int ch = lerIntMaiorQueZero();
+                    boolean ok = cursoService.cadastrarUce(ppc, cod, nome, ch);
+                    System.out.println(ok ? "UCE cadastrada." : "Codigo duplicado ou dados invalidos.");
+                    break;
+                case "3":
+                    System.out.print("Codigo da UCE a remover: ");
+                    String codRm = sc.nextLine().trim();
+                    boolean removida = cursoService.removerUce(ppc, codRm);
+                    System.out.println(removida ? "UCE removida." : "UCE nao encontrada.");
+                    break;
+                case "0":
+                    return;
+                default:
+                    System.out.println("Opcao invalida.");
+            }
         }
     }
 

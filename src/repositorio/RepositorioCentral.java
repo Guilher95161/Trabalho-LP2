@@ -12,6 +12,7 @@ public class RepositorioCentral {
     private List<SolicitacaoAproveitamento> solicitacoes = new ArrayList<>();
     private List<GrupoEstudantil> grupos = new ArrayList<>();
     private List<SolicitacaoGrupoEstudantil> solicitacoesGrupos = new ArrayList<>();
+    private List<Curso> cursos = new ArrayList<>();
     // Usuários
 
     public void salvarUsuario(Usuario u) {
@@ -147,5 +148,35 @@ public class RepositorioCentral {
             }
         }
         return null;
+    }
+
+    // Cursos (PPC)
+
+    public void salvarCurso(Curso c) {
+        cursos.add(c);
+    }
+
+    public List<Curso> findAllCursos() {
+        return new ArrayList<>(cursos);
+    }
+
+    public Curso findCursoById(int id) {
+        for (Curso c : cursos) {
+            if (c.getId() == id) return c;
+        }
+        return null;
+    }
+
+    public Curso findCursoByCodigo(String codigo) {
+        for (Curso c : cursos) {
+            if (c.getCodigo().equalsIgnoreCase(codigo)) return c;
+        }
+        return null;
+    }
+
+    public boolean removerCurso(int id) {
+        Curso c = findCursoById(id);
+        if (c == null) return false;
+        return cursos.remove(c);
     }
 }

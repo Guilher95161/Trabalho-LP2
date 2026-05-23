@@ -19,6 +19,11 @@ public class Oportunidade {
     private Usuario responsavel;
     private StatusOportunidade status;
 
+    // RF009/RF0009 - Unidade Curricular de Extensao
+    private boolean uce;
+    private UnidadeCurricular uceVinculada;  // referencia uma UCE de algum PPC; null se nao for UCE
+    private String componenteCurricular;     // texto livre - usado quando nao ha UCE concreta no PPC
+
     private List<Discente> filaEspera;
     private List<Discente> inscritosAprovados;
 
@@ -34,6 +39,9 @@ public class Oportunidade {
         this.vagas = vagas;
         this.responsavel = responsavel;
         this.status = status;
+        this.uce = false;
+        this.uceVinculada = null;
+        this.componenteCurricular = null;
         this.filaEspera = new ArrayList<>();
         this.inscritosAprovados = new ArrayList<>();
     }
@@ -47,6 +55,32 @@ public class Oportunidade {
     public int getVagas()                   { return vagas; }
     public Usuario getResponsavel()         { return responsavel; }
     public StatusOportunidade getStatus()   { return status; }
+    public boolean isUce()                  { return uce; }
+    public UnidadeCurricular getUceVinculada() { return uceVinculada; }
+    public String getComponenteCurricular() {
+        if (uceVinculada != null) return uceVinculada.getCodigo() + " - " + uceVinculada.getNome();
+        return componenteCurricular;
+    }
+
+    // RF009 - marca como UCE com texto livre (sem vinculo a um PPC especifico)
+    public void marcarComoUce(String componenteCurricular) {
+        this.uce = true;
+        this.componenteCurricular = componenteCurricular;
+        this.uceVinculada = null;
+    }
+
+    // RF0009 - marca como UCE vinculada a uma UCE concreta de um PPC
+    public void marcarComoUce(UnidadeCurricular u) {
+        this.uce = true;
+        this.uceVinculada = u;
+        this.componenteCurricular = null;
+    }
+
+    public void desmarcarUce() {
+        this.uce = false;
+        this.uceVinculada = null;
+        this.componenteCurricular = null;
+    }
 
     public List<Discente> getFilaEspera() {
         return Collections.unmodifiableList(filaEspera);
@@ -91,17 +125,45 @@ public class Oportunidade {
         return true;
     }
 
-    public void encerrar() { this.status = StatusOportunidade.ENCERRADA; }
-    public void cancelar() { this.status = StatusOportunidade.CANCELADA; }
+    public void iniciarExecucao() {
+        if (this.status == StatusOportunidade.ABERTA) {
+            this.status = StatusOportunidade.EM_EXECUCAO;
+        }
+    }
+
+    public void encerrar() {
+        // Pode ser encerrada tanto de ABERTA quanto de EM_EXECUCAO
+        if (this.status == StatusOportunidade.ABERTA || this.status == StatusOportunidade.EM_EXECUCAO) {
+            this.status = StatusOportunidade.ENCERRADA;
+        }
+    }
+
+    /**
+     * RF012 - cancela a oportunidade. So permite enquanto nao foi ENCERRADA.
+     */
+    public boolean cancelar() {
+        if (this.status == StatusOportunidade.ENCERRADA
+                || this.status == StatusOportunidade.CANCELADA) {
+            return false;
+        }
+        this.status = StatusOportunidade.CANCELADA;
+        return true;
+    }
 
     @Override
     public String toString() {
+        String uceInfo = "";
+        if (uce) {
+            String label = getComponenteCurricular();
+            uceInfo = " | [UCE: " + (label != null ? label : "?") + "]";
+        }
         return "[" + id + "] " + titulo +
                " | " + modalidade +
                " | " + periodoRealizacao +
                " | " + cargaHoraria + "h" +
                " | Vagas: " + inscritosAprovados.size() + "/" + vagas +
                " | Status: " + status +
-               " | Resp: " + responsavel.getNome();
+               " | Resp: " + responsavel.getNome() +
+               uceInfo;
     }
 }
