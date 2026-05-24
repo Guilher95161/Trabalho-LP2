@@ -7,9 +7,9 @@ Projeto em Java desenvolvido para a disciplina de LP2. A aplicação simula, via
 O sistema tem como objetivo centralizar o gerenciamento de:
 
 * usuários com diferentes papéis
-* cursos com versionamento de PPC e UCEs
-* oportunidades de extensão (com fluxo completo de aprovação, execução e encerramento)
-* inscrições e substituição de participantes
+* oportunidades de extensão
+* solicitações de aproveitamento de horas
+* grupos estudantis
 * certificados emitidos ao encerrar oportunidades
 * solicitações de aproveitamento de horas (com delegação e prazos)
 * grupos estudantis com histórico de cargos
@@ -73,12 +73,14 @@ O sistema tem como objetivo centralizar o gerenciamento de:
 * **Prazos** — 10 dias para o Coordenador avaliar; 5 dias para o discente reenviar uma solicitação indeferida.
 * **Delegação** — Coordenador pode passar uma solicitação para a Comissão; cada um vê só o que é seu.
 * **Rascunhos** — qualquer perfil que cria oportunidades pode salvar como rascunho, editar e submeter quando estiver pronto.
+* **Tratamento de exceções** — hierarquia de exceções de domínio em `src/excecoes` (raiz: `SistemaExtensaoException`). Os serviços lançam erros de negócio tipados (`EntidadeNaoEncontradaException`, `OperacaoInvalidaException`, `EmailJaCadastradoException`, `UsuarioInativoException`) e o menu captura no ponto certo, mantendo a UX consistente.
 
 ## Tecnologias e características
 
 * Java puro (sem frameworks ou bibliotecas externas)
 * Aplicação de console
 * Armazenamento em memória usando `LinkedHashMap` e `LinkedHashSet` para garantir busca eficiente e ordem de inserção
+* Hierarquia própria de exceções de domínio (`unchecked`) para sinalização limpa de erros de negócio
 * Sem banco de dados ou persistência em arquivos
 
 ## Requisitos
@@ -146,23 +148,43 @@ src/
 |-- Main.java
 |-- entidades/
 |   `-- enums/
+|-- excecoes/
 |-- interfaceterminal/
 |-- repositorio/
 `-- servicos/
 ```
 
-* `src/Main.java`: ponto de entrada da aplicação
+* `src/Main.java`: ponto de entrada da aplicação. Instancia os serviços, popula cenários de demonstração e abre o menu.
 * `src/entidades`: classes de domínio (Usuario, Oportunidade, Curso, Ppc, UnidadeCurricular, GrupoEstudantil, Certificado, etc.)
 * `src/entidades/enums`: enums de status e classificação (StatusOportunidade, StatusSolicitacao, CargoGrupo, ModalidadeOportunidade)
+* `src/excecoes`: hierarquia de exceções de domínio (SistemaExtensaoException e filhas)
 * `src/interfaceterminal`: menus e interação com o usuário
 * `src/repositorio`: armazenamento central em memória
 * `src/servicos`: regras de negócio e orquestração entre entidades
 
 ---
 
+## Cenários pré-populados
+
+Ao iniciar, o sistema já vem com sete cenários prontos cobrindo o fluxo principal e suas variações. Cada um para em um ponto diferente da máquina de estados, permitindo testar qualquer etapa sem precisar refazer as anteriores.
+
+| # | Oportunidade | Status | Para quê serve |
+|---|---|---|---|
+| 1 | Curso de Java — Fundamentos (UCE EXT0001, 40h) | ENCERRADA, aproveitamento DEFERIDO | `aluno1` já tem 40h de UCE computadas no painel |
+| 2 | Minicurso de Git (20h) | EM_EXECUCAO, `aluno1` aprovado | Demonstrar **encerrar + certificar** ao vivo |
+| 3 | Workshop de Algoritmos (30h) | ABERTA, sem inscritos | Demonstrar **inscrição** ao vivo |
+| 4 | Palestra: Ética em IA (4h) | ENCERRADA, `aluno2` certificado | Demonstrar `aluno2` **solicitando aproveitamento** ao vivo |
+| 5 | Seminário de Sistemas Distribuídos (16h) | Aproveitamento PENDENTE | Demonstrar `coord1` **avaliando** ao vivo |
+| 6 | Curso de Python Avançado (24h) | Aproveitamento DELEGADO à Comissão | Demonstrar `comissao1` **avaliando** ao vivo |
+| 7 | Workshop de Banco de Dados (12h) | INDEFERIDO há 10 dias | Demonstrar **prazo de reenvio (5d) estourado** |
+
+Além disso, o curso CC já vem com **duas versões de PPC** (2020 e 2025) e um **grupo estudantil** ("Liga Acadêmica de Computação") com `aluno1` como presidente, habilitando a opção *Propor oportunidade* no menu dele.
+
+---
+
 ## Exemplo de fluxo de teste
 
-Para validar o fluxo unificado do sistema (inscrição → aproveitamento), siga este roteiro:
+Para validar o fluxo unificado do sistema (inscrição → aproveitamento) **do zero**, siga este roteiro:
 
 1. **Criar oportunidade (Docente):**
    * Login com `doc@ufma.br` / `doc123`.

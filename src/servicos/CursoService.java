@@ -4,6 +4,8 @@ import entidades.Curso;
 import entidades.Ppc;
 import entidades.UnidadeCurricular;
 import entidades.Usuario;
+import excecoes.EntidadeNaoEncontradaException;
+import excecoes.OperacaoInvalidaException;
 import repositorio.RepositorioCentral;
 
 import java.util.List;
@@ -68,13 +70,15 @@ public class CursoService {
 
     // Cria uma nova versao do PPC e a torna vigente. A antiga continua acessivel
     // pelo historico, com os discentes ja vinculados a ela.
-    public boolean cadastrarNovaVersaoPpc(int cursoId, String anoVigencia, int horas, Usuario autor) {
+    public void cadastrarNovaVersaoPpc(int cursoId, String anoVigencia, int horas, Usuario autor) {
         Curso c = repositorio.findCursoById(cursoId);
-        if (c == null || horas <= 0) return false;
-        if (c.buscarPpcPorAno(anoVigencia) != null) return false;
+        if (c == null) throw new EntidadeNaoEncontradaException("Curso #" + cursoId + " nao encontrado.");
+        if (horas <= 0) throw new OperacaoInvalidaException("Carga horaria deve ser maior que zero.");
+        if (c.buscarPpcPorAno(anoVigencia) != null) {
+            throw new OperacaoInvalidaException("Ja existe um PPC com o ano '" + anoVigencia + "' para este curso.");
+        }
         Ppc nova = new Ppc(c, anoVigencia, horas, autor);
         c.adicionarVersaoPpc(nova);
-        return true;
     }
 
     public Ppc buscarPpcAtivo(int cursoId) {

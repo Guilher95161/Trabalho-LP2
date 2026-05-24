@@ -2,6 +2,9 @@ package servicos;
 
 import entidades.*;
 import entidades.enums.StatusOportunidade;
+import excecoes.EntidadeNaoEncontradaException;
+import excecoes.OperacaoInvalidaException;
+import excecoes.UsuarioInativoException;
 import repositorio.RepositorioCentral;
 
 import java.util.ArrayList;
@@ -27,14 +30,14 @@ public class OportunidadeService {
         return repositorio.findOportunidadeById(id);
     }
 
-    public boolean inscreverDiscente(int oportunidadeId, Discente d) {
-        if (!d.isAtivo()) return false;
+    public void inscreverDiscente(int oportunidadeId, Discente d) {
+        if (!d.isAtivo()) throw new UsuarioInativoException(d.getEmail());
         Oportunidade op = repositorio.findOportunidadeById(oportunidadeId);
-        if (op != null && op.getStatus() == StatusOportunidade.ABERTA) {
-            op.solicitarInscricao(d);
-            return true;
+        if (op == null) throw new EntidadeNaoEncontradaException("Oportunidade #" + oportunidadeId + " nao encontrada.");
+        if (op.getStatus() != StatusOportunidade.ABERTA) {
+            throw new OperacaoInvalidaException("Inscricao nao permitida: oportunidade esta " + op.getStatus() + ".");
         }
-        return false;
+        op.solicitarInscricao(d);
     }
 
     public void aprovarOportunidade(int id){
@@ -70,27 +73,31 @@ public class OportunidadeService {
         return false;
     }
 
-    public boolean iniciarExecucao(int oportunidadeId) {
+    public void iniciarExecucao(int oportunidadeId) {
         Oportunidade op = repositorio.findOportunidadeById(oportunidadeId);
-        if (op != null && op.getStatus() == StatusOportunidade.ABERTA) {
-            op.iniciarExecucao();
-            return true;
+        if (op == null) throw new EntidadeNaoEncontradaException("Oportunidade #" + oportunidadeId + " nao encontrada.");
+        if (op.getStatus() != StatusOportunidade.ABERTA) {
+            throw new OperacaoInvalidaException("Execucao nao pode ser iniciada: oportunidade esta " + op.getStatus() + ".");
         }
-        return false;
+        op.iniciarExecucao();
     }
 
     public void encerrarOportunidade(int oportunidadeId) {
         Oportunidade op = repositorio.findOportunidadeById(oportunidadeId);
-        if (op != null && (op.getStatus() == StatusOportunidade.ABERTA
-                        || op.getStatus() == StatusOportunidade.EM_EXECUCAO)) {
-            op.encerrar();
+        if (op == null) throw new EntidadeNaoEncontradaException("Oportunidade #" + oportunidadeId + " nao encontrada.");
+        if (op.getStatus() != StatusOportunidade.ABERTA && op.getStatus() != StatusOportunidade.EM_EXECUCAO) {
+            throw new OperacaoInvalidaException("Encerramento invalido: oportunidade esta " + op.getStatus() + ".");
         }
+        op.encerrar();
     }
 
-    public boolean cancelarOportunidade(int oportunidadeId) {
+    public void cancelarOportunidade(int oportunidadeId) {
         Oportunidade op = repositorio.findOportunidadeById(oportunidadeId);
-        if (op == null) return false;
-        return op.cancelar();
+        if (op == null) throw new EntidadeNaoEncontradaException("Oportunidade #" + oportunidadeId + " nao encontrada.");
+        boolean cancelou = op.cancelar();
+        if (!cancelou) {
+            throw new OperacaoInvalidaException("Oportunidade nao pode ser cancelada no status atual: " + op.getStatus() + ".");
+        }
     }
 
     public boolean submeterRascunho(int id) {

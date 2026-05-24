@@ -90,6 +90,13 @@ public class SolicitacaoAproveitamento {
         return Math.max(0, PRAZO_REENVIO_DIAS - diasDesdeAvaliacao());
     }
 
+    // Reservado para o povoamento de demo - permite forjar uma solicitacao
+    // antiga sem precisar esperar dias passarem no relogio. Usar so no Populador.
+    public void ajustarDatasParaDemo(LocalDate dataCriacao, LocalDate dataAvaliacao) {
+        this.dataCriacao = dataCriacao;
+        this.dataAvaliacao = dataAvaliacao;
+    }
+
     @Override
     public String toString() {
         String delegacao = delegadaParaComissao ? " | [DELEGADA A COMISSAO]" : "";

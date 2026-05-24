@@ -5,6 +5,10 @@ import entidades.enums.CargoGrupo;
 import entidades.enums.ModalidadeOportunidade;
 import entidades.enums.StatusOportunidade;
 import entidades.enums.StatusSolicitacao;
+import excecoes.EmailJaCadastradoException;
+import excecoes.EntidadeNaoEncontradaException;
+import excecoes.OperacaoInvalidaException;
+import excecoes.UsuarioInativoException;
 import servicos.AproveitamentoService;
 import servicos.CursoService;
 import servicos.GrupoService;
@@ -76,7 +80,13 @@ public class MenuTerminal {
         System.out.print("Senha: ");
         String senha = sc.nextLine().trim();
 
-        Usuario u = usuarioService.autenticar(email, senha);
+        Usuario u;
+        try {
+            u = usuarioService.autenticar(email, senha);
+        } catch (UsuarioInativoException e) {
+            System.out.println("Acesso negado: " + e.getMessage());
+            return;
+        }
 
         if (u == null) {
             System.out.println("Email ou senha invalidos.");
@@ -124,11 +134,12 @@ public class MenuTerminal {
 
         Discente novo = new Discente(nome, matricula, email, senha, ppc);
 
-        boolean ok = usuarioService.cadastrarUsuario(novo);
-        if (ok)
+        try {
+            usuarioService.cadastrarUsuario(novo);
             System.out.println("Cadastro realizado com sucesso!");
-        else
-            System.out.println("Email já cadastrado.");
+        } catch (EmailJaCadastradoException e) {
+            System.out.println("Erro no cadastro: " + e.getMessage());
+        }
     }
 
     // Pede curso + versao do PPC. Importante porque alunos de turmas diferentes
@@ -215,11 +226,12 @@ public class MenuTerminal {
                 return;
         }
 
-        boolean ok = usuarioService.cadastrarUsuario(novo);
-        if (ok)
+        try {
+            usuarioService.cadastrarUsuario(novo);
             System.out.println("Cadastro realizado com sucesso!");
-        else
-            System.out.println("Email já cadastrado.");
+        } catch (EmailJaCadastradoException e) {
+            System.out.println("Erro no cadastro: " + e.getMessage());
+        }
     }
 
     // ----- Menus por perfil -----
@@ -904,11 +916,12 @@ public class MenuTerminal {
             System.out.println("Voce nao e o responsavel por esta oportunidade.");
             return;
         }
-        boolean ok = oportunidadeService.iniciarExecucao(id);
-        if (ok)
+        try {
+            oportunidadeService.iniciarExecucao(id);
             System.out.println("Oportunidade marcada como EM_EXECUCAO.");
-        else
-            System.out.println("Nao foi possivel iniciar execucao (nao esta ABERTA).");
+        } catch (OperacaoInvalidaException e) {
+            System.out.println("Nao foi possivel iniciar execucao: " + e.getMessage());
+        }
     }
 
     // Cancelamento exige motivo. So vale enquanto a oportunidade ainda esta viva.
@@ -932,11 +945,12 @@ public class MenuTerminal {
             if (!motivo.isEmpty()) break;
             System.out.println("Motivo nao pode ser vazio.");
         }
-        boolean ok = oportunidadeService.cancelarOportunidade(id);
-        if (ok)
+        try {
+            oportunidadeService.cancelarOportunidade(id);
             System.out.println("Oportunidade cancelada. Motivo registrado: " + motivo);
-        else
-            System.out.println("Nao foi possivel cancelar (ja encerrada ou ja cancelada).");
+        } catch (EntidadeNaoEncontradaException | OperacaoInvalidaException e) {
+            System.out.println("Nao foi possivel cancelar: " + e.getMessage());
+        }
     }
 
     private void encerrarOportunidade(Usuario solicitante) {
@@ -955,7 +969,12 @@ public class MenuTerminal {
             return;
         }
 
-        oportunidadeService.encerrarOportunidade(id);
+        try {
+            oportunidadeService.encerrarOportunidade(id);
+        } catch (OperacaoInvalidaException e) {
+            System.out.println("Nao foi possivel encerrar: " + e.getMessage());
+            return;
+        }
         System.out.println("Oportunidade encerrada.");
 
         List<Discente> aprovados = new ArrayList<>(o.getInscritosAprovados());
@@ -1046,11 +1065,14 @@ public class MenuTerminal {
         listarOportunidades();
         System.out.print("ID da oportunidade: ");
         int id = lerInt();
-        boolean ok = oportunidadeService.inscreverDiscente(id, d);
-        if (ok)
+        try {
+            oportunidadeService.inscreverDiscente(id, d);
             System.out.println("Pedido de inscricao enviado com sucesso!");
-        else
-            System.out.println("Nao foi possivel se inscrever. Verifique se a oportunidade existe, esta ABERTA e sua conta esta ativa.");
+        } catch (UsuarioInativoException e) {
+            System.out.println("Acesso negado: " + e.getMessage());
+        } catch (EntidadeNaoEncontradaException | OperacaoInvalidaException e) {
+            System.out.println("Nao foi possivel se inscrever: " + e.getMessage());
+        }
     }
 
     private void cancelarInscricao(Discente d) {
@@ -1197,11 +1219,12 @@ public class MenuTerminal {
         listarSolicitacoesPendentesSemDelegacao();
         System.out.print("ID da solicitacao a delegar: ");
         int id = lerInt();
-        boolean ok = aproveitamentoService.delegarParaComissao(id);
-        if (ok)
+        try {
+            aproveitamentoService.delegarParaComissao(id);
             System.out.println("Solicitacao delegada para a Comissao com sucesso.");
-        else
-            System.out.println("Nao foi possivel delegar: solicitacao nao encontrada, nao esta pendente ou ja foi delegada.");
+        } catch (EntidadeNaoEncontradaException | OperacaoInvalidaException e) {
+            System.out.println("Nao foi possivel delegar: " + e.getMessage());
+        }
     }
 
     private void avaliarSolicitacaoDelegada() {
@@ -1258,8 +1281,12 @@ public class MenuTerminal {
             }
         }
 
-        aproveitamentoService.avaliarSolicitacao(s, aprovar, parecer);
-        System.out.println("Solicitacao avaliada: " + s.getStatus());
+        try {
+            aproveitamentoService.avaliarSolicitacao(s, aprovar, parecer);
+            System.out.println("Solicitacao avaliada: " + s.getStatus());
+        } catch (OperacaoInvalidaException e) {
+            System.out.println("Erro ao avaliar solicitacao: " + e.getMessage());
+        }
     }
 
     // ----- Grupo Estudantil -----
@@ -1677,9 +1704,12 @@ public class MenuTerminal {
         int horas = lerIntMaiorQueZero();
 
         Usuario autor = usuarioLogadoAtual;
-        boolean ok = cursoService.cadastrarNovaVersaoPpc(idCurso, ano, horas, autor);
-        if (ok) System.out.println("Nova versao do PPC cadastrada e marcada como vigente.");
-        else    System.out.println("Falha: ano ja existe ou dados invalidos.");
+        try {
+            cursoService.cadastrarNovaVersaoPpc(idCurso, ano, horas, autor);
+            System.out.println("Nova versao do PPC cadastrada e marcada como vigente.");
+        } catch (EntidadeNaoEncontradaException | OperacaoInvalidaException e) {
+            System.out.println("Falha ao cadastrar PPC: " + e.getMessage());
+        }
     }
 
     private void verHistoricoPpc() {

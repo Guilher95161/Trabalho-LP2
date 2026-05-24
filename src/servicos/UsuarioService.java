@@ -1,10 +1,11 @@
 package servicos;
 
 import entidades.*;
-import repositorio.RepositorioCentral;
-
+import excecoes.EmailJaCadastradoException;
+import excecoes.UsuarioInativoException;
 import java.util.ArrayList;
 import java.util.List;
+import repositorio.RepositorioCentral;
 
 public class UsuarioService {
 
@@ -29,20 +30,17 @@ public class UsuarioService {
         repositorio.salvarUsuario(new Docente("Josélio", "0004", "doc@ufma.br",    "doc123"));
     }
 
-    public boolean cadastrarUsuario(Usuario u) {
-        Usuario existente = repositorio.findUsuarioByEmail(u.getEmail());
-        if (existente!=null) {
-            return false;
+    public void cadastrarUsuario(Usuario u) {
+        if (repositorio.findUsuarioByEmail(u.getEmail()) != null) {
+            throw new EmailJaCadastradoException(u.getEmail());
         }
         repositorio.salvarUsuario(u);
-        return true;
     }
 
     public Usuario autenticar(String email, String senha) {
-        Usuario u = repositorio.findUsuarioByEmailESenha(email,senha);
-        if (u != null && !u.isAtivo()){
-            System.out.println("Erro: esta conta foi desativada.");
-            return null;
+        Usuario u = repositorio.findUsuarioByEmailESenha(email, senha);
+        if (u != null && !u.isAtivo()) {
+            throw new UsuarioInativoException(email);
         }
         return u;
     }

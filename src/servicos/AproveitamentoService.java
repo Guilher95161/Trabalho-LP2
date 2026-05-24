@@ -3,6 +3,8 @@ package servicos;
 import entidades.Discente;
 import entidades.SolicitacaoAproveitamento;
 import entidades.enums.StatusSolicitacao;
+import excecoes.EntidadeNaoEncontradaException;
+import excecoes.OperacaoInvalidaException;
 import repositorio.RepositorioCentral;
 
 import java.util.ArrayList;
@@ -50,18 +52,25 @@ public class AproveitamentoService {
     }
 
     public void avaliarSolicitacao(SolicitacaoAproveitamento s, boolean aprovado, String parecer) {
-        if (s.getStatus() != StatusSolicitacao.PENDENTE) return;
+        if (s.getStatus() != StatusSolicitacao.PENDENTE) {
+            throw new OperacaoInvalidaException("Solicitacao nao pode ser avaliada: status atual e " + s.getStatus() + ".");
+        }
         s.avaliarSolicitacao(aprovado, parecer);
         if (aprovado) {
             s.getSolicitante().adicionarHoras(s.getCertificado().getCargaHoraria());
         }
     }
 
-    public boolean delegarParaComissao(int id) {
+    public void delegarParaComissao(int id) {
         SolicitacaoAproveitamento s = repositorio.findSolicitacaoById(id);
-        if (s == null || s.getStatus() != StatusSolicitacao.PENDENTE || s.isDelegadaParaComissao()) return false;
+        if (s == null) throw new EntidadeNaoEncontradaException("Solicitacao #" + id + " nao encontrada.");
+        if (s.getStatus() != StatusSolicitacao.PENDENTE) {
+            throw new OperacaoInvalidaException("Solicitacao nao esta PENDENTE (status atual: " + s.getStatus() + ").");
+        }
+        if (s.isDelegadaParaComissao()) {
+            throw new OperacaoInvalidaException("Solicitacao ja foi delegada para a Comissao.");
+        }
         s.delegarParaComissao();
-        return true;
     }
 
     public boolean cancelarSolicitacao(int id, Discente solicitante) {
