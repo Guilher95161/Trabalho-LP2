@@ -1,8 +1,6 @@
 package excecoes;
 
-// Quando um buscarPor... no repositorio nao acha nada. Antes esses casos
-// retornavam null e o chamador tinha que conferir - agora ja chega o erro
-// pronto, com mensagem citando o ID que falhou.
+// quando o repositorio nao encontra o que foi pedido
 public class EntidadeNaoEncontradaException extends SistemaExtensaoException {
 
     public EntidadeNaoEncontradaException(String message) {

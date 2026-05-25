@@ -1,8 +1,6 @@
 package excecoes;
 
-// Conta desativada tentando logar ou executar acao no sistema.
-// O Admin desativa contas por motivos administrativos (egresso, problema
-// disciplinar) e o sistema barra qualquer operacao ate uma eventual reativacao.
+// conta desativada tentando operar no sistema
 public class UsuarioInativoException extends SistemaExtensaoException {
 
     public UsuarioInativoException(String email) {

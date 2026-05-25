@@ -18,8 +18,7 @@ public class SolicitacaoAproveitamento {
     private String parecer;
     private boolean delegadaParaComissao;
 
-    // dataCriacao reinicia a cada reenvio (para nao misturar com o prazo da primeira tentativa).
-    // dataAvaliacao guarda o momento do parecer.
+    // dataCriacao reinicia a cada reenvio; dataAvaliacao e quando foi julgado
     private LocalDate dataCriacao;
     private LocalDate dataAvaliacao;
 
@@ -73,13 +72,13 @@ public class SolicitacaoAproveitamento {
         return ChronoUnit.DAYS.between(dataAvaliacao, LocalDate.now());
     }
 
-    // Solicitacao pendente ha mais de 10 dias = coordenador estourou o prazo.
+    // pendente ha mais de 10 dias = coord nao avaliou no prazo
     public boolean isAvaliacaoAtrasada() {
         return status == StatusSolicitacao.PENDENTE
             && diasDesdeCriacao() > PRAZO_AVALIACAO_DIAS;
     }
 
-    // Discente so consegue reenviar nos primeiros 5 dias apos o indeferimento.
+    // so pode reenviar nos 5 primeiros dias apos indeferimento
     public boolean podeReenviar() {
         return status == StatusSolicitacao.INDEFERIDA
             && diasDesdeAvaliacao() <= PRAZO_REENVIO_DIAS;
@@ -90,8 +89,7 @@ public class SolicitacaoAproveitamento {
         return Math.max(0, PRAZO_REENVIO_DIAS - diasDesdeAvaliacao());
     }
 
-    // Reservado para o povoamento de demo - permite forjar uma solicitacao
-    // antiga sem precisar esperar dias passarem no relogio. Usar so no Populador.
+    // so pra demo - forca datas antigas sem esperar o tempo passar
     public void ajustarDatasParaDemo(LocalDate dataCriacao, LocalDate dataAvaliacao) {
         this.dataCriacao = dataCriacao;
         this.dataAvaliacao = dataAvaliacao;

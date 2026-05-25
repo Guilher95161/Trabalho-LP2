@@ -5,12 +5,10 @@ public class Certificado {
     private int cargaHoraria;
     private String data;
 
-    // True quando ja existe um pedido de aproveitamento pendente/aceito para este certificado.
-    // Evita que o aluno envie o mesmo certificado duas vezes.
+    // evita que o mesmo cert seja enviado duas vezes
     private boolean aproveitamentoSolicitado;
 
-    // Cópia do componente curricular no momento da emissão - se a UCE for editada
-    // depois, o certificado guarda o estado original (snapshot).
+    // guarda o componente curricular no momento da emissao
     private boolean uce;
     private String componenteCurricular;
     private UnidadeCurricular uceVinculada;

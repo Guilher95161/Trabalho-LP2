@@ -21,14 +21,11 @@ public class Oportunidade {
     private Usuario responsavel;
     private StatusOportunidade status;
 
-    // Marcacao opcional como UCE. uceVinculada referencia a UCE concreta de um PPC;
-    // quando nao temos a UCE no sistema, cai no texto livre componenteCurricular.
+    // marcacao de UCE: vinculada a uma UCE concreta ou so como texto livre
     private boolean uce;
     private UnidadeCurricular uceVinculada;
     private String componenteCurricular;
 
-    // Set garante unicidade no proprio tipo e da contains O(1).
-    // LinkedHashSet mantem a ordem de chegada (FIFO da fila de espera).
     private Set<Discente> filaEspera;
     private Set<Discente> inscritosAprovados;
 
@@ -67,14 +64,12 @@ public class Oportunidade {
         return componenteCurricular;
     }
 
-    // Versao texto livre - util quando o PPC ainda nao tem essa UCE cadastrada.
     public void marcarComoUce(String componenteCurricular) {
         this.uce = true;
         this.componenteCurricular = componenteCurricular;
         this.uceVinculada = null;
     }
 
-    // Versao vinculada a uma UCE concreta de algum PPC.
     public void marcarComoUce(UnidadeCurricular u) {
         this.uce = true;
         this.uceVinculada = u;
@@ -87,8 +82,7 @@ public class Oportunidade {
         this.componenteCurricular = null;
     }
 
-    // Devolvem List (e nao Set) porque varios pontos do menu precisam de .get(idx).
-    // Imutavel para evitar que alguem altere a fila por fora.
+    // retorna imutavel pra ninguem alterar a fila por fora
     public List<Discente> getFilaEspera() {
         return Collections.unmodifiableList(new ArrayList<>(filaEspera));
     }
@@ -102,8 +96,7 @@ public class Oportunidade {
         }
     }
 
-    // Tira do rascunho. Discente precisa passar pela aprovacao docente;
-    // os demais perfis vao direto para ABERTA.
+    // discente vai pra aguardando aprovacao; outros perfis vao direto pra ABERTA
     public boolean submeterRascunho() {
         if (this.status != StatusOportunidade.RASCUNHO) return false;
         if (this.responsavel instanceof Discente) {
@@ -114,7 +107,6 @@ public class Oportunidade {
         return true;
     }
 
-    // Edicao so e permitida enquanto o rascunho nao foi submetido.
     public boolean editarSeRascunho(String titulo, String descricao,
                                     ModalidadeOportunidade modalidade,
                                     String periodoRealizacao,
@@ -130,8 +122,7 @@ public class Oportunidade {
     }
 
     public void solicitarInscricao(Discente discente) {
-        // Se o discente ja esta aprovado nao faz sentido voltar para a fila.
-        // Estar duas vezes na fila o Set ja resolve sozinho.
+        // ja aprovado nao entra na fila de espera de novo
         if (!inscritosAprovados.contains(discente)) {
             filaEspera.add(discente);
         }
@@ -151,8 +142,7 @@ public class Oportunidade {
         inscritosAprovados.remove(discente);
     }
 
-    // Tira um aprovado da lista e promove alguem que estava esperando.
-    // A justificativa fica a cargo de quem chama (gravada no menu).
+    // remove um aprovado e promove quem ta esperando na fila
     public boolean substituirParticipante(Discente aRemover, Discente substituto) {
         if (!inscritosAprovados.contains(aRemover)) return false;
         if (!filaEspera.contains(substituto)) return false;
@@ -169,13 +159,11 @@ public class Oportunidade {
     }
 
     public void encerrar() {
-        // Aceita tanto ABERTA quanto EM_EXECUCAO - as duas representam atividade ainda viva.
         if (this.status == StatusOportunidade.ABERTA || this.status == StatusOportunidade.EM_EXECUCAO) {
             this.status = StatusOportunidade.ENCERRADA;
         }
     }
 
-    // Cancelar nao faz sentido se ja terminou ou ja foi cancelada antes.
     public boolean cancelar() {
         if (this.status == StatusOportunidade.ENCERRADA
                 || this.status == StatusOportunidade.CANCELADA) {

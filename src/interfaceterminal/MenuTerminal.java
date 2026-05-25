@@ -28,8 +28,7 @@ public class MenuTerminal {
     private final CursoService cursoService;
     private final Scanner sc;
 
-    // Quem esta logado no momento - usado, por exemplo, para registrar quem
-    // cadastrou uma nova versao do PPC.
+    // usuario logado no momento
     private Usuario usuarioLogadoAtual = null;
 
     public MenuTerminal(UsuarioService usuarioService,
@@ -72,7 +71,7 @@ public class MenuTerminal {
         }
     }
 
-    // ----- Login / Cadastro -----
+    // --- Login / Cadastro ---
 
     private void fazerLogin() {
         System.out.print("Email: ");
@@ -130,7 +129,7 @@ public class MenuTerminal {
         String senha = sc.nextLine().trim();
 
         Ppc ppc = selecionarPpc();
-        // Permite cadastro sem PPC vinculado; o painel cai no fallback padrao
+        // permite cadastrar sem PPC; usa carga padrao nesse caso
 
         Discente novo = new Discente(nome, matricula, email, senha, ppc);
 
@@ -142,8 +141,7 @@ public class MenuTerminal {
         }
     }
 
-    // Pede curso + versao do PPC. Importante porque alunos de turmas diferentes
-    // (PPC 2020 vs 2025) podem estudar lado a lado no mesmo curso.
+    // alunos do mesmo curso podem ter PPCs diferentes dependendo da turma
     private Ppc selecionarPpc() {
         List<Curso> cursos = cursoService.listarTodos();
         if (cursos.isEmpty()) {
@@ -173,7 +171,7 @@ public class MenuTerminal {
             return null;
         }
         if (versoes.size() == 1) {
-            return versoes.get(0); // unica opcao - vincula direto
+            return versoes.get(0); // so tem uma versao
         }
         System.out.println("Selecione a versao do PPC:");
         for (int i = 0; i < versoes.size(); i++) {
@@ -234,7 +232,7 @@ public class MenuTerminal {
         }
     }
 
-    // ----- Menus por perfil -----
+    // --- Menus por perfil ---
 
     private void menuDiscente(Discente d) {
         while (true) {
@@ -582,7 +580,7 @@ public class MenuTerminal {
         }
     }
 
-    // ----- Usuario -----
+    // --- Usuario ---
 
     private void desativarUsuario() {
         System.out.println("Insira o email do usuário a desativar: ");
@@ -591,7 +589,7 @@ public class MenuTerminal {
         System.out.println("Desativado com sucesso!");
     }
 
-    // ----- Oportunidade -----
+    // --- Oportunidade ---
 
     private void proporOportunidade(Discente d){
         if (!grupoService.isLider(d)) {
@@ -634,8 +632,7 @@ public class MenuTerminal {
     }
 
     private void criarOportunidade(Usuario responsavel, StatusOportunidade statusInicial) {
-        // Antes de pedir os dados, ofereço guardar como rascunho - util quando
-        // a pessoa ainda nao tem certeza dos campos.
+        // pergunta antes se quer salvar como rascunho
         StatusOportunidade status = statusInicial;
         if (statusInicial != StatusOportunidade.RASCUNHO) {
             System.out.print("Salvar como rascunho? (s/n): ");
@@ -673,7 +670,7 @@ public class MenuTerminal {
 
         Oportunidade nova = new Oportunidade(titulo, descricao, modalidade, periodo, ch, vagas, responsavel, status);
 
-        // Discente nao marca UCE - so quem cadastra de forma "oficial" tem essa opcao.
+        // discente nao tem a opcao de marcar UCE
         if (!(responsavel instanceof Discente)) {
             System.out.print("Esta oportunidade e uma UCE (Unidade Curricular de Extensao)? (s/n): ");
             String resp = sc.nextLine().trim().toLowerCase();
@@ -709,7 +706,6 @@ public class MenuTerminal {
         }
     }
 
-    // Navega curso -> PPC -> UCE e devolve a UCE escolhida (ou null).
     private UnidadeCurricular selecionarUceDePpc() {
         List<Curso> cursos = cursoService.listarTodos();
         if (cursos.isEmpty()) { System.out.println("Nenhum curso cadastrado."); return null; }
@@ -747,7 +743,7 @@ public class MenuTerminal {
     }
 
     private void criarOportunidadeAdmin() {
-        // Lista so docentes ativos - quem foi desativado nao deve receber novos projetos.
+        // so docentes ativos
         List<Docente> docentes = usuarioService.listarDocentesAtivos();
         if (docentes.isEmpty()) {
             System.out.println("Nenhum docente ativo cadastrado.");
@@ -811,8 +807,6 @@ public class MenuTerminal {
 
     }
 
-    // Mostra os rascunhos do usuario e submete o escolhido (vira ABERTA ou
-    // AGUARDANDO_APROVACAO dependendo do perfil de quem criou).
     private void submeterRascunho(Usuario solicitante) {
         List<Oportunidade> rascunhos = oportunidadeService.listarRascunhosDe(solicitante);
         if (rascunhos.isEmpty()) {
@@ -832,7 +826,7 @@ public class MenuTerminal {
         }
     }
 
-    // Edicao campo a campo. Enter em branco = mantem o valor atual (poupa retrabalho).
+    // enter em branco mantem o valor atual
     private void editarRascunho(Usuario solicitante) {
         List<Oportunidade> rascunhos = oportunidadeService.listarRascunhosDe(solicitante);
         if (rascunhos.isEmpty()) {
@@ -911,7 +905,7 @@ public class MenuTerminal {
             System.out.println("Oportunidade nao encontrada.");
             return;
         }
-        // Trocar de status e prerrogativa de quem criou a oportunidade.
+        // so o responsavel ou admin pode trocar o status
         if (!(solicitante instanceof Administrador) && !op.getResponsavel().equals(solicitante)) {
             System.out.println("Voce nao e o responsavel por esta oportunidade.");
             return;
@@ -924,7 +918,7 @@ public class MenuTerminal {
         }
     }
 
-    // Cancelamento exige motivo. So vale enquanto a oportunidade ainda esta viva.
+    // cancelamento precisa de motivo obrigatorio
     private void cancelarOportunidade(Usuario solicitante) {
         listarOportunidades();
         System.out.print("ID da oportunidade a cancelar: ");
@@ -963,7 +957,7 @@ public class MenuTerminal {
             return;
         }
 
-        // Encerramento envolve emitir certificados - so quem criou pode decidir quem cumpriu.
+        // so o responsavel decide quem cumpriu a atividade
         if (!(solicitante instanceof Administrador) && !o.getResponsavel().equals(solicitante)) {
             System.out.println("Voce nao e o responsavel por esta oportunidade.");
             return;
@@ -1085,7 +1079,7 @@ public class MenuTerminal {
             System.out.println("Nao foi possivel cancelar. Verifique se a oportunidade existe e esta ABERTA.");
     }
 
-    // ----- Solicitacao de Aproveitamento -----
+    // --- Solicitacao de Aproveitamento ---
 
     private void solicitarAproveitamento(Discente d) {
         List<Certificado> disponiveis = new ArrayList<>();
@@ -1255,7 +1249,7 @@ public class MenuTerminal {
         coletarDecisaoEAvaliar(s);
     }
 
-    // Coleta deferir/indeferir + parecer. Indeferimento exige justificativa por escrito.
+    // indeferimento precisa de parecer escrito, deferimento e opcional
     private void coletarDecisaoEAvaliar(SolicitacaoAproveitamento s) {
         System.out.println("[1] Deferir  [2] Indeferir");
         System.out.print("Opcao: ");
@@ -1272,7 +1266,7 @@ public class MenuTerminal {
             System.out.print("Parecer (opcional): ");
             parecer = sc.nextLine().trim();
         } else {
-            // Loop ate o coordenador escrever algo - parecer vazio em indeferimento nao passa.
+            // parecer vazio nao passa em indeferimento
             while (true) {
                 System.out.print("Parecer (OBRIGATORIO para indeferimento): ");
                 parecer = sc.nextLine().trim();
@@ -1289,7 +1283,7 @@ public class MenuTerminal {
         }
     }
 
-    // ----- Grupo Estudantil -----
+    // --- Grupo Estudantil ---
 
     private void solicitarCriacaoGrupo(Discente d) {
         System.out.println("Nome do Grupo: ");
@@ -1297,7 +1291,7 @@ public class MenuTerminal {
         System.out.println("Descrição/Objetivos: ");
         String desc = sc.nextLine().trim();
 
-        // So lista docentes ativos - quem foi desativado nao recebe novos vinculos.
+        // so docentes ativos
         List<Docente> docentes = usuarioService.listarDocentesAtivos();
         if (docentes.isEmpty()) {
             System.out.println("Nenhum docente ativo disponivel.");
@@ -1345,7 +1339,7 @@ public class MenuTerminal {
     }
 
     private void criarGrupo() {
-        // So lista docentes ativos - quem foi desativado nao recebe novos vinculos.
+        // so docentes ativos
         List<Docente> docentes = usuarioService.listarDocentesAtivos();
         if (docentes.isEmpty()) {
             System.out.println("Nenhum docente ativo disponivel.");
@@ -1445,7 +1439,7 @@ public class MenuTerminal {
             return;
         }
 
-        // Defesa contra o caso de o docente digitar o id de um grupo que nao e dele.
+        // impede docente de acessar grupo de outro
         if (!(u instanceof Administrador) && !g.getResponsavel().equals(u)) {
             System.out.println("Voce nao e o docente responsavel por este grupo.");
             return;
@@ -1457,7 +1451,7 @@ public class MenuTerminal {
 
         Discente d;
         if (op.equals("1")) {
-            // Adicionar membro = novo vinculo - so com discentes ativos.
+            // so discentes ativos podem entrar no grupo
             List<Discente> ativos = usuarioService.listarDiscentesAtivos();
             if (ativos.isEmpty()) {
                 System.out.println("Nenhum discente ativo no sistema.");
@@ -1476,7 +1470,7 @@ public class MenuTerminal {
             return;
         }
 
-        // Para remover/definir cargo: usar discentes que JA sao membros do grupo
+        // remover/cargo so funciona em quem ja e membro
         List<Discente> membros = g.getMembros();
         if (membros.isEmpty()) {
             System.out.println("Grupo nao tem membros.");
@@ -1618,8 +1612,6 @@ public class MenuTerminal {
         }
     }
 
-    // Menu para administrar tudo relacionado a cursos: criar, versionar PPC,
-    // listar historico e gerenciar UCEs.
     private void menuGerenciarCursos() {
         while (true) {
             System.out.println("\n--- GERENCIAR CURSOS / PPCs / UCEs ---");
@@ -1690,7 +1682,7 @@ public class MenuTerminal {
         System.out.println(ok ? "Curso removido." : "Curso nao encontrado.");
     }
 
-    // O autor da nova versao do PPC e o usuario que esta logado agora.
+    // autor = quem ta logado
     private void cadastrarNovaVersaoPpc() {
         listarCursos();
         System.out.print("ID do curso: ");
@@ -1791,9 +1783,9 @@ public class MenuTerminal {
         }
     }
 
-    // ----- Leitura de entrada -----
+    // --- Leitura de entrada ---
 
-    // Aceita tanto "01" quanto "1" sem cair no default do switch.
+    // normaliza "01" e "1" pra nao cair no default do switch
     private String lerOpcao() {
         String entrada = sc.nextLine().trim();
         try {

@@ -3,8 +3,7 @@ package entidades;
 import java.util.ArrayList;
 import java.util.List;
 
-// Curso de graduacao - so identidade (codigo + nome). A carga horaria de
-// extensao fica em cada versao do PPC, nao aqui, porque pode mudar com o tempo.
+// carga horaria de extensao fica no PPC, nao aqui, pq muda a cada versao
 public class Curso {
     private static int contador = 1;
 
@@ -36,7 +35,6 @@ public class Curso {
         versoesPpc.add(novaVersao);
     }
 
-    // null se o curso ainda nao tem PPC cadastrado.
     public Ppc getPpcAtual() {
         for (int i = versoesPpc.size() - 1; i >= 0; i--) {
             Ppc p = versoesPpc.get(i);

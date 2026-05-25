@@ -1,7 +1,6 @@
 package entidades;
 
-// Unidade Curricular de Extensao - cada PPC tem sua propria lista de UCEs,
-// porque a carga horaria pode variar entre versoes do curso.
+// UCE do PPC - carga pode variar entre versoes do curso
 public class UnidadeCurricular {
     private static int contador = 1;
 

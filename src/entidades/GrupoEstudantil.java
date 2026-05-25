@@ -15,7 +15,7 @@ public class GrupoEstudantil {
     private String descricao;
     private Docente responsavel;
 
-    // Map em vez de duas listas paralelas membros/cargos - mais dificil de quebrar.
+    // membro + cargo num so lugar pra nao desincronizar
     private Map<Discente, CargoGrupo> membrosECargos;
 
     private List<HistoricoCargo> historicoCargos;
@@ -29,7 +29,6 @@ public class GrupoEstudantil {
         this.historicoCargos = new ArrayList<>();
     }
 
-    // Usado quando nao se conhece a descricao na hora da criacao.
     public GrupoEstudantil(String nome, Docente responsavel) {
         this(nome, "", responsavel);
     }
@@ -76,7 +75,6 @@ public class GrupoEstudantil {
         }
     }
 
-    // Retorna null se o discente nao e membro do grupo.
     public CargoGrupo getCargo(Discente d) {
         return membrosECargos.get(d);
     }
@@ -89,7 +87,7 @@ public class GrupoEstudantil {
         return resultado;
     }
 
-    // Fecha a entrada aberta (dataFim == null) que ainda existir para esse discente.
+    // fecha o cargo atual do discente antes de mudar
     private void encerrarEntradaAtual(Discente d) {
         for (int i = historicoCargos.size() - 1; i >= 0; i--) {
             HistoricoCargo h = historicoCargos.get(i);

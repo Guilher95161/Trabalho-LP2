@@ -18,7 +18,6 @@ public class UsuarioService {
         popularDadosIniciais();
     }
 
-    // Cadastra usuarios de teste para nao precisar criar tudo na mao a cada execucao.
     private void popularDadosIniciais() {
         Curso cursoPadrao = cursoService.listarTodos().isEmpty() ? null : cursoService.listarTodos().get(0);
         Ppc ppcPadrao = (cursoPadrao != null) ? cursoPadrao.getPpcAtual() : null;
@@ -64,8 +63,7 @@ public class UsuarioService {
         return repositorio.findAllDocentes();
     }
 
-    // Listas filtradas - usadas para selecoes onde o usuario inativo nao deve aparecer
-    // (ex: adicionar membro a grupo, escolher docente responsavel de oportunidade).
+    // so os ativos - inativo nao aparece nas selecoes
     public List<Discente> listarDiscentesAtivos() {
         List<Discente> ativos = new ArrayList<>();
         for (Discente d : repositorio.findAllDiscentes()) {

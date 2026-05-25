@@ -41,9 +41,7 @@ public class Main {
         menu.iniciar();
     }
 
-    // Popula cenarios prontos para a apresentacao. Cada bloco para em um ponto
-    // diferente da maquina de estados, pra que a banca consiga continuar o fluxo
-    // ao vivo sem precisar executar todos os passos anteriores.
+    // cria dados de demo pra banca nao ter que fazer tudo manualmente
     private static void popularDemo(RepositorioCentral repositorio,
                                     OportunidadeService oportunidadeService,
                                     AproveitamentoService aproveitamentoService,
@@ -59,13 +57,12 @@ public class Main {
         Ppc ppc2020 = cc.getPpcAtual();
         UnidadeCurricular ext0001 = ppc2020.buscarUcePorCodigo("EXT0001");
 
-        // ---- Segunda versao do PPC: mostra que o versionamento funciona.
-        // aluno1/aluno2 continuam ancorados no 2020 (vira HISTORICO).
+        // segunda versao do PPC - aluno1/aluno2 ficam no 2020 (vira historico)
         cursoService.cadastrarNovaVersaoPpc(cc.getId(), "2025", 320, coord);
         Ppc ppc2025 = cc.buscarPpcPorAno("2025");
         cursoService.cadastrarUce(ppc2025, "EXT0003", "Atividades Extensionistas Integradas", 80);
 
-        // ---- Grupo estudantil com lider: habilita "Propor oportunidade" no menu do discente.
+        // grupo com lider pra habilitar a opcao de propor oportunidade no menu
         GrupoEstudantil liga = new GrupoEstudantil(
             "Liga Academica de Computacao",
             "Promove maratonas de programacao, palestras e minicursos para a comunidade do curso.",
@@ -75,7 +72,7 @@ public class Main {
         liga.adicionarMembro(aluno2);
         grupoService.criarGrupo(liga);
 
-        // ---- Cenario 1: HAPPY PATH COMPLETO (aluno1 ja tem 40h computadas).
+        // cenario 1: fluxo completo - aluno1 ja com 40h deferidas
         Oportunidade op1 = new Oportunidade(
             "Curso de Java - Fundamentos",
             "Introducao a sintaxe, orientacao a objetos e bibliotecas padrao.",
@@ -95,7 +92,7 @@ public class Main {
         aproveitamentoService.avaliarSolicitacao(sJava, true,
             "Atividade compativel com a UCE EXT0001. Carga horaria validada.");
 
-        // ---- Cenario 2: EM_EXECUCAO -> demo de encerrar + certificar ao vivo.
+        // cenario 2: em execucao - demo de encerrar e certificar ao vivo
         Oportunidade op2 = new Oportunidade(
             "Minicurso de Git e Controle de Versao",
             "Fluxo de commits, branches e pull requests no dia a dia.",
@@ -107,7 +104,7 @@ public class Main {
         oportunidadeService.avaliarInscricao(op2.getId(), aluno1, true);
         oportunidadeService.iniciarExecucao(op2.getId());
 
-        // ---- Cenario 3: ABERTA sem inscritos -> demo de inscricao ao vivo.
+        // cenario 3: aberta sem inscrito - demo de inscricao ao vivo
         Oportunidade op3 = new Oportunidade(
             "Workshop de Algoritmos Avancados",
             "Programacao dinamica, grafos e tecnicas de otimizacao.",
@@ -116,8 +113,7 @@ public class Main {
             30, 10, doc, StatusOportunidade.ABERTA);
         oportunidadeService.criarOportunidade(op3);
 
-        // ---- Cenario 4: ENCERRADA + aluno2 certificado sem pedir aproveitamento ->
-        // demo: aluno2 loga e usa [4] Solicitar aproveitamento.
+        // cenario 4: aluno2 certificado mas ainda nao pediu aproveitamento
         Oportunidade op4 = new Oportunidade(
             "Palestra: Etica em Inteligencia Artificial",
             "Discussao sobre vies algoritmico, privacidade e responsabilidade.",
@@ -131,7 +127,7 @@ public class Main {
         oportunidadeService.encerrarOportunidade(op4.getId());
         oportunidadeService.certificarDiscentes(op4.getId(), Collections.singletonList(aluno2));
 
-        // ---- Cenario 5: Aproveitamento PENDENTE -> demo do coordenador avaliar.
+        // cenario 5: aproveitamento pendente pra o coord avaliar
         Oportunidade op5 = new Oportunidade(
             "Seminario de Sistemas Distribuidos",
             "Consenso, replicacao e tolerancia a falhas.",
@@ -148,7 +144,7 @@ public class Main {
         SolicitacaoAproveitamento sSemi = new SolicitacaoAproveitamento(aluno2, certSemi);
         aproveitamentoService.criarSolicitacao(sSemi);
 
-        // ---- Cenario 6: Aproveitamento DELEGADO a Comissao -> demo da comissao avaliar.
+        // cenario 6: aproveitamento delegado pra comissao avaliar
         Oportunidade op6 = new Oportunidade(
             "Curso de Python Avancado",
             "Decoradores, geradores e programacao assincrona.",
@@ -166,7 +162,7 @@ public class Main {
         aproveitamentoService.criarSolicitacao(sPy);
         aproveitamentoService.delegarParaComissao(sPy.getId());
 
-        // ---- Cenario 7: INDEFERIDO HA 10 DIAS -> prazo de reenvio (5 dias) estourado.
+        // cenario 7: indeferido ha 10 dias - prazo de reenvio ja estourou
         Oportunidade op7 = new Oportunidade(
             "Workshop de Banco de Dados",
             "Modelagem relacional, normalizacao e SQL pratico.",
@@ -184,7 +180,7 @@ public class Main {
         aproveitamentoService.criarSolicitacao(sBd);
         aproveitamentoService.avaliarSolicitacao(sBd, false,
             "Carga horaria insuficiente para a UCE indicada. Falta documentacao complementar.");
-        // Backdata para forcar prazo de reenvio estourado.
+        // forca datas antigas pra simular prazo estourado
         sBd.ajustarDatasParaDemo(LocalDate.now().minusDays(20), LocalDate.now().minusDays(10));
     }
 }

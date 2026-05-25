@@ -126,8 +126,7 @@ public class OportunidadeService {
         return rascunhos;
     }
 
-    // Atencao: emite o certificado mas NAO da as horas. As horas so caem
-    // na conta do aluno depois que o aproveitamento for deferido.
+    // emite o cert mas as horas so entram depois do aproveitamento ser deferido
     public void certificarDiscentes(int oportunidadeId, List<Discente> selecionados) {
         Oportunidade op = repositorio.findOportunidadeById(oportunidadeId);
         if (op == null || op.getStatus() != StatusOportunidade.ENCERRADA) return;
@@ -148,7 +147,6 @@ public class OportunidadeService {
     public boolean substituirParticipante(int oportunidadeId, Discente aRemover, Discente substituto) {
         Oportunidade op = repositorio.findOportunidadeById(oportunidadeId);
         if (op == null) return false;
-        // So vale antes do encerramento - depois disso a substituicao perde sentido.
         if (op.getStatus() != StatusOportunidade.ABERTA
                 && op.getStatus() != StatusOportunidade.EM_EXECUCAO) return false;
         return op.substituirParticipante(aRemover, substituto);
@@ -166,9 +164,7 @@ public class OportunidadeService {
         return total;
     }
 
-    // Soma as horas de certificados de UCE que ja tiveram aproveitamento deferido.
-    // A flag aproveitamentoSolicitado por si so nao basta - ela fica true tanto para
-    // pendente quanto para deferido. Por isso vamos buscar a solicitacao DEFERIDA.
+    // conta so UCEs com aproveitamento deferido, nao so com flag de pendente
     public int calcularHorasUceConcluidas(Discente d) {
         int total = 0;
         for (Certificado c : d.getCertificados()) {

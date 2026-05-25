@@ -4,8 +4,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-// Uma versao do PPC. Cada curso pode ter varias (turma 2020, turma 2025...)
-// e cada versao traz sua propria carga horaria e suas proprias UCEs.
+// cada versao do PPC tem sua propria carga e suas UCEs
 public class Ppc {
     private static int contador = 1;
 
@@ -16,7 +15,7 @@ public class Ppc {
     private LocalDate dataCadastro;
     private Usuario autorAlteracao;
     private List<UnidadeCurricular> uces;
-    private boolean ativa;                       // false quando ja foi substituida por outra versao
+    private boolean ativa;
 
     public Ppc(Curso curso, String anoVigencia, int horasExtensaoNecessarias,
                Usuario autorAlteracao) {

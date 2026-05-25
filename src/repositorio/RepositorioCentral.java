@@ -7,8 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-// Persistencia em memoria. Usa LinkedHashMap em vez de ArrayList para que
-// as buscas por chave sejam O(1) e a ordem de cadastro seja preservada.
+// repositorio em memoria - mantem a ordem de cadastro
 public class RepositorioCentral {
 
     private Map<String,  Usuario>                    usuarios            = new LinkedHashMap<>();
@@ -18,7 +17,7 @@ public class RepositorioCentral {
     private Map<Integer, SolicitacaoGrupoEstudantil> solicitacoesGrupos  = new LinkedHashMap<>();
     private Map<String,  Curso>                      cursos              = new LinkedHashMap<>();
 
-    // ==== Usuarios ====
+    // --- Usuarios ---
 
     public void salvarUsuario(Usuario u) {
         usuarios.put(u.getEmail(), u);
@@ -54,7 +53,7 @@ public class RepositorioCentral {
         return lista;
     }
 
-    // ==== Oportunidades ====
+    // --- Oportunidades ---
 
     public void salvarOportunidade(Oportunidade o) {
         oportunidades.put(o.getId(), o);
@@ -68,7 +67,7 @@ public class RepositorioCentral {
         return oportunidades.get(id);
     }
 
-    // ==== Solicitacoes de Aproveitamento ====
+    // --- Solicitacoes de Aproveitamento ---
 
     public void salvarSolicitacao(SolicitacaoAproveitamento s) {
         solicitacoes.put(s.getId(), s);
@@ -90,7 +89,7 @@ public class RepositorioCentral {
         return lista;
     }
 
-    // ==== Grupos Estudantis ====
+    // --- Grupos ---
 
     public void salvarGrupo(GrupoEstudantil g) {
         grupos.put(g.getId(), g);
@@ -112,7 +111,7 @@ public class RepositorioCentral {
         return grupos.get(id);
     }
 
-    // ==== Solicitacoes de Grupo ====
+    // --- Solicitacoes de Grupo ---
 
     public void salvarSolicitacaoGrupo(SolicitacaoGrupoEstudantil s) {
         solicitacoesGrupos.put(s.getId(), s);
@@ -126,7 +125,7 @@ public class RepositorioCentral {
         return solicitacoesGrupos.get(id);
     }
 
-    // ==== Cursos (PPC) ====
+    // --- Cursos ---
 
     public void salvarCurso(Curso c) {
         cursos.put(c.getCodigo().toUpperCase(), c);

@@ -5,7 +5,6 @@ public abstract class Usuario {
     private String matricula;
     private String email;
     private String senha;
-    // Valores possiveis: "DISCENTE", "DOCENTE", "COORDENADOR", "COMISSAO", "ADMINISTRADOR".
     private String tipo;
     private boolean ativo;
 
@@ -64,7 +63,7 @@ public abstract class Usuario {
         return "[" + tipo + " - " + status + "] " + nome + " (" + email + ")";
     }
 
-    // Dois usuarios sao iguais se tem o mesmo email - o email e o login.
+    // email e o identificador unico do usuario
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

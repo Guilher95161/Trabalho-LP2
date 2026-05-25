@@ -38,7 +38,7 @@ public class GrupoService {
         if ( solicitacao != null && solicitacao.getStatus() == StatusSolicitacao.PENDENTE){
             if(aprovado){
                 solicitacao.aprovar();
-                // Aproveita os dados do formulario do discente para nao pedir tudo de novo.
+                // usa os dados da solicitacao pra criar o grupo
                 GrupoEstudantil novoGrupo = new GrupoEstudantil(
                     solicitacao.getNomeGrupo(),
                     solicitacao.getDescricao(),
