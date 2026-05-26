@@ -668,28 +668,25 @@ public class MenuTerminal {
         System.out.print("Vagas: ");
         int vagas = lerInt();
 
-        Oportunidade nova = new Oportunidade(titulo, descricao, modalidade, periodo, ch, vagas, responsavel, status);
-
-        // discente nao tem a opcao de marcar UCE
-        if (!(responsavel instanceof Discente)) {
-            System.out.print("Esta oportunidade e uma UCE (Unidade Curricular de Extensao)? (s/n): ");
-            String resp = sc.nextLine().trim().toLowerCase();
-            if (resp.equals("s")) {
-                System.out.println("[1] Vincular a uma UCE concreta de um PPC (recomendado)");
-                System.out.println("[2] Apenas indicar componente curricular como texto livre");
-                System.out.print("Opcao: ");
-                String tipoUce = sc.nextLine().trim();
-                if (tipoUce.equals("1")) {
-                    UnidadeCurricular u = selecionarUceDePpc();
-                    if (u != null) nova.marcarComoUce(u);
-                } else if (tipoUce.equals("2")) {
-                    System.out.print("Codigo/nome do componente curricular: ");
-                    String cc = sc.nextLine().trim();
-                    if (!cc.isEmpty()) nova.marcarComoUce(cc);
-                }
-            }
+        // toda oportunidade e UCE - escolhemos so como o componente sera identificado
+        UnidadeCurricular uceVinculada = null;
+        String componenteCurricular = null;
+        System.out.println("Componente curricular (UCE):");
+        System.out.println("[1] Vincular a uma UCE concreta de um PPC (recomendado)");
+        System.out.println("[2] Indicar componente curricular como texto livre");
+        System.out.print("Opcao: ");
+        String tipoUce = sc.nextLine().trim();
+        if (tipoUce.equals("1")) {
+            uceVinculada = selecionarUceDePpc();
+        }
+        if (uceVinculada == null) {
+            System.out.print("Descricao do componente curricular: ");
+            String cc = sc.nextLine().trim();
+            componenteCurricular = cc.isEmpty() ? "Componente nao especificado" : cc;
         }
 
+        Oportunidade nova = new Oportunidade(titulo, descricao, modalidade, periodo, ch, vagas,
+                                             responsavel, status, uceVinculada, componenteCurricular);
         oportunidadeService.criarOportunidade(nova);
         switch (status) {
             case ABERTA:
@@ -1529,43 +1526,29 @@ public class MenuTerminal {
         Ppc ppc = d.getPpc();
         int totalNecessario = (ppc != null) ? ppc.getHorasExtensaoNecessarias() : CursoService.CARGA_PADRAO;
         int concluidas = d.getHorasCumpridas();
-        int horasUce   = oportunidadeService.calcularHorasUceConcluidas(d);
-        int pendentes  = oportunidadeService.calcularHorasPendentes(d);
 
         System.out.println("\n========== PAINEL DE PROGRESSO ==========");
         if (ppc != null) {
-            System.out.println("Curso            : " + ppc.getCurso().getCodigo() + " - " + ppc.getCurso().getNome());
+            System.out.println("Curso              : " + ppc.getCurso().getCodigo() + " - " + ppc.getCurso().getNome());
             System.out.println("PPC vigente p/voce : " + ppc.getAnoVigencia()
                               + (ppc.isAtiva() ? " (vigente)" : " (historica)"));
         } else {
-            System.out.println("PPC              : (nao vinculado - usando carga padrao)");
+            System.out.println("PPC                : (nao vinculado - usando carga padrao)");
         }
-        System.out.println("Horas concluidas : " + concluidas + "h  (sendo " + horasUce + "h de UCE)");
-        System.out.println("Horas pendentes  : " + pendentes  + "h  (inscrito e aprovado, oportunidade ainda em andamento)");
-        System.out.println("Total necessario : " + totalNecessario + "h");
+
+        System.out.println("\n-- Certificados Aproveitados --");
+        List<Certificado> aproveitados = aproveitamentoService.listarCertificadosAproveitados(d);
+        if (aproveitados.isEmpty()) {
+            System.out.println("  Nenhum certificado aproveitado ainda.");
+        } else {
+            for (Certificado c : aproveitados) {
+                System.out.println("  " + c.getTituloAtividade() + " - " + c.getCargaHoraria() + "h");
+            }
+        }
+
         System.out.println();
         System.out.print("Progresso: ");
         exibirBarraProgresso(concluidas, totalNecessario);
-
-        System.out.println("\n-- Meus Certificados --");
-        if (d.getCertificados().isEmpty()) {
-            System.out.println("  Nenhum certificado ainda.");
-        } else {
-            for (Certificado c : d.getCertificados()) {
-                System.out.println("  " + c);
-            }
-        }
-
-        System.out.println("\n-- Minhas Solicitacoes de Aproveitamento --");
-        boolean found = false;
-        for (SolicitacaoAproveitamento s : aproveitamentoService.listarTodas()) {
-            if (s.getSolicitante().equals(d)) {
-                String parecer = s.getParecer().isEmpty() ? "" : " | Parecer: " + s.getParecer();
-                System.out.println("  " + s + parecer);
-                found = true;
-            }
-        }
-        if (!found) System.out.println("  Nenhuma solicitacao registrada.");
         System.out.println("=========================================");
     }
 

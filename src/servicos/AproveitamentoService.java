@@ -1,5 +1,6 @@
 package servicos;
 
+import entidades.Certificado;
 import entidades.Discente;
 import entidades.SolicitacaoAproveitamento;
 import entidades.enums.StatusSolicitacao;
@@ -49,6 +50,16 @@ public class AproveitamentoService {
 
     public SolicitacaoAproveitamento buscarPorId(int id) {
         return repositorio.findSolicitacaoById(id);
+    }
+
+    public List<Certificado> listarCertificadosAproveitados(Discente d) {
+        List<Certificado> aproveitados = new ArrayList<>();
+        for (SolicitacaoAproveitamento s : repositorio.findAllSolicitacoes()) {
+            if (s.getSolicitante().equals(d) && s.getStatus() == StatusSolicitacao.DEFERIDA) {
+                aproveitados.add(s.getCertificado());
+            }
+        }
+        return aproveitados;
     }
 
     public void avaliarSolicitacao(SolicitacaoAproveitamento s, boolean aprovado, String parecer) {

@@ -78,8 +78,8 @@ public class Main {
             "Introducao a sintaxe, orientacao a objetos e bibliotecas padrao.",
             ModalidadeOportunidade.CURSO,
             "01/02/2026 - 28/02/2026",
-            40, 5, doc, StatusOportunidade.ABERTA);
-        op1.marcarComoUce(ext0001);
+            40, 5, doc, StatusOportunidade.ABERTA,
+            ext0001, null);
         oportunidadeService.criarOportunidade(op1);
         oportunidadeService.inscreverDiscente(op1.getId(), aluno1);
         oportunidadeService.avaliarInscricao(op1.getId(), aluno1, true);
@@ -98,7 +98,8 @@ public class Main {
             "Fluxo de commits, branches e pull requests no dia a dia.",
             ModalidadeOportunidade.CURSO,
             "01/05/2026 - 31/05/2026",
-            20, 8, doc, StatusOportunidade.ABERTA);
+            20, 8, doc, StatusOportunidade.ABERTA,
+            null, "Capacitacao em controle de versao");
         oportunidadeService.criarOportunidade(op2);
         oportunidadeService.inscreverDiscente(op2.getId(), aluno1);
         oportunidadeService.avaliarInscricao(op2.getId(), aluno1, true);
@@ -110,7 +111,8 @@ public class Main {
             "Programacao dinamica, grafos e tecnicas de otimizacao.",
             ModalidadeOportunidade.CURSO,
             "01/06/2026 - 30/06/2026",
-            30, 10, doc, StatusOportunidade.ABERTA);
+            30, 10, doc, StatusOportunidade.ABERTA,
+            null, "Atividade extensionista em algoritmos");
         oportunidadeService.criarOportunidade(op3);
 
         // cenario 4: aluno2 certificado mas ainda nao pediu aproveitamento
@@ -119,7 +121,8 @@ public class Main {
             "Discussao sobre vies algoritmico, privacidade e responsabilidade.",
             ModalidadeOportunidade.EVENTO,
             "15/03/2026",
-            4, 50, doc, StatusOportunidade.ABERTA);
+            4, 50, doc, StatusOportunidade.ABERTA,
+            null, "Evento de extensao em etica e tecnologia");
         oportunidadeService.criarOportunidade(op4);
         oportunidadeService.inscreverDiscente(op4.getId(), aluno2);
         oportunidadeService.avaliarInscricao(op4.getId(), aluno2, true);
@@ -133,7 +136,8 @@ public class Main {
             "Consenso, replicacao e tolerancia a falhas.",
             ModalidadeOportunidade.EVENTO,
             "10/03/2026 - 20/03/2026",
-            16, 25, doc, StatusOportunidade.ABERTA);
+            16, 25, doc, StatusOportunidade.ABERTA,
+            null, "Seminario tecnico em sistemas distribuidos");
         oportunidadeService.criarOportunidade(op5);
         oportunidadeService.inscreverDiscente(op5.getId(), aluno2);
         oportunidadeService.avaliarInscricao(op5.getId(), aluno2, true);
@@ -150,7 +154,8 @@ public class Main {
             "Decoradores, geradores e programacao assincrona.",
             ModalidadeOportunidade.CURSO,
             "01/04/2026 - 30/04/2026",
-            24, 8, doc, StatusOportunidade.ABERTA);
+            24, 8, doc, StatusOportunidade.ABERTA,
+            null, "Capacitacao tecnica em Python");
         oportunidadeService.criarOportunidade(op6);
         oportunidadeService.inscreverDiscente(op6.getId(), aluno2);
         oportunidadeService.avaliarInscricao(op6.getId(), aluno2, true);
@@ -168,7 +173,8 @@ public class Main {
             "Modelagem relacional, normalizacao e SQL pratico.",
             ModalidadeOportunidade.CURSO,
             "01/02/2026 - 15/02/2026",
-            12, 15, doc, StatusOportunidade.ABERTA);
+            12, 15, doc, StatusOportunidade.ABERTA,
+            null, "Atividade extensionista em banco de dados");
         oportunidadeService.criarOportunidade(op7);
         oportunidadeService.inscreverDiscente(op7.getId(), aluno1);
         oportunidadeService.avaliarInscricao(op7.getId(), aluno1, true);

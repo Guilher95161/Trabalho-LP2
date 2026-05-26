@@ -32,7 +32,7 @@ O sistema tem como objetivo centralizar o gerenciamento de:
 
 ### Docente
 
-* Criar oportunidades (já abertas) e marcá-las como UCE
+* Criar oportunidades de extensão (já abertas) informando o componente curricular (UCE)
 * Aprovar propostas de oportunidades enviadas por discentes líderes
 * Iniciar a execução de uma oportunidade aberta
 * Encerrar oportunidade e escolher seletivamente quem será certificado
@@ -68,7 +68,7 @@ O sistema tem como objetivo centralizar o gerenciamento de:
 
 * **Versionamento de PPC** — ao atualizar a carga horária, uma nova versão é criada e a anterior fica como histórica.
 * **UCEs por PPC** — cada versão do PPC tem suas próprias unidades curriculares de extensão, suportando turmas de PPCs diferentes (ex: 2020 e 2025) ao mesmo tempo.
-* **Painel de progresso** — barra textual com horas concluídas, horas pendentes (já inscritas) e total exigido pelo PPC do aluno.
+* **Painel de progresso** — lista os certificados já aproveitados (com suas horas) e exibe uma barra textual comparando o total acumulado à carga exigida pelo PPC do aluno.
 * **Fluxo unificado** — inscrição → aprovação → execução → encerramento → certificação seletiva → aproveitamento → horas computadas.
 * **Prazos** — 10 dias para o Coordenador avaliar; 5 dias para o discente reenviar uma solicitação indeferida.
 * **Delegação** — Coordenador pode passar uma solicitação para a Comissão; cada um vê só o que é seu.
@@ -170,7 +170,7 @@ Ao iniciar, o sistema já vem com sete cenários prontos cobrindo o fluxo princi
 
 | # | Oportunidade | Status | Para quê serve |
 |---|---|---|---|
-| 1 | Curso de Java — Fundamentos (UCE EXT0001, 40h) | ENCERRADA, aproveitamento DEFERIDO | `aluno1` já tem 40h de UCE computadas no painel |
+| 1 | Curso de Java — Fundamentos (UCE EXT0001, 40h) | ENCERRADA, aproveitamento DEFERIDO | `aluno1` já tem 40h aproveitadas no painel |
 | 2 | Minicurso de Git (20h) | EM_EXECUCAO, `aluno1` aprovado | Demonstrar **encerrar + certificar** ao vivo |
 | 3 | Workshop de Algoritmos (30h) | ABERTA, sem inscritos | Demonstrar **inscrição** ao vivo |
 | 4 | Palestra: Ética em IA (4h) | ENCERRADA, `aluno2` certificado | Demonstrar `aluno2` **solicitando aproveitamento** ao vivo |
@@ -191,7 +191,7 @@ Para validar o fluxo unificado do sistema (inscrição → aproveitamento) **do 
    * Opção **[1] Criar oportunidade**.
    * Quando perguntado "Salvar como rascunho?", responda `n` para publicar direto.
    * Preencha (ex.: Título "Curso de Java", Modalidade `CURSO`, CH `40`, Vagas `5`).
-   * Quando perguntado se é UCE, responda `n` (ou `s` e vincule à `EXT0001` do PPC CC/2020).
+   * Escolha o componente curricular: opção **[1]** para vincular a uma UCE concreta (ex.: `EXT0001` do PPC CC/2020) ou **[2]** para descrever em texto livre.
    * Saia do menu.
 
 2. **Inscrição (Discente):**
@@ -218,7 +218,7 @@ Para validar o fluxo unificado do sistema (inscrição → aproveitamento) **do 
 
 6. **Verificação (Discente):**
    * Volte como `aluno1@ufma.br`.
-   * Opção **[13] Painel de progresso de horas** — a barra agora reflete as horas computadas, com a quantidade exigida vinda do PPC vinculado ao aluno.
+   * Opção **[13] Painel de progresso de horas** — o certificado aparece na lista "Certificados Aproveitados" e a barra reflete as horas computadas, comparadas à carga exigida pelo PPC do aluno.
 
 ### Outros fluxos para explorar
 

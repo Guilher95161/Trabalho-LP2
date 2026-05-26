@@ -21,8 +21,7 @@ public class Oportunidade {
     private Usuario responsavel;
     private StatusOportunidade status;
 
-    // marcacao de UCE: vinculada a uma UCE concreta ou so como texto livre
-    private boolean uce;
+    // toda oportunidade e UCE: vinculada a uma UCE concreta ou so texto livre
     private UnidadeCurricular uceVinculada;
     private String componenteCurricular;
 
@@ -31,7 +30,8 @@ public class Oportunidade {
 
     public Oportunidade(String titulo, String descricao, ModalidadeOportunidade modalidade,
                         String periodoRealizacao, int cargaHoraria, int vagas,
-                        Usuario responsavel, StatusOportunidade status) {
+                        Usuario responsavel, StatusOportunidade status,
+                        UnidadeCurricular uceVinculada, String componenteCurricular) {
         this.id = contador++;
         this.titulo = titulo;
         this.descricao = descricao;
@@ -41,9 +41,8 @@ public class Oportunidade {
         this.vagas = vagas;
         this.responsavel = responsavel;
         this.status = status;
-        this.uce = false;
-        this.uceVinculada = null;
-        this.componenteCurricular = null;
+        this.uceVinculada = uceVinculada;
+        this.componenteCurricular = componenteCurricular;
         this.filaEspera = new LinkedHashSet<>();
         this.inscritosAprovados = new LinkedHashSet<>();
     }
@@ -57,29 +56,10 @@ public class Oportunidade {
     public int getVagas()                   { return vagas; }
     public Usuario getResponsavel()         { return responsavel; }
     public StatusOportunidade getStatus()   { return status; }
-    public boolean isUce()                  { return uce; }
     public UnidadeCurricular getUceVinculada() { return uceVinculada; }
     public String getComponenteCurricular() {
         if (uceVinculada != null) return uceVinculada.getCodigo() + " - " + uceVinculada.getNome();
         return componenteCurricular;
-    }
-
-    public void marcarComoUce(String componenteCurricular) {
-        this.uce = true;
-        this.componenteCurricular = componenteCurricular;
-        this.uceVinculada = null;
-    }
-
-    public void marcarComoUce(UnidadeCurricular u) {
-        this.uce = true;
-        this.uceVinculada = u;
-        this.componenteCurricular = null;
-    }
-
-    public void desmarcarUce() {
-        this.uce = false;
-        this.uceVinculada = null;
-        this.componenteCurricular = null;
     }
 
     // retorna imutavel pra ninguem alterar a fila por fora
@@ -175,11 +155,8 @@ public class Oportunidade {
 
     @Override
     public String toString() {
-        String uceInfo = "";
-        if (uce) {
-            String label = getComponenteCurricular();
-            uceInfo = " | [UCE: " + (label != null ? label : "?") + "]";
-        }
+        String label = getComponenteCurricular();
+        String uceInfo = " | [UCE: " + (label != null ? label : "?") + "]";
         return "[" + id + "] " + titulo +
                " | " + modalidade +
                " | " + periodoRealizacao +

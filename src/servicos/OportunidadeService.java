@@ -136,7 +136,6 @@ public class OportunidadeService {
                 op.getTitulo(),
                 op.getCargaHoraria(),
                 dataHoje,
-                op.isUce(),
                 op.getComponenteCurricular(),
                 op.getUceVinculada()
             );
@@ -150,39 +149,5 @@ public class OportunidadeService {
         if (op.getStatus() != StatusOportunidade.ABERTA
                 && op.getStatus() != StatusOportunidade.EM_EXECUCAO) return false;
         return op.substituirParticipante(aRemover, substituto);
-    }
-
-    public int calcularHorasPendentes(Discente d) {
-        int total = 0;
-        for (Oportunidade op : repositorio.findAllOportunidades()) {
-            boolean emAndamento = op.getStatus() == StatusOportunidade.ABERTA
-                               || op.getStatus() == StatusOportunidade.EM_EXECUCAO;
-            if (emAndamento && op.getInscritosAprovados().contains(d)) {
-                total += op.getCargaHoraria();
-            }
-        }
-        return total;
-    }
-
-    // conta so UCEs com aproveitamento deferido, nao so com flag de pendente
-    public int calcularHorasUceConcluidas(Discente d) {
-        int total = 0;
-        for (Certificado c : d.getCertificados()) {
-            if (c.isUce() && c.isAproveitamentoSolicitado()) {
-                if (foiDeferida(d, c)) total += c.getCargaHoraria();
-            }
-        }
-        return total;
-    }
-
-    private boolean foiDeferida(Discente d, Certificado c) {
-        for (SolicitacaoAproveitamento s : repositorio.findAllSolicitacoes()) {
-            if (s.getSolicitante().equals(d)
-                && s.getCertificado() == c
-                && s.getStatus() == entidades.enums.StatusSolicitacao.DEFERIDA) {
-                return true;
-            }
-        }
-        return false;
     }
 }
