@@ -135,9 +135,7 @@ public class OportunidadeService {
             Certificado cert = new Certificado(
                 op.getTitulo(),
                 op.getCargaHoraria(),
-                dataHoje,
-                op.getComponenteCurricular(),
-                op.getUceVinculada()
+                dataHoje
             );
             d.adicionarCertificado(cert);
         }

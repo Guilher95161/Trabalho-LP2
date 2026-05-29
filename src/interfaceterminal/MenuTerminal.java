@@ -668,25 +668,8 @@ public class MenuTerminal {
         System.out.print("Vagas: ");
         int vagas = lerInt();
 
-        // toda oportunidade e UCE - escolhemos so como o componente sera identificado
-        UnidadeCurricular uceVinculada = null;
-        String componenteCurricular = null;
-        System.out.println("Componente curricular (UCE):");
-        System.out.println("[1] Vincular a uma UCE concreta de um PPC (recomendado)");
-        System.out.println("[2] Indicar componente curricular como texto livre");
-        System.out.print("Opcao: ");
-        String tipoUce = sc.nextLine().trim();
-        if (tipoUce.equals("1")) {
-            uceVinculada = selecionarUceDePpc();
-        }
-        if (uceVinculada == null) {
-            System.out.print("Descricao do componente curricular: ");
-            String cc = sc.nextLine().trim();
-            componenteCurricular = cc.isEmpty() ? "Componente nao especificado" : cc;
-        }
-
         Oportunidade nova = new Oportunidade(titulo, descricao, modalidade, periodo, ch, vagas,
-                                             responsavel, status, uceVinculada, componenteCurricular);
+                                             responsavel, status);
         oportunidadeService.criarOportunidade(nova);
         switch (status) {
             case ABERTA:
@@ -701,42 +684,6 @@ public class MenuTerminal {
             default:
                 break;
         }
-    }
-
-    private UnidadeCurricular selecionarUceDePpc() {
-        List<Curso> cursos = cursoService.listarTodos();
-        if (cursos.isEmpty()) { System.out.println("Nenhum curso cadastrado."); return null; }
-        System.out.println("Selecione o curso:");
-        for (int i = 0; i < cursos.size(); i++) {
-            System.out.println("[" + i + "] " + cursos.get(i));
-        }
-        System.out.print("Opcao: ");
-        int idxCurso = lerInt();
-        Curso c = cursoService.buscarPorIndice(idxCurso);
-        if (c == null) return null;
-
-        List<Ppc> versoes = c.getVersoesPpc();
-        if (versoes.isEmpty()) { System.out.println("Curso sem PPC."); return null; }
-        System.out.println("Selecione o PPC:");
-        for (int i = 0; i < versoes.size(); i++) {
-            System.out.println("[" + i + "] " + versoes.get(i).getAnoVigencia()
-                              + (versoes.get(i).isAtiva() ? " (vigente)" : " (historica)"));
-        }
-        System.out.print("Opcao: ");
-        int idxPpc = lerInt();
-        if (idxPpc < 0 || idxPpc >= versoes.size()) return null;
-        Ppc ppc = versoes.get(idxPpc);
-
-        List<UnidadeCurricular> uces = ppc.getUces();
-        if (uces.isEmpty()) { System.out.println("PPC sem UCEs."); return null; }
-        System.out.println("Selecione a UCE:");
-        for (int i = 0; i < uces.size(); i++) {
-            System.out.println("[" + i + "] " + uces.get(i));
-        }
-        System.out.print("Opcao: ");
-        int idxUce = lerInt();
-        if (idxUce >= 0 && idxUce < uces.size()) return uces.get(idxUce);
-        return null;
     }
 
     private void criarOportunidadeAdmin() {
@@ -1597,14 +1544,13 @@ public class MenuTerminal {
 
     private void menuGerenciarCursos() {
         while (true) {
-            System.out.println("\n--- GERENCIAR CURSOS / PPCs / UCEs ---");
+            System.out.println("\n--- GERENCIAR CURSOS / PPCs ---");
             System.out.println("[1] Listar cursos");
             System.out.println("[2] Cadastrar curso");
             System.out.println("[3] Editar nome de curso");
             System.out.println("[4] Remover curso");
             System.out.println("[5] Cadastrar nova versao de PPC");
             System.out.println("[6] Ver historico de PPCs de um curso");
-            System.out.println("[7] Gerenciar UCEs de um PPC");
             System.out.println("[0] Voltar");
             System.out.print("Opcao: ");
 
@@ -1616,7 +1562,6 @@ public class MenuTerminal {
                 case "4": removerCurso(); break;
                 case "5": cadastrarNovaVersaoPpc(); break;
                 case "6": verHistoricoPpc(); break;
-                case "7": menuGerenciarUces(); break;
                 case "0": return;
                 default: System.out.println("Opcao invalida.");
             }
@@ -1701,69 +1646,6 @@ public class MenuTerminal {
         }
         System.out.println("-- Historico de PPCs de " + c.getCodigo() + " --");
         for (Ppc p : versoes) System.out.println(p);
-    }
-
-    private void menuGerenciarUces() {
-        listarCursos();
-        System.out.print("ID do curso: ");
-        int idCurso = lerInt();
-        Curso c = cursoService.buscarPorId(idCurso);
-        if (c == null) { System.out.println("Curso nao encontrado."); return; }
-
-        List<Ppc> versoes = c.getVersoesPpc();
-        if (versoes.isEmpty()) { System.out.println("Curso sem PPC."); return; }
-
-        System.out.println("-- Versoes do PPC --");
-        for (int i = 0; i < versoes.size(); i++) {
-            System.out.println("[" + i + "] " + versoes.get(i));
-        }
-        System.out.print("Selecione a versao do PPC: ");
-        int idxPpc = lerInt();
-        if (idxPpc < 0 || idxPpc >= versoes.size()) {
-            System.out.println("Versao invalida.");
-            return;
-        }
-        Ppc ppc = versoes.get(idxPpc);
-
-        while (true) {
-            System.out.println("\n--- UCEs DO PPC " + ppc.getCurso().getCodigo() + "/" + ppc.getAnoVigencia() + " ---");
-            System.out.println("[1] Listar UCEs");
-            System.out.println("[2] Cadastrar UCE");
-            System.out.println("[3] Remover UCE");
-            System.out.println("[0] Voltar");
-            System.out.print("Opcao: ");
-
-            String op = lerOpcao();
-            switch (op) {
-                case "1":
-                    if (ppc.getUces().isEmpty()) {
-                        System.out.println("Nenhuma UCE cadastrada.");
-                    } else {
-                        for (UnidadeCurricular u : ppc.getUces()) System.out.println(u);
-                    }
-                    break;
-                case "2":
-                    System.out.print("Codigo (ex: EXT0001): ");
-                    String cod = sc.nextLine().trim();
-                    System.out.print("Nome: ");
-                    String nome = sc.nextLine().trim();
-                    System.out.print("Carga horaria: ");
-                    int ch = lerIntMaiorQueZero();
-                    boolean ok = cursoService.cadastrarUce(ppc, cod, nome, ch);
-                    System.out.println(ok ? "UCE cadastrada." : "Codigo duplicado ou dados invalidos.");
-                    break;
-                case "3":
-                    System.out.print("Codigo da UCE a remover: ");
-                    String codRm = sc.nextLine().trim();
-                    boolean removida = cursoService.removerUce(ppc, codRm);
-                    System.out.println(removida ? "UCE removida." : "UCE nao encontrada.");
-                    break;
-                case "0":
-                    return;
-                default:
-                    System.out.println("Opcao invalida.");
-            }
-        }
     }
 
     // --- Leitura de entrada ---

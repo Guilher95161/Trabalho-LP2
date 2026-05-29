@@ -21,17 +21,12 @@ public class Oportunidade {
     private Usuario responsavel;
     private StatusOportunidade status;
 
-    // toda oportunidade e UCE: vinculada a uma UCE concreta ou so texto livre
-    private UnidadeCurricular uceVinculada;
-    private String componenteCurricular;
-
     private Set<Discente> filaEspera;
     private Set<Discente> inscritosAprovados;
 
     public Oportunidade(String titulo, String descricao, ModalidadeOportunidade modalidade,
                         String periodoRealizacao, int cargaHoraria, int vagas,
-                        Usuario responsavel, StatusOportunidade status,
-                        UnidadeCurricular uceVinculada, String componenteCurricular) {
+                        Usuario responsavel, StatusOportunidade status) {
         this.id = contador++;
         this.titulo = titulo;
         this.descricao = descricao;
@@ -41,8 +36,6 @@ public class Oportunidade {
         this.vagas = vagas;
         this.responsavel = responsavel;
         this.status = status;
-        this.uceVinculada = uceVinculada;
-        this.componenteCurricular = componenteCurricular;
         this.filaEspera = new LinkedHashSet<>();
         this.inscritosAprovados = new LinkedHashSet<>();
     }
@@ -56,11 +49,6 @@ public class Oportunidade {
     public int getVagas()                   { return vagas; }
     public Usuario getResponsavel()         { return responsavel; }
     public StatusOportunidade getStatus()   { return status; }
-    public UnidadeCurricular getUceVinculada() { return uceVinculada; }
-    public String getComponenteCurricular() {
-        if (uceVinculada != null) return uceVinculada.getCodigo() + " - " + uceVinculada.getNome();
-        return componenteCurricular;
-    }
 
     // retorna imutavel pra ninguem alterar a fila por fora
     public List<Discente> getFilaEspera() {
@@ -155,15 +143,12 @@ public class Oportunidade {
 
     @Override
     public String toString() {
-        String label = getComponenteCurricular();
-        String uceInfo = " | [UCE: " + (label != null ? label : "?") + "]";
         return "[" + id + "] " + titulo +
                " | " + modalidade +
                " | " + periodoRealizacao +
                " | " + cargaHoraria + "h" +
                " | Vagas: " + inscritosAprovados.size() + "/" + vagas +
                " | Status: " + status +
-               " | Resp: " + responsavel.getNome() +
-               uceInfo;
+               " | Resp: " + responsavel.getNome();
     }
 }
