@@ -32,3 +32,6 @@ bin/
 
 ## Utilitarios
 DOCUMENTACAO.md
+
+### Maven / Spring Boot ###
+target/
