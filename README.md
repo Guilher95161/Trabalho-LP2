@@ -73,20 +73,20 @@ O sistema tem como objetivo centralizar o gerenciamento de:
 * **Prazos** — 10 dias para o Coordenador avaliar; 5 dias para o discente reenviar uma solicitação indeferida.
 * **Delegação** — Coordenador pode passar uma solicitação para a Comissão; cada um vê só o que é seu.
 * **Rascunhos** — qualquer perfil que cria oportunidades pode salvar como rascunho, editar e submeter quando estiver pronto.
-* **Tratamento de exceções** — hierarquia de exceções de domínio em `src/excecoes` (raiz: `SistemaExtensaoException`). Os serviços lançam erros de negócio tipados (`EntidadeNaoEncontradaException`, `OperacaoInvalidaException`, `EmailJaCadastradoException`, `UsuarioInativoException`) e o menu captura no ponto certo, mantendo a UX consistente.
+* **Tratamento de exceções** — hierarquia de exceções de domínio em `br.ufma.excecao` (raiz: `SistemaExtensaoException`). Os serviços lançam erros de negócio tipados (`EntidadeNaoEncontradaException`, `OperacaoInvalidaException`, `EmailJaCadastradoException`, `UsuarioInativoException`) e o menu captura no ponto certo, mantendo a UX consistente.
 
 ## Tecnologias e características
 
-* Java puro (sem frameworks ou bibliotecas externas)
-* Aplicação de console
-* Armazenamento em memória usando `LinkedHashMap` e `LinkedHashSet` para garantir busca eficiente e ordem de inserção
-* Hierarquia própria de exceções de domínio (`unchecked`) para sinalização limpa de erros de negócio
-* Sem banco de dados ou persistência em arquivos
+* **Spring Boot 4.0.6** sobre **Java 21**, build com **Maven** (wrapper `mvnw`) — *etapa 3 em andamento*
+* Banco **H2 em memória** (console em `/h2-console`); a migração para JPA está nos próximos passos
+* Domínio em Java puro herdado da etapa 2 (regras, máquinas de estado, hierarquia de exceções `unchecked`)
+* Armazenamento atual ainda em memória (`RepositorioCentral` com `LinkedHashMap`/`LinkedHashSet`), a ser trocado por `JpaRepository`
+* Interface funcional hoje é o **menu de terminal** (`Main` + `MenuTerminal`); os endpoints REST entram quando a camada controller for criada
 
 ## Requisitos
 
-* O projeto foi pensado no JDK 21, mas funciona a partir do JDK 8.
-* Terminal com suporte aos comandos `javac` e `java`
+* **JDK 21** (o projeto roda em Java 21; aponte o `JAVA_HOME` para um JDK 21 ao buildar).
+* Não precisa instalar Maven — o **Maven Wrapper** (`mvnw`) baixa tudo. Internet na primeira execução.
 
 ## Usuários iniciais para teste
 
@@ -105,30 +105,22 @@ Os dois discentes já vêm vinculados ao PPC **CC/2020** (310h, com duas UCEs ca
 
 ## Como executar
 
+> **Java 21:** se a máquina tiver mais de um JDK, garanta que o build use o 21 (via `JAVA_HOME`).
+
 ### IntelliJ IDEA
 
-1. Abra a pasta do projeto no IntelliJ IDEA.
-2. Configure o SDK do Java, se necessário.
-3. Execute a classe `Main` localizada em `src/Main.java`.
+1. Abra a pasta do projeto (o IntelliJ reconhece o `pom.xml` como projeto **Maven**).
+2. Configure o **Project SDK = 21**.
+3. Rode `ExtensaoApplication` (app web em `http://localhost:8080`) — ou `br.ufma.Main` para o menu de terminal legado.
 
-### PowerShell
+### PowerShell (Windows)
 
 No diretório raiz do projeto:
 
 ```powershell
-if (-not (Test-Path out)) { New-Item -ItemType Directory -Path out | Out-Null }
-javac -d out (Get-ChildItem -Path src -Recurse -Filter *.java | ForEach-Object { $_.FullName })
-java -cp out Main
-```
-
-### CMD
-
-No diretório raiz do projeto:
-
-```bat
-if not exist out mkdir out
-javac -d out src\Main.java src\entidades\*.java src\entidades\enums\*.java src\servicos\*.java src\repositorio\*.java src\interfaceterminal\*.java
-java -cp out Main
+$env:JAVA_HOME = "C:\Program Files\Java\jdk-21.0.10"   # ajuste para o caminho do seu JDK 21
+.\mvnw.cmd spring-boot:run
+# abre http://localhost:8080/h2-console
 ```
 
 ### Linux/macOS
@@ -136,31 +128,33 @@ java -cp out Main
 No diretório raiz do projeto:
 
 ```bash
-mkdir -p out
-javac -d out $(find src -name "*.java")
-java -cp out Main
+export JAVA_HOME=/caminho/para/jdk-21
+./mvnw spring-boot:run
 ```
 
 ## Estrutura do projeto
 
 ```text
-src/
-|-- Main.java
-|-- entidades/
-|   `-- enums/
-|-- excecoes/
-|-- interfaceterminal/
-|-- repositorio/
-`-- servicos/
+src/main/java/br/ufma/
+|-- ExtensaoApplication.java   (entry Spring)
+|-- Main.java                  (entry do menu CLI legado)
+|-- model/
+|   |-- entidades/  (+ enums/)
+|   `-- repositorio/
+|-- servico/
+|-- excecao/
+`-- interfaceterminal/
+src/main/resources/application.properties   (H2)
+pom.xml · mvnw · .mvn/   (build Maven)
 ```
 
-* `src/Main.java`: ponto de entrada da aplicação. Instancia os serviços, popula cenários de demonstração e abre o menu.
-* `src/entidades`: classes de domínio (Usuario, Oportunidade, Curso, Ppc, UnidadeCurricular, GrupoEstudantil, Certificado, etc.)
-* `src/entidades/enums`: enums de status e classificação (StatusOportunidade, StatusSolicitacao, CargoGrupo, ModalidadeOportunidade)
-* `src/excecoes`: hierarquia de exceções de domínio (SistemaExtensaoException e filhas)
-* `src/interfaceterminal`: menus e interação com o usuário
-* `src/repositorio`: armazenamento central em memória
-* `src/servicos`: regras de negócio e orquestração entre entidades
+* `ExtensaoApplication`: ponto de entrada Spring Boot (`@SpringBootApplication`).
+* `Main`: entry do menu de terminal legado — instancia os serviços, popula cenários de demonstração e abre o menu.
+* `model/entidades` (+ `enums`): classes de domínio (Usuario, Oportunidade, Curso, Ppc, UnidadeCurricular, GrupoEstudantil, MembroGrupo, Certificado…) e enums de status/classificação.
+* `model/repositorio`: armazenamento central em memória (`RepositorioCentral`).
+* `servico`: regras de negócio e orquestração entre entidades.
+* `excecao`: hierarquia de exceções de domínio (`SistemaExtensaoException` e filhas).
+* `interfaceterminal`: menus e interação com o usuário (legado, será substituído por REST).
 
 ---
 
@@ -232,7 +226,7 @@ Para validar o fluxo unificado do sistema (inscrição → aproveitamento) **do 
 
 ## Limitações atuais
 
-* Os dados são reiniciados a cada execução (sem persistência em disco)
-* A interface é totalmente baseada em terminal
-* Datas livres em texto: o período de realização da oportunidade é uma string, não um `LocalDate` — checagens de prazo de inscrição baseadas em data ainda não são feitas
+* Persistência ainda em memória — reiniciar apaga tudo (o banco H2/JPA da etapa 3 está nos próximos passos)
+* A interface funcional ainda é o terminal; os endpoints REST entram quando a camada controller for criada
+* `Oportunidade.periodoRealizacao` continua texto livre (string), não `LocalDate` — checagens de prazo de inscrição por data ainda não são feitas. (`Certificado` e `HistoricoCargo` já usam `LocalDate`.)
 * Não há sistema de notificações ou alertas automáticos por tempo
