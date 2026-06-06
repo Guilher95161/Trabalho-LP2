@@ -2,27 +2,66 @@ package br.ufma.model.entidades;
 
 import br.ufma.model.entidades.enums.ModalidadeOportunidade;
 import br.ufma.model.entidades.enums.StatusOportunidade;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+@Entity
+@Table(name = "oportunidade")
 public class Oportunidade {
     private static int contador = 1;
 
-    private int id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_oportunidade")
+    private Integer id;
+
     private String titulo;
     private String descricao;
+
+    @Enumerated(EnumType.STRING)
     private ModalidadeOportunidade modalidade;
+
     private String periodoRealizacao;
     private int cargaHoraria;
     private int vagas;
+
+    @ManyToOne
+    @JoinColumn(name = "responsavel_id")
     private Usuario responsavel;
+
+    @Enumerated(EnumType.STRING)
     private StatusOportunidade status;
 
-    private Set<Discente> filaEspera;
-    private Set<Discente> inscritosAprovados;
+    @ManyToMany
+    @JoinTable(name = "oportunidade_fila_espera",
+        joinColumns = @JoinColumn(name = "oportunidade_id"),
+        inverseJoinColumns = @JoinColumn(name = "discente_id"))
+    private Set<Discente> filaEspera = new LinkedHashSet<>();
+
+    @ManyToMany
+    @JoinTable(name = "oportunidade_inscritos",
+        joinColumns = @JoinColumn(name = "oportunidade_id"),
+        inverseJoinColumns = @JoinColumn(name = "discente_id"))
+    private Set<Discente> inscritosAprovados = new LinkedHashSet<>();
+
+    // construtor vazio exigido pelo JPA
+    protected Oportunidade() {
+    }
 
     public Oportunidade(String titulo, String descricao, ModalidadeOportunidade modalidade,
                         String periodoRealizacao, int cargaHoraria, int vagas,
@@ -36,11 +75,9 @@ public class Oportunidade {
         this.vagas = vagas;
         this.responsavel = responsavel;
         this.status = status;
-        this.filaEspera = new LinkedHashSet<>();
-        this.inscritosAprovados = new LinkedHashSet<>();
     }
 
-    public int getId()                      { return id; }
+    public Integer getId()                  { return id; }
     public String getTitulo()               { return titulo; }
     public String getDescricao()            { return descricao; }
     public ModalidadeOportunidade getModalidade() { return modalidade; }

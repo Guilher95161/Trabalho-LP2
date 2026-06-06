@@ -1,37 +1,62 @@
 package br.ufma.model.entidades;
 
 import br.ufma.model.entidades.enums.CargoGrupo;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+@Entity
+@Table(name = "grupo_estudantil")
 public class GrupoEstudantil {
     private static int contador = 1;
 
-    private int id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_grupo")
+    private Integer id;
+
     private String nome;
     private String descricao;
+
+    @ManyToOne
+    @JoinColumn(name = "responsavel_id")
     private Docente responsavel;
 
     // membro + cargo num so lugar pra nao desincronizar
-    private List<MembroGrupo> membros;
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "grupo_id")
+    private List<MembroGrupo> membros = new ArrayList<>();
 
-    private List<HistoricoCargo> historicoCargos;
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "grupo_hist_id")
+    private List<HistoricoCargo> historicoCargos = new ArrayList<>();
+
+    // construtor vazio exigido pelo JPA
+    protected GrupoEstudantil() {
+    }
 
     public GrupoEstudantil(String nome, String descricao, Docente responsavel) {
         this.id = contador++;
         this.nome = nome;
         this.descricao = descricao;
         this.responsavel = responsavel;
-        this.membros = new ArrayList<>();
-        this.historicoCargos = new ArrayList<>();
     }
 
     public GrupoEstudantil(String nome, Docente responsavel) {
         this(nome, "", responsavel);
     }
 
-    public int getId()              { return id; }
+    public Integer getId()          { return id; }
     public String getNome()         { return nome; }
     public String getDescricao()    { return descricao; }
     public Docente getResponsavel() { return responsavel; }

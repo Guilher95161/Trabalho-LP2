@@ -1,18 +1,37 @@
 package br.ufma.model.entidades;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
 
+@Entity
+@Table(name = "discente")
+@PrimaryKeyJoinColumn(name = "id_usuario")
 public class Discente extends Usuario {
     private int horasCumpridas;
-    private List<Certificado> certificados;
+
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "discente_id")
+    private List<Certificado> certificados = new ArrayList<>();
+
     // alunos do mesmo curso podem ter PPCs diferentes (turmas distintas)
+    @ManyToOne
+    @JoinColumn(name = "ppc_id")
     private Ppc ppc;
+
+    // construtor vazio exigido pelo JPA
+    protected Discente() {
+    }
 
     public Discente(String nome, String matricula, String email, String senha) {
         super(nome, matricula, email, senha, "DISCENTE");
         this.horasCumpridas = 0;
-        this.certificados = new ArrayList<>();
         this.ppc = null;
     }
 

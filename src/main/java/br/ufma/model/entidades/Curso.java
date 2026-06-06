@@ -1,25 +1,45 @@
 package br.ufma.model.entidades;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
 
 // carga horaria de extensao fica no PPC, nao aqui, pq muda a cada versao
+@Entity
+@Table(name = "curso")
 public class Curso {
     private static int contador = 1;
 
-    private int id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_curso")
+    private Integer id;
+
+    @Column(name = "codigo", unique = true)
     private String codigo;
     private String nome;
-    private List<Ppc> versoesPpc;
+
+    @OneToMany(mappedBy = "curso", cascade = CascadeType.ALL)
+    private List<Ppc> versoesPpc = new ArrayList<>();
+
+    // construtor vazio exigido pelo JPA
+    protected Curso() {
+    }
 
     public Curso(String codigo, String nome) {
         this.id = contador++;
         this.codigo = codigo;
         this.nome = nome;
-        this.versoesPpc = new ArrayList<>();
     }
 
-    public int getId()              { return id; }
+    public Integer getId()          { return id; }
     public String getCodigo()       { return codigo; }
     public String getNome()         { return nome; }
     public List<Ppc> getVersoesPpc(){ return versoesPpc; }

@@ -1,16 +1,44 @@
 package br.ufma.model.entidades;
 
 import br.ufma.model.entidades.enums.StatusSolicitacao;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
+@Entity
+@Table(name = "solicitacao_grupo")
 public class SolicitacaoGrupoEstudantil {
     private static int contador = 1;
 
-    private int id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_solicitacao_grupo")
+    private Integer id;
+
+    @ManyToOne
+    @JoinColumn(name = "solicitante_id")
     private Discente solicitante;
+
     private String nomeGrupo;
     private String descricao;
+
+    @ManyToOne
+    @JoinColumn(name = "docente_id")
     private Docente docenteResponsavel;
+
+    @Enumerated(EnumType.STRING)
     private StatusSolicitacao status;
+
+    // construtor vazio exigido pelo JPA
+    protected SolicitacaoGrupoEstudantil() {
+    }
 
     public SolicitacaoGrupoEstudantil(Discente solicitante, String nomeGrupo, String descricao, Docente docenteResponsavel) {
         this.id = contador++;
@@ -21,7 +49,7 @@ public class SolicitacaoGrupoEstudantil {
         this.status = StatusSolicitacao.PENDENTE;
     }
 
-    public int getId() {
+    public Integer getId() {
         return id;
     }
 

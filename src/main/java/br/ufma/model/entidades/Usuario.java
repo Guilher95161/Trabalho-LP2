@@ -1,12 +1,36 @@
 package br.ufma.model.entidades;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.Table;
+
+@Entity
+@Inheritance(strategy = InheritanceType.JOINED)
+@Table(name = "usuario")
 public abstract class Usuario {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_usuario")
+    private Integer id;
+
     private String nome;
     private String matricula;
+
+    @Column(name = "email", unique = true)
     private String email;
+
     private String senha;
     private String tipo;
     private boolean ativo;
+
+    // construtor vazio exigido pelo JPA
+    protected Usuario() {
+    }
 
     public Usuario(String nome, String matricula, String email, String senha, String tipo) {
         this.nome = nome;
@@ -17,6 +41,9 @@ public abstract class Usuario {
         this.ativo = true;
     }
 
+    public Integer getId(){
+        return id;
+    }
     public String getNome(){
         return nome;
     }

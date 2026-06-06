@@ -78,9 +78,9 @@ O sistema tem como objetivo centralizar o gerenciamento de:
 ## Tecnologias e características
 
 * **Spring Boot 4.0.6** sobre **Java 21**, build com **Maven** (wrapper `mvnw`) — *etapa 3 em andamento*
-* Banco **H2 em memória** (console em `/h2-console`); a migração para JPA está nos próximos passos
-* Domínio em Java puro herdado da etapa 2 (regras, máquinas de estado, hierarquia de exceções `unchecked`)
-* Armazenamento atual ainda em memória (`RepositorioCentral` com `LinkedHashMap`/`LinkedHashSet`), a ser trocado por `JpaRepository`
+* Banco **H2 em memória** (console em `/h2-console`); **entidades já mapeadas em JPA** (herança JOINED, `@GeneratedValue(IDENTITY)`) e **8 repositórios `JpaRepository`** criados — falta ligar os services a eles
+* Domínio em Java puro herdado da etapa 2 (regras, máquinas de estado, hierarquia de exceções `unchecked`), agora anotado com JPA
+* **Store ativo ainda em memória** (`RepositorioCentral` com `LinkedHashMap`/`LinkedHashSet`): services e CLI continuam usando-o; a troca pelos `JpaRepository` é o cutover dos próximos passos
 * Interface funcional hoje é o **menu de terminal** (`Main` + `MenuTerminal`); os endpoints REST entram quando a camada controller for criada
 
 ## Requisitos
@@ -150,8 +150,8 @@ pom.xml · mvnw · .mvn/   (build Maven)
 
 * `ExtensaoApplication`: ponto de entrada Spring Boot (`@SpringBootApplication`).
 * `Main`: entry do menu de terminal legado — instancia os serviços, popula cenários de demonstração e abre o menu.
-* `model/entidades` (+ `enums`): classes de domínio (Usuario, Oportunidade, Curso, Ppc, UnidadeCurricular, GrupoEstudantil, MembroGrupo, Certificado…) e enums de status/classificação.
-* `model/repositorio`: armazenamento central em memória (`RepositorioCentral`).
+* `model/entidades` (+ `enums`): classes de domínio (Usuario, Oportunidade, Curso, Ppc, UnidadeCurricular, GrupoEstudantil, MembroGrupo, Certificado…) e enums de status/classificação — **anotadas com JPA** (`@Entity`, herança JOINED, relações).
+* `model/repositorio`: `RepositorioCentral` (store em memória, ainda ativo) **+ 8 interfaces `JpaRepository`** (já criadas, ainda não ligadas aos services).
 * `servico`: regras de negócio e orquestração entre entidades.
 * `excecao`: hierarquia de exceções de domínio (`SistemaExtensaoException` e filhas).
 * `interfaceterminal`: menus e interação com o usuário (legado, será substituído por REST).
@@ -226,7 +226,7 @@ Para validar o fluxo unificado do sistema (inscrição → aproveitamento) **do 
 
 ## Limitações atuais
 
-* Persistência ainda em memória — reiniciar apaga tudo (o banco H2/JPA da etapa 3 está nos próximos passos)
+* Persistência ainda em memória — reiniciar apaga tudo. As entidades já estão mapeadas em JPA e há repositórios `JpaRepository`, mas os services ainda gravam no `RepositorioCentral`; o banco H2/JPA só vira o store ativo após o cutover dos services.
 * A interface funcional ainda é o terminal; os endpoints REST entram quando a camada controller for criada
 * `Oportunidade.periodoRealizacao` continua texto livre (string), não `LocalDate` — checagens de prazo de inscrição por data ainda não são feitas. (`Certificado` e `HistoricoCargo` já usam `LocalDate`.)
 * Não há sistema de notificações ou alertas automáticos por tempo

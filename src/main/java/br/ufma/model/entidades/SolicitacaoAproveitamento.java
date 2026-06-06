@@ -1,9 +1,21 @@
 package br.ufma.model.entidades;
 
 import br.ufma.model.entidades.enums.StatusSolicitacao;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 
+@Entity
+@Table(name = "solicitacao_aproveitamento")
 public class SolicitacaoAproveitamento {
     private static int contador = 1;
 
@@ -11,16 +23,35 @@ public class SolicitacaoAproveitamento {
     public static final int PRAZO_AVALIACAO_DIAS = 10;
     public static final int PRAZO_REENVIO_DIAS = 5;
 
-    private int id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_solicitacao")
+    private Integer id;
+
+    @ManyToOne
+    @JoinColumn(name = "solicitante_id")
     private Discente solicitante;
+
+    @ManyToOne
+    @JoinColumn(name = "certificado_id")
     private Certificado certificado;
+
+    @Enumerated(EnumType.STRING)
     private StatusSolicitacao status;
+
     private String parecer;
     private boolean delegadaParaComissao;
 
     // dataCriacao reinicia a cada reenvio; dataAvaliacao e quando foi julgado
+    @Column(name = "data_criacao")
     private LocalDate dataCriacao;
+
+    @Column(name = "data_avaliacao")
     private LocalDate dataAvaliacao;
+
+    // construtor vazio exigido pelo JPA
+    protected SolicitacaoAproveitamento() {
+    }
 
     public SolicitacaoAproveitamento(Discente solicitante, Certificado certificado) {
         this.id = contador++;
@@ -33,7 +64,7 @@ public class SolicitacaoAproveitamento {
         this.dataAvaliacao = null;
     }
 
-    public int getId()                         { return id; }
+    public Integer getId()                     { return id; }
     public Discente getSolicitante()           { return solicitante; }
     public Certificado getCertificado()        { return certificado; }
     public StatusSolicitacao getStatus()       { return status; }
