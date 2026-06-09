@@ -32,6 +32,7 @@ bin/
 
 ## Utilitarios
 DOCUMENTACAO.md
+ER_DIAGRAM.md
 
 ### Maven / Spring Boot ###
 target/
