@@ -5,8 +5,10 @@ universitária: usuários com papéis, oportunidades de extensão, certificados 
 horas.
 
 > **Etapa 3 (Spring Boot) — em andamento.** O projeto foi **reconstruído do zero** no estilo da
-> aula (entidades anêmicas com Lombok, JPA, H2). Estão prontas as camadas **`model`** e **`repo`**;
-> a camada **`service`** (regras de negócio) e o **REST** entram nos próximos passos.
+> aula (entidades anêmicas com Lombok, JPA, H2). Estão prontas as camadas **`model`**, **`repo`**,
+> **`service`** e **`controller`** (REST). Os services/controllers entregam **CRUD + validação +
+> login** (estilo dos PDFs da aula); as **regras de negócio ricas** (máquinas de estado, prazos,
+> aproveitamento de horas) entram nos próximos passos.
 
 ## Objetivo
 
@@ -17,7 +19,7 @@ Centralizar o gerenciamento de:
 * **certificados** emitidos aos discentes
 * **solicitações de aproveitamento** de horas (com parecer, delegação e prazos)
 
-## Domínio (7 entidades)
+## Domínio (11 entidades)
 
 | Entidade | Papel no sistema |
 |---|---|
@@ -28,8 +30,12 @@ Centralizar o gerenciamento de:
 | `Oportunidade` | atividade de extensão (fila de espera + inscritos aprovados) |
 | `Certificado` | comprovante de horas do aluno |
 | `SolicitacaoAproveitamento` | pedido para que um certificado conte como horas |
+| `GrupoEstudantil` | grupo/liga sob responsabilidade de um `Usuario` (papel docente); agrega membros e histórico de cargos |
+| `MembroGrupo` | vínculo discente + cargo + data de entrada num grupo |
+| `HistoricoCargo` | trilha temporal de cargos de um discente no grupo |
+| `SolicitacaoGrupoEstudantil` | pedido de um discente para criação de grupo |
 
-Enums: `StatusOportunidade`, `StatusSolicitacao`, `ModalidadeOportunidade`.
+Enums: `StatusOportunidade`, `StatusSolicitacao`, `ModalidadeOportunidade`, `CargoGrupo`.
 
 **Em uma frase:** um `Discente` (vinculado a um `Curso`) inscreve-se em `Oportunidades`, recebe
 `Certificados`, e abre uma `SolicitacaoAproveitamento` para essas horas serem contadas; quem avalia
@@ -43,15 +49,17 @@ são `Usuarios` com o `Papel` adequado.
 * **Comissão** — avalia solicitações delegadas pelo coordenador.
 * **Administrador** — acesso completo; gerencia usuários.
 
-> As regras acima são o **escopo de negócio**; sua implementação vive na camada `service`, ainda a
-> ser escrita. Hoje o projeto entrega o modelo de dados (entidades + repositórios) que as sustenta.
+> As regras acima são o **escopo de negócio**. A camada `service` já entrega o **CRUD + validação +
+> login**; as regras ricas (defere/indefere com prazos, delegação, certificação) entram numa próxima
+> etapa.
 
 ## Tecnologias
 
 * **Spring Boot 4.0.6** sobre **Java 21**, build com **Maven** (wrapper `mvnw`).
 * **Spring Data JPA** + **H2 em memória** (console em `/h2-console`).
 * **Lombok** para o boilerplate das entidades.
-* Pacote base `br.ufma.extensao`; camadas flat `model/`, `repo/`, `service/`.
+* Pacote base `br.ufma.extensao`; camadas flat `model/` (+ `model/dto/`), `repo/`, `service/`
+  (+ `service/exceptions/`), `controller/`.
 
 ## Requisitos
 
@@ -88,10 +96,13 @@ pelo Hibernate a partir do mapeamento (`ddl-auto=update`).
 ```text
 src/main/java/br/ufma/extensao/
 |-- ExtensaoApplication.java   (entry @SpringBootApplication)
-|-- model/                     (7 entidades anêmicas + enums/)
-|   `-- enums/                 (StatusOportunidade, StatusSolicitacao, ModalidadeOportunidade)
-|-- repo/                      (6 interfaces JpaRepository)
-`-- service/                   (reservada — próximo passo)
+|-- model/                     (11 entidades anêmicas + enums/ + dto/)
+|   |-- enums/                 (StatusOportunidade, StatusSolicitacao, ModalidadeOportunidade, CargoGrupo)
+|   `-- dto/                   (DTOs de requisição dos controllers)
+|-- repo/                      (9 interfaces JpaRepository)
+|-- service/                   (9 services @Service + exceptions/)
+|   `-- exceptions/            (SistemaExtensaoException + RegraNegocioRunTime + 4 especializadas)
+`-- controller/                (9 @RestController, endpoints /api/*)
 src/main/resources/application.properties   (H2 em memória + console)
 pom.xml · mvnw · .mvn/   (build Maven)
 ```
@@ -99,10 +110,13 @@ pom.xml · mvnw · .mvn/   (build Maven)
 ## Estado atual e próximos passos
 
 * ✅ Scaffold Spring Boot subindo em `:8080`; schema JPA gerado no H2.
-* ✅ Camada `model` (7 entidades, herança JOINED em `Discente`, `Papel` M:N) e `repo` (6 repositórios).
-* ⬜ Camada `service` com as regras de negócio (máquinas de estado, prazos, aproveitamento de horas).
-* ⬜ DTOs + controllers REST, tratamento global de exceções, seeding de dados, Spring Security.
+* ✅ Camada `model` (11 entidades, herança JOINED em `Discente`, `Papel` M:N, grupos estudantis) e
+  `repo` (9 repositórios).
+* ✅ Camada `service` (9 services) com **CRUD + validação + login** e hierarquia de exceções de domínio.
+* ✅ Camada `controller` (9 `@RestController`) com endpoints REST `/api/*`, DTOs e respostas `ResponseEntity`.
+* ⬜ Regras de negócio ricas nos services (máquinas de estado, prazos 10/5, aproveitamento de horas, cargos/líder).
+* ⬜ Seeding de dados e Spring Security.
 
-> O escopo foi **reduzido** em relação à etapa 2 (removida a feature de grupos estudantis e o
-> versionamento de PPC/UCE) para aproximar do projeto de referência da disciplina. O histórico
-> completo da etapa 2 permanece nas branches `P2` e no histórico do git.
+> O **versionamento de PPC/UCE** continua colapsado em `Curso` (decisão da disciplina). A feature de
+> **grupos estudantis** foi **reintroduzida**. O histórico completo da etapa 2 permanece nas branches
+> `P2` e no histórico do git.
