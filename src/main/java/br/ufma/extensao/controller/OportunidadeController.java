@@ -60,6 +60,46 @@ public class OportunidadeController {
         return ResponseEntity.ok(service.buscar(filtro));
     }
 
+    @PostMapping("{id}/submeter")
+    public ResponseEntity submeter(@PathVariable Integer id) {
+        return transicao(id, "submeter");
+    }
+
+    @PostMapping("{id}/aprovar")
+    public ResponseEntity aprovar(@PathVariable Integer id) {
+        return transicao(id, "aprovar");
+    }
+
+    @PostMapping("{id}/iniciar")
+    public ResponseEntity iniciar(@PathVariable Integer id) {
+        return transicao(id, "iniciar");
+    }
+
+    @PostMapping("{id}/encerrar")
+    public ResponseEntity encerrar(@PathVariable Integer id) {
+        return transicao(id, "encerrar");
+    }
+
+    @PostMapping("{id}/cancelar")
+    public ResponseEntity cancelar(@PathVariable Integer id) {
+        return transicao(id, "cancelar");
+    }
+
+    private ResponseEntity transicao(Integer id, String acao) {
+        try {
+            Oportunidade oportunidade = switch (acao) {
+                case "submeter" -> service.submeter(id);
+                case "aprovar" -> service.aprovar(id);
+                case "iniciar" -> service.iniciar(id);
+                case "encerrar" -> service.encerrar(id);
+                default -> service.cancelar(id);
+            };
+            return ResponseEntity.ok(oportunidade);
+        } catch (SistemaExtensaoException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     private Oportunidade montar(Integer id, OportunidadeDTO dto) {
         Oportunidade oportunidade = new Oportunidade();
         oportunidade.setId(id);

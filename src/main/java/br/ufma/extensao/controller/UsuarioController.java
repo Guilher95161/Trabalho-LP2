@@ -58,6 +58,15 @@ public class UsuarioController {
         }
     }
 
+    @PutMapping("{id}/desativar")
+    public ResponseEntity desativar(@PathVariable Integer id) {
+        try {
+            return ResponseEntity.ok(service.desativarUsuario(id));
+        } catch (SistemaExtensaoException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     @DeleteMapping("{id}")
     public ResponseEntity remover(@PathVariable Integer id) {
         try {
