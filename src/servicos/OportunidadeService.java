@@ -91,10 +91,10 @@ public class OportunidadeService {
         op.encerrar();
     }
 
-    public void cancelarOportunidade(int oportunidadeId) {
+    public void cancelarOportunidade(int oportunidadeId, String motivo) {
         Oportunidade op = repositorio.findOportunidadeById(oportunidadeId);
         if (op == null) throw new EntidadeNaoEncontradaException("Oportunidade #" + oportunidadeId + " nao encontrada.");
-        boolean cancelou = op.cancelar();
+        boolean cancelou = op.cancelar(motivo);
         if (!cancelou) {
             throw new OperacaoInvalidaException("Oportunidade nao pode ser cancelada no status atual: " + op.getStatus() + ".");
         }

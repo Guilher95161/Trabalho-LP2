@@ -102,7 +102,9 @@ public class RepositorioCentral {
     public List<GrupoEstudantil> findGrupoByUsuario(Usuario u) {
         List<GrupoEstudantil> lista = new ArrayList<>();
         for (GrupoEstudantil g : grupos.values()) {
-            if (u.equals(g.getResponsavel())) lista.add(g);
+            boolean ehResponsavel = u.equals(g.getResponsavel());
+            boolean ehMembro = (u instanceof Discente) && g.isMembro((Discente) u);
+            if (ehResponsavel || ehMembro) lista.add(g);
         }
         return lista;
     }

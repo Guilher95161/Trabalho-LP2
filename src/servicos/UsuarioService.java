@@ -51,6 +51,13 @@ public class UsuarioService {
         }
     }
 
+    public void reativarUsuario(String email){
+        Usuario u = repositorio.findUsuarioByEmail(email);
+        if (u != null){
+            u.reativarConta();
+        }
+    }
+
     public List<Usuario> listarTodos() {
         return repositorio.findAllUsuarios();
     }

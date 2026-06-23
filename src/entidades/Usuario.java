@@ -57,6 +57,10 @@ public abstract class Usuario {
         this.ativo = false;
     }
 
+    public void reativarConta(){
+        this.ativo = true;
+    }
+
     @Override
     public String toString() {
         String status = ativo ? "ATIVO" : "INATIVO";

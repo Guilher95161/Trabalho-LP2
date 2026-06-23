@@ -502,6 +502,7 @@ public class MenuTerminal {
             System.out.println("[19] Gerenciar Cursos (PPC)");
             System.out.println("[20] Submeter rascunho de oportunidade");
             System.out.println("[21] Editar rascunho de oportunidade");
+            System.out.println("[22] Reativar Usuario");
             System.out.println("[0]  Sair");
             System.out.print("Opcao: ");
 
@@ -571,6 +572,9 @@ public class MenuTerminal {
                 case "21":
                     editarRascunho(a);
                     break;
+                case "22":
+                    reativarUsuario();
+                    break;
                 case "0":
                     return;
                 default:
@@ -587,6 +591,13 @@ public class MenuTerminal {
         String email = sc.nextLine().trim();
         usuarioService.desativarUsuario(email);
         System.out.println("Desativado com sucesso!");
+    }
+
+    private void reativarUsuario() {
+        System.out.println("Insira o email do usuário a reativar: ");
+        String email = sc.nextLine().trim();
+        usuarioService.reativarUsuario(email);
+        System.out.println("Reativado com sucesso!");
     }
 
     // --- Oportunidade ---
@@ -884,7 +895,7 @@ public class MenuTerminal {
             System.out.println("Motivo nao pode ser vazio.");
         }
         try {
-            oportunidadeService.cancelarOportunidade(id);
+            oportunidadeService.cancelarOportunidade(id, motivo);
             System.out.println("Oportunidade cancelada. Motivo registrado: " + motivo);
         } catch (EntidadeNaoEncontradaException | OperacaoInvalidaException e) {
             System.out.println("Nao foi possivel cancelar: " + e.getMessage());

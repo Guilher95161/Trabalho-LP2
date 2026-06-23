@@ -20,6 +20,7 @@ public class Oportunidade {
     private int vagas;
     private Usuario responsavel;
     private StatusOportunidade status;
+    private String motivoCancelamento;
 
     private Set<Discente> filaEspera;
     private Set<Discente> inscritosAprovados;
@@ -49,6 +50,7 @@ public class Oportunidade {
     public int getVagas()                   { return vagas; }
     public Usuario getResponsavel()         { return responsavel; }
     public StatusOportunidade getStatus()   { return status; }
+    public String getMotivoCancelamento()   { return motivoCancelamento; }
 
     // retorna imutavel pra ninguem alterar a fila por fora
     public List<Discente> getFilaEspera() {
@@ -132,23 +134,27 @@ public class Oportunidade {
         }
     }
 
-    public boolean cancelar() {
+    public boolean cancelar(String motivo) {
         if (this.status == StatusOportunidade.ENCERRADA
                 || this.status == StatusOportunidade.CANCELADA) {
             return false;
         }
         this.status = StatusOportunidade.CANCELADA;
+        this.motivoCancelamento = motivo;
         return true;
     }
 
     @Override
     public String toString() {
+        String motivo = (status == StatusOportunidade.CANCELADA && motivoCancelamento != null)
+                ? " | Motivo: " + motivoCancelamento : "";
         return "[" + id + "] " + titulo +
                " | " + modalidade +
                " | " + periodoRealizacao +
                " | " + cargaHoraria + "h" +
                " | Vagas: " + inscritosAprovados.size() + "/" + vagas +
                " | Status: " + status +
-               " | Resp: " + responsavel.getNome();
+               " | Resp: " + responsavel.getNome() +
+               motivo;
     }
 }
