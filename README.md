@@ -114,9 +114,12 @@ pom.xml · mvnw · .mvn/   (build Maven)
   `repo` (9 repositórios).
 * ✅ Camada `service` (9 services) com **CRUD + validação + login** e hierarquia de exceções de domínio.
 * ✅ Camada `controller` (9 `@RestController`) com endpoints REST `/api/*`, DTOs e respostas `ResponseEntity`.
-* ✅ Primeiras regras ricas: **máquina de estados da Oportunidade** (`submeter/aprovar/iniciar/encerrar/cancelar`, RF012) e **desativar conta** (RF0001).
-* ⬜ Demais regras ricas (prazos 10/5 e deferimento do aproveitamento, painel de horas, cargos/líder, aprovação de grupo).
-* ⬜ Validação de papéis nas ações, seeding de dados e Spring Security.
+* ✅ Regras ricas da P2 portadas:
+  * **Oportunidade** — máquina de estados (RF012) + inscrições (fila/aprovados/substituir/certificar) + `motivoCancelamento`.
+  * **Aproveitamento** — máquina de estados `StatusSolicitacao`, **deferimento que soma horas ao discente**, delegação, cancelamento e reenvio com **prazos 10/5**.
+  * **Grupos** — aprovação que **cria o grupo** (solicitante vira `PRESIDENTE`), gerência de membros/cargos com histórico, `isLider` e busca de grupo por responsável **ou** membro.
+  * **Painel de horas** do discente e **desativar/reativar conta** (RF0001/RF004).
+* ⬜ Validação de papéis nas ações, seeding de dados, persistência em arquivo (H2 file) e **Spring Security/JWT**.
 
 > O **versionamento de PPC/UCE** continua colapsado em `Curso` (decisão da disciplina). A feature de
 > **grupos estudantis** foi **reintroduzida**. O histórico completo da etapa 2 permanece nas branches

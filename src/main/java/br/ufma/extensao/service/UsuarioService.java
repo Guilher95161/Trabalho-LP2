@@ -52,6 +52,14 @@ public class UsuarioService {
         return repository.save(usuario);
     }
 
+    @Transactional
+    public Usuario reativarUsuario(Integer id) {
+        Usuario usuario = repository.findById(id)
+                .orElseThrow(() -> new EntidadeNaoEncontradaException("Usuario nao encontrado."));
+        usuario.setAtivo(true);
+        return repository.save(usuario);
+    }
+
     public void remover(Usuario usuario) {
         verificarId(usuario);
         repository.delete(usuario);

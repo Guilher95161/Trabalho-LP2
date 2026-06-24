@@ -58,6 +58,61 @@ public class SolicitacaoAproveitamentoController {
         return ResponseEntity.ok(service.buscar(filtro));
     }
 
+    @GetMapping("/pendentes")
+    public ResponseEntity listarPendentes() {
+        return ResponseEntity.ok(service.listarPendentes());
+    }
+
+    @GetMapping("/pendentes/nao-delegadas")
+    public ResponseEntity listarPendentesSemDelegacao() {
+        return ResponseEntity.ok(service.listarPendentesSemDelegacao());
+    }
+
+    @GetMapping("/delegadas")
+    public ResponseEntity listarDelegadas() {
+        return ResponseEntity.ok(service.listarDelegadas());
+    }
+
+    // ===== Transicoes de estado =====
+
+    @PostMapping("{id}/avaliar")
+    public ResponseEntity avaliar(@PathVariable Integer id,
+                                  @RequestParam boolean aprovado,
+                                  @RequestParam(value = "parecer", required = false) String parecer) {
+        try {
+            return ResponseEntity.ok(service.avaliar(id, aprovado, parecer));
+        } catch (SistemaExtensaoException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("{id}/delegar")
+    public ResponseEntity delegar(@PathVariable Integer id) {
+        try {
+            return ResponseEntity.ok(service.delegar(id));
+        } catch (SistemaExtensaoException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("{id}/cancelar")
+    public ResponseEntity cancelar(@PathVariable Integer id) {
+        try {
+            return ResponseEntity.ok(service.cancelar(id));
+        } catch (SistemaExtensaoException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("{id}/reenviar")
+    public ResponseEntity reenviar(@PathVariable Integer id) {
+        try {
+            return ResponseEntity.ok(service.reenviar(id));
+        } catch (SistemaExtensaoException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     private SolicitacaoAproveitamento montar(Integer id, SolicitacaoAproveitamentoDTO dto) {
         SolicitacaoAproveitamento solicitacao = new SolicitacaoAproveitamento();
         solicitacao.setId(id);

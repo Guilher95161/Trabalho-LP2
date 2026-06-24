@@ -1,7 +1,11 @@
 package br.ufma.extensao.service;
 
+import br.ufma.extensao.model.Certificado;
+import br.ufma.extensao.model.Discente;
 import br.ufma.extensao.model.Oportunidade;
 import br.ufma.extensao.model.enums.StatusOportunidade;
+import br.ufma.extensao.repo.CertificadoRepository;
+import br.ufma.extensao.repo.DiscenteRepository;
 import br.ufma.extensao.repo.OportunidadeRepository;
 import br.ufma.extensao.service.exceptions.EntidadeNaoEncontradaException;
 import br.ufma.extensao.service.exceptions.OperacaoInvalidaException;
@@ -12,13 +16,23 @@ import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class OportunidadeService {
 
     @Autowired
     OportunidadeRepository repository;
+
+    @Autowired
+    DiscenteRepository discenteRepository;
+
+    @Autowired
+    CertificadoRepository certificadoRepository;
 
     @Transactional
     public Oportunidade salvar(Oportunidade oportunidade) {
@@ -81,18 +95,118 @@ public class OportunidadeService {
     }
 
     @Transactional
-    public Oportunidade cancelar(Integer id) {
+    public Oportunidade cancelar(Integer id, String motivo) {
         Oportunidade oportunidade = buscarObrigatoria(id);
         StatusOportunidade status = oportunidade.getStatus();
         if (status == StatusOportunidade.ENCERRADA || status == StatusOportunidade.CANCELADA)
             throw new OperacaoInvalidaException("Nao e possivel cancelar uma oportunidade ja ENCERRADA ou CANCELADA.");
         oportunidade.setStatus(StatusOportunidade.CANCELADA);
+        oportunidade.setMotivoCancelamento(motivo);
         return repository.save(oportunidade);
+    }
+
+    // ===== Inscricoes (fila de espera / aprovados) =====
+
+    @Transactional
+    public Oportunidade inscrever(Integer oportunidadeId, Integer discenteId) {
+        Oportunidade oportunidade = buscarObrigatoria(oportunidadeId);
+        if (oportunidade.getStatus() != StatusOportunidade.ABERTA)
+            throw new OperacaoInvalidaException("Inscricao nao permitida: oportunidade esta " + oportunidade.getStatus() + ".");
+        Discente discente = buscarDiscente(discenteId);
+        if (!discente.isAtivo())
+            throw new OperacaoInvalidaException("Discente inativo nao pode se inscrever.");
+        // ja aprovado nao volta para a fila de espera
+        if (oportunidade.getInscritosAprovados() != null && oportunidade.getInscritosAprovados().contains(discente))
+            return oportunidade;
+        if (oportunidade.getFilaEspera() == null)
+            oportunidade.setFilaEspera(new LinkedHashSet<>());
+        oportunidade.getFilaEspera().add(discente);
+        return repository.save(oportunidade);
+    }
+
+    @Transactional
+    public Oportunidade avaliarInscricao(Integer oportunidadeId, Integer discenteId, boolean aprovar) {
+        Oportunidade oportunidade = buscarObrigatoria(oportunidadeId);
+        if (oportunidade.getStatus() != StatusOportunidade.ABERTA)
+            throw new OperacaoInvalidaException("So e possivel avaliar inscricoes de uma oportunidade ABERTA.");
+        Discente discente = buscarDiscente(discenteId);
+        Set<Discente> fila = oportunidade.getFilaEspera();
+        if (fila == null || !fila.contains(discente))
+            throw new OperacaoInvalidaException("Discente nao esta na fila de espera.");
+        if (aprovar) {
+            if (oportunidade.getInscritosAprovados() == null)
+                oportunidade.setInscritosAprovados(new LinkedHashSet<>());
+            if (oportunidade.getInscritosAprovados().size() >= oportunidade.getVagas())
+                throw new OperacaoInvalidaException("Nao ha vagas disponiveis.");
+            oportunidade.getInscritosAprovados().add(discente);
+        }
+        fila.remove(discente);
+        return repository.save(oportunidade);
+    }
+
+    @Transactional
+    public Oportunidade cancelarInscricao(Integer oportunidadeId, Integer discenteId) {
+        Oportunidade oportunidade = buscarObrigatoria(oportunidadeId);
+        Discente discente = buscarDiscente(discenteId);
+        if (oportunidade.getFilaEspera() != null)
+            oportunidade.getFilaEspera().remove(discente);
+        if (oportunidade.getInscritosAprovados() != null)
+            oportunidade.getInscritosAprovados().remove(discente);
+        return repository.save(oportunidade);
+    }
+
+    // remove um aprovado e promove um discente que esta na fila de espera
+    @Transactional
+    public Oportunidade substituirParticipante(Integer oportunidadeId, Integer aRemoverId, Integer substitutoId) {
+        Oportunidade oportunidade = buscarObrigatoria(oportunidadeId);
+        StatusOportunidade status = oportunidade.getStatus();
+        if (status != StatusOportunidade.ABERTA && status != StatusOportunidade.EM_EXECUCAO)
+            throw new OperacaoInvalidaException("Substituicao so e possivel em oportunidade ABERTA ou EM_EXECUCAO.");
+        Discente aRemover = buscarDiscente(aRemoverId);
+        Discente substituto = buscarDiscente(substitutoId);
+        Set<Discente> aprovados = oportunidade.getInscritosAprovados();
+        Set<Discente> fila = oportunidade.getFilaEspera();
+        if (aprovados == null || !aprovados.contains(aRemover))
+            throw new OperacaoInvalidaException("Participante a remover nao esta entre os aprovados.");
+        if (fila == null || !fila.contains(substituto))
+            throw new OperacaoInvalidaException("Substituto nao esta na fila de espera.");
+        aprovados.remove(aRemover);
+        fila.remove(substituto);
+        aprovados.add(substituto);
+        return repository.save(oportunidade);
+    }
+
+    // emite certificados; as horas so entram depois do aproveitamento ser deferido
+    @Transactional
+    public Oportunidade certificar(Integer oportunidadeId, List<Integer> discenteIds) {
+        Oportunidade oportunidade = buscarObrigatoria(oportunidadeId);
+        if (oportunidade.getStatus() != StatusOportunidade.ENCERRADA)
+            throw new OperacaoInvalidaException("So e possivel certificar discentes de uma oportunidade ENCERRADA.");
+        LocalDate hoje = LocalDate.now();
+        for (Integer discenteId : discenteIds) {
+            Discente discente = buscarDiscente(discenteId);
+            Certificado certificado = Certificado.builder()
+                    .tituloAtividade(oportunidade.getTitulo())
+                    .cargaHoraria(oportunidade.getCargaHoraria())
+                    .data(hoje)
+                    .aproveitamentoSolicitado(false)
+                    .build();
+            if (discente.getCertificados() == null)
+                discente.setCertificados(new ArrayList<>());
+            discente.getCertificados().add(certificado);
+            discenteRepository.save(discente);
+        }
+        return oportunidade;
     }
 
     private Oportunidade buscarObrigatoria(Integer id) {
         return repository.findById(id)
                 .orElseThrow(() -> new EntidadeNaoEncontradaException("Oportunidade nao encontrada."));
+    }
+
+    private Discente buscarDiscente(Integer id) {
+        return discenteRepository.findById(id)
+                .orElseThrow(() -> new EntidadeNaoEncontradaException("Discente nao encontrado."));
     }
 
     public List<Oportunidade> buscar(Oportunidade filtro) {

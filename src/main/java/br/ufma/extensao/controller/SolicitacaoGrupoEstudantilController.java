@@ -58,6 +58,20 @@ public class SolicitacaoGrupoEstudantilController {
         return ResponseEntity.ok(service.buscar(filtro));
     }
 
+    @GetMapping("/pendentes")
+    public ResponseEntity listarPendentes() {
+        return ResponseEntity.ok(service.listarPendentes());
+    }
+
+    @PostMapping("{id}/avaliar")
+    public ResponseEntity avaliar(@PathVariable Integer id, @RequestParam boolean aprovado) {
+        try {
+            return ResponseEntity.ok(service.avaliar(id, aprovado));
+        } catch (SistemaExtensaoException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     private SolicitacaoGrupoEstudantil montar(Integer id, SolicitacaoGrupoEstudantilDTO dto) {
         SolicitacaoGrupoEstudantil solicitacao = new SolicitacaoGrupoEstudantil();
         solicitacao.setId(id);

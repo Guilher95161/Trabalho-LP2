@@ -57,6 +57,15 @@ public class DiscenteController {
         return ResponseEntity.ok(service.buscar(filtro));
     }
 
+    @GetMapping("{id}/painel-horas")
+    public ResponseEntity painelHoras(@PathVariable Integer id) {
+        try {
+            return ResponseEntity.ok(service.painelHoras(id));
+        } catch (SistemaExtensaoException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     private Discente montar(Integer id, DiscenteDTO dto) {
         Discente discente = new Discente();
         discente.setId(id);

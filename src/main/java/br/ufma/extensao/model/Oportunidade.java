@@ -46,6 +46,9 @@ public class Oportunidade {
     @Column(name = "status")
     private StatusOportunidade status;
 
+    @Column(name = "motivo_cancelamento")
+    private String motivoCancelamento;
+
     @ManyToMany
     @JoinTable(
             name = "oportunidade_fila_espera",

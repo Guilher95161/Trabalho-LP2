@@ -12,6 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/oportunidades")
 public class OportunidadeController {
@@ -81,8 +83,13 @@ public class OportunidadeController {
     }
 
     @PostMapping("{id}/cancelar")
-    public ResponseEntity cancelar(@PathVariable Integer id) {
-        return transicao(id, "cancelar");
+    public ResponseEntity cancelar(@PathVariable Integer id,
+                                   @RequestParam(value = "motivo", required = false) String motivo) {
+        try {
+            return ResponseEntity.ok(service.cancelar(id, motivo));
+        } catch (SistemaExtensaoException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     private ResponseEntity transicao(Integer id, String acao) {
@@ -91,10 +98,60 @@ public class OportunidadeController {
                 case "submeter" -> service.submeter(id);
                 case "aprovar" -> service.aprovar(id);
                 case "iniciar" -> service.iniciar(id);
-                case "encerrar" -> service.encerrar(id);
-                default -> service.cancelar(id);
+                default -> service.encerrar(id);
             };
             return ResponseEntity.ok(oportunidade);
+        } catch (SistemaExtensaoException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // ===== Inscricoes =====
+
+    @PostMapping("{id}/inscrever")
+    public ResponseEntity inscrever(@PathVariable Integer id, @RequestParam Integer discenteId) {
+        try {
+            return ResponseEntity.ok(service.inscrever(id, discenteId));
+        } catch (SistemaExtensaoException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("{id}/avaliar-inscricao")
+    public ResponseEntity avaliarInscricao(@PathVariable Integer id,
+                                           @RequestParam Integer discenteId,
+                                           @RequestParam boolean aprovar) {
+        try {
+            return ResponseEntity.ok(service.avaliarInscricao(id, discenteId, aprovar));
+        } catch (SistemaExtensaoException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("{id}/cancelar-inscricao")
+    public ResponseEntity cancelarInscricao(@PathVariable Integer id, @RequestParam Integer discenteId) {
+        try {
+            return ResponseEntity.ok(service.cancelarInscricao(id, discenteId));
+        } catch (SistemaExtensaoException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("{id}/substituir")
+    public ResponseEntity substituir(@PathVariable Integer id,
+                                     @RequestParam Integer aRemoverId,
+                                     @RequestParam Integer substitutoId) {
+        try {
+            return ResponseEntity.ok(service.substituirParticipante(id, aRemoverId, substitutoId));
+        } catch (SistemaExtensaoException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("{id}/certificar")
+    public ResponseEntity certificar(@PathVariable Integer id, @RequestBody List<Integer> discenteIds) {
+        try {
+            return ResponseEntity.ok(service.certificar(id, discenteIds));
         } catch (SistemaExtensaoException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
