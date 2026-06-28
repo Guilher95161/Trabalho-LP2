@@ -25,9 +25,17 @@ public class CertificadoService {
     }
 
     @Transactional
-    public Certificado atualizar(Certificado certificado) {
-        verificarId(certificado);
-        return repository.save(certificado);
+    public Certificado atualizar(Certificado patch) {
+        verificarId(patch);
+        Certificado existente = repository.findById(patch.getId())
+                .orElseThrow(() -> new EntidadeNaoEncontradaException("Certificado nao encontrado."));
+        if (patch.getTituloAtividade() != null && !patch.getTituloAtividade().isBlank())
+            existente.setTituloAtividade(patch.getTituloAtividade());
+        if (patch.getCargaHoraria() > 0)
+            existente.setCargaHoraria(patch.getCargaHoraria());
+        if (patch.getData() != null)
+            existente.setData(patch.getData());
+        return repository.save(existente);
     }
 
     public void remover(Certificado certificado) {
@@ -39,6 +47,11 @@ public class CertificadoService {
         Certificado certificado = repository.findById(id)
                 .orElseThrow(() -> new EntidadeNaoEncontradaException("Certificado nao encontrado."));
         remover(certificado);
+    }
+
+    public Certificado buscarPorId(Integer id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new EntidadeNaoEncontradaException("Certificado nao encontrado."));
     }
 
     public List<Certificado> buscar(Certificado filtro) {

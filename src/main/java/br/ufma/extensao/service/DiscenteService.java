@@ -7,6 +7,7 @@ import br.ufma.extensao.service.exceptions.RegraNegocioRunTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,16 +21,35 @@ public class DiscenteService {
     @Autowired
     DiscenteRepository repository;
 
+    @Autowired
+    PasswordEncoder passwordEncoder;
+
     @Transactional
     public Discente salvar(Discente discente) {
         verificaDiscente(discente);
+        if (discente.getSenha() != null && !discente.getSenha().trim().isEmpty())
+            discente.setSenha(passwordEncoder.encode(discente.getSenha()));
         return repository.save(discente);
     }
 
     @Transactional
-    public Discente atualizar(Discente discente) {
-        verificarId(discente);
-        return repository.save(discente);
+    public Discente atualizar(Discente patch) {
+        verificarId(patch);
+        Discente existente = repository.findById(patch.getId())
+                .orElseThrow(() -> new EntidadeNaoEncontradaException("Discente nao encontrado."));
+        if (patch.getNome() != null && !patch.getNome().isBlank())
+            existente.setNome(patch.getNome());
+        if (patch.getEmail() != null && !patch.getEmail().isBlank())
+            existente.setEmail(patch.getEmail());
+        if (patch.getMatricula() != null)
+            existente.setMatricula(patch.getMatricula());
+        if (patch.getSenha() != null && !patch.getSenha().isBlank())
+            existente.setSenha(passwordEncoder.encode(patch.getSenha()));
+        if (patch.getCurso() != null)
+            existente.setCurso(patch.getCurso());
+        if (patch.getHorasCumpridas() > 0)
+            existente.setHorasCumpridas(patch.getHorasCumpridas());
+        return repository.save(existente);
     }
 
     public void remover(Discente discente) {
@@ -70,6 +90,11 @@ public class DiscenteService {
         painel.put("percentualConcluido", percentual);
         painel.put("concluido", meta > 0 && horas >= meta);
         return painel;
+    }
+
+    public Discente buscarPorId(Integer id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new EntidadeNaoEncontradaException("Discente nao encontrado."));
     }
 
     private void verificarId(Discente discente) {

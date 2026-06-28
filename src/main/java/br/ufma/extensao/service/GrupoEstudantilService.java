@@ -36,9 +36,16 @@ public class GrupoEstudantilService {
     }
 
     @Transactional
-    public GrupoEstudantil atualizar(GrupoEstudantil grupo) {
-        verificarId(grupo);
-        return repository.save(grupo);
+    public GrupoEstudantil atualizar(GrupoEstudantil patch) {
+        verificarId(patch);
+        GrupoEstudantil existente = buscarObrigatoria(patch.getId());
+        if (patch.getNome() != null && !patch.getNome().isBlank())
+            existente.setNome(patch.getNome());
+        if (patch.getDescricao() != null)
+            existente.setDescricao(patch.getDescricao());
+        if (patch.getResponsavel() != null)
+            existente.setResponsavel(patch.getResponsavel());
+        return repository.save(existente);
     }
 
     public void remover(GrupoEstudantil grupo) {
@@ -143,6 +150,10 @@ public class GrupoEstudantilService {
                 break;
             }
         }
+    }
+
+    public GrupoEstudantil buscarPorId(Integer id) {
+        return buscarObrigatoria(id);
     }
 
     private GrupoEstudantil buscarObrigatoria(Integer id) {

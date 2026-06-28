@@ -4,11 +4,12 @@ Projeto da disciplina de LP2. Aplicação **Spring Boot** que modela um sistema 
 universitária: usuários com papéis, oportunidades de extensão, certificados e aproveitamento de
 horas.
 
-> **Etapa 3 (Spring Boot) — em andamento.** O projeto foi **reconstruído do zero** no estilo da
-> aula (entidades anêmicas com Lombok, JPA, H2). Estão prontas as camadas **`model`**, **`repo`**,
-> **`service`** e **`controller`** (REST). Os services/controllers entregam **CRUD + validação +
-> login** (estilo dos PDFs da aula); as **regras de negócio ricas** (máquinas de estado, prazos,
-> aproveitamento de horas) entram nos próximos passos.
+> **Etapa 3 (Spring Boot) — concluída.** O projeto foi **reconstruído do zero** no estilo da
+> aula (entidades anêmicas com Lombok, JPA, H2). As quatro camadas REST estão completas (**`model`**,
+> **`repo`**, **`service`**, **`controller`**) com as **regras de negócio ricas** da P2 portadas,
+> **persistência em H2 em arquivo + seeding**, **autenticação Spring Security + JWT**,
+> **autorização por papel** (`@PreAuthorize`/`hasRole`), **DTOs de resposta** (sem expor entidades
+> cruas) e **112 testes** cobrindo services e controllers.
 
 ## Objetivo
 
@@ -49,17 +50,20 @@ são `Usuarios` com o `Papel` adequado.
 * **Comissão** — avalia solicitações delegadas pelo coordenador.
 * **Administrador** — acesso completo; gerencia usuários.
 
-> As regras acima são o **escopo de negócio**. A camada `service` já entrega o **CRUD + validação +
-> login**; as regras ricas (defere/indefere com prazos, delegação, certificação) entram numa próxima
-> etapa.
+> As regras acima são o **escopo de negócio**. A camada `service` entrega **CRUD + validação +
+> login** e as **regras ricas** (defere/indefere com prazos 10/5, delegação, certificação, máquinas
+> de estado). A **autenticação** é feita por **Spring Security + JWT** (login emite token; todo
+> endpoint fora de cadastro/login/H2 exige `Authorization: Bearer`). A **autorização por papel**
+> está ativa: cada endpoint exige o `Papel` correto via `@PreAuthorize`/`hasRole`.
 
 ## Tecnologias
 
 * **Spring Boot 4.0.6** sobre **Java 21**, build com **Maven** (wrapper `mvnw`).
-* **Spring Data JPA** + **H2 em memória** (console em `/h2-console`).
+* **Spring Data JPA** + **H2 em arquivo** (`./data/sistema`, persiste entre execuções; console em `/h2-console`).
+* **Spring Security + JWT** (`jjwt` 0.12.x) — autenticação stateless; senha com **BCrypt**.
 * **Lombok** para o boilerplate das entidades.
 * Pacote base `br.ufma.extensao`; camadas flat `model/` (+ `model/dto/`), `repo/`, `service/`
-  (+ `service/exceptions/`), `controller/`.
+  (+ `service/exceptions/`), `controller/`, `config/` (security).
 
 ## Requisitos
 
@@ -88,39 +92,50 @@ export JAVA_HOME=/caminho/para/jdk-21
 Abra a pasta (reconhece o `pom.xml` como projeto **Maven**), Project SDK = **21**, rode
 `ExtensaoApplication`.
 
-**Console H2:** JDBC URL `jdbc:h2:mem:sistema`, usuário `db`, senha `senha`. As tabelas são geradas
-pelo Hibernate a partir do mapeamento (`ddl-auto=update`).
+**Console H2:** JDBC URL `jdbc:h2:file:./data/sistema`, usuário `db`, senha `senha`. As tabelas são
+geradas pelo Hibernate a partir do mapeamento (`ddl-auto=update`) e os dados de demonstração são
+semeados na primeira execução (ver `DemoDataInitializer`).
+
+**Autenticação (JWT):** crie um usuário em `POST /api/usuarios` (liberado) e faça login em
+`POST /api/usuarios/autenticar` com `{ "email": ..., "senha": ... }`. A resposta traz `{"token":"..."}`
+(também no header `Authorization`). Envie esse token como `Authorization: Bearer <token>` nas demais
+chamadas — todo endpoint fora de cadastro/login/`/h2-console` exige autenticação. O roteiro de testes
+ponta a ponta está em `ROTEIRO_TESTES.md`.
 
 ## Estrutura do projeto
 
 ```text
 src/main/java/br/ufma/extensao/
-|-- ExtensaoApplication.java   (entry @SpringBootApplication)
+|-- ExtensaoApplication.java   (entry @SpringBootApplication + bean BCryptPasswordEncoder)
 |-- model/                     (11 entidades anêmicas + enums/ + dto/)
 |   |-- enums/                 (StatusOportunidade, StatusSolicitacao, ModalidadeOportunidade, CargoGrupo)
-|   `-- dto/                   (DTOs de requisição dos controllers)
+|   `-- dto/                   (DTOs de requisição + DTOs de resposta *Response)
 |-- repo/                      (9 interfaces JpaRepository)
-|-- service/                   (9 services @Service + exceptions/)
+|-- service/                   (9 services @Service/@Transactional + exceptions/)
 |   `-- exceptions/            (SistemaExtensaoException + RegraNegocioRunTime + 4 especializadas)
-`-- controller/                (9 @RestController, endpoints /api/*)
-src/main/resources/application.properties   (H2 em memória + console)
+|-- controller/                (9 @RestController, endpoints /api/*, @PreAuthorize por ação)
+`-- config/                    (SecurityConfig + JwtAuthorizationFilter + JwtService + SecurityConstants + DemoDataInitializer)
+src/main/resources/application.properties        (H2 em arquivo + console)
+src/test/resources/application.properties        (H2 em memória, isolado, create-drop)
 pom.xml · mvnw · .mvn/   (build Maven)
 ```
 
-## Estado atual e próximos passos
+## Estado atual
 
-* ✅ Scaffold Spring Boot subindo em `:8080`; schema JPA gerado no H2.
-* ✅ Camada `model` (11 entidades, herança JOINED em `Discente`, `Papel` M:N, grupos estudantis) e
-  `repo` (9 repositórios).
-* ✅ Camada `service` (9 services) com **CRUD + validação + login** e hierarquia de exceções de domínio.
-* ✅ Camada `controller` (9 `@RestController`) com endpoints REST `/api/*`, DTOs e respostas `ResponseEntity`.
-* ✅ Regras ricas da P2 portadas:
+Todas as fases da etapa 3 estão concluídas:
+
+* ✅ **Scaffold + model + repo** — Spring Boot subindo em `:8080`; 11 entidades JPA, 9 `JpaRepository`.
+* ✅ **Services** — 9 `@Service`/`@Transactional` com CRUD + validação + login + regras ricas:
   * **Oportunidade** — máquina de estados (RF012) + inscrições (fila/aprovados/substituir/certificar) + `motivoCancelamento`.
   * **Aproveitamento** — máquina de estados `StatusSolicitacao`, **deferimento que soma horas ao discente**, delegação, cancelamento e reenvio com **prazos 10/5**.
-  * **Grupos** — aprovação que **cria o grupo** (solicitante vira `PRESIDENTE`), gerência de membros/cargos com histórico, `isLider` e busca de grupo por responsável **ou** membro.
+  * **Grupos** — aprovação que **cria o grupo** (solicitante vira `PRESIDENTE`), gerência de membros/cargos com histórico, `isLider`.
   * **Painel de horas** do discente e **desativar/reativar conta** (RF0001/RF004).
-* ⬜ Validação de papéis nas ações, seeding de dados, persistência em arquivo (H2 file) e **Spring Security/JWT**.
+* ✅ **Controllers** — 9 `@RestController` com endpoints `/api/*`; **DTOs de resposta** (`*Response`) em todos os endpoints que retornam entidades; **`@PreAuthorize`/`hasRole`** por ação.
+* ✅ **Spring Security + JWT** — login em `POST /api/usuarios/autenticar` retorna token; BCrypt na senha; `SecurityFilterChain` STATELESS.
+* ✅ **Persistência em H2 em arquivo** + **seeding** dos 7 cenários (`DemoDataInitializer`); testes em H2 em memória isolado.
+* ✅ **112 testes** passando — services (52) e controllers (55) + contextLoads; cobertura de CRUD, regras de negócio, autorização (403 sem papel correto) e cenários de erro.
+* ✅ **FIFO nas inscrições** — `filaEspera` e `inscritosAprovados` usam `List<Discente>` com `@OrderColumn`, garantindo ordem de inserção no reload.
 
 > O **versionamento de PPC/UCE** continua colapsado em `Curso` (decisão da disciplina). A feature de
-> **grupos estudantis** foi **reintroduzida**. O histórico completo da etapa 2 permanece nas branches
-> `P2` e no histórico do git.
+> **grupos estudantis** foi **reintroduzida**. O histórico da etapa 2 permanece nas branches `P2` e
+> no git.

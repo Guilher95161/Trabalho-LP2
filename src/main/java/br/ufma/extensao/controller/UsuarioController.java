@@ -1,13 +1,20 @@
 package br.ufma.extensao.controller;
 
+import br.ufma.extensao.config.JwtService;
+import br.ufma.extensao.config.SecurityConstants;
 import br.ufma.extensao.model.Usuario;
 import br.ufma.extensao.model.dto.UsuarioDTO;
+import br.ufma.extensao.model.dto.UsuarioResponse;
 import br.ufma.extensao.service.UsuarioService;
 import br.ufma.extensao.service.exceptions.SistemaExtensaoException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/usuarios")
@@ -15,6 +22,9 @@ public class UsuarioController {
 
     @Autowired
     UsuarioService service;
+
+    @Autowired
+    JwtService jwtService;
 
     @PostMapping
     public ResponseEntity salvar(@RequestBody UsuarioDTO dto) {
@@ -26,7 +36,7 @@ public class UsuarioController {
         usuario.setAtivo(true);
         try {
             Usuario salvo = service.salvar(usuario);
-            return new ResponseEntity(salvo, HttpStatus.CREATED);
+            return new ResponseEntity(UsuarioResponse.from(salvo), HttpStatus.CREATED);
         } catch (SistemaExtensaoException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -36,13 +46,17 @@ public class UsuarioController {
     public ResponseEntity autenticar(@RequestBody UsuarioDTO dto) {
         try {
             service.efetuarLogin(dto.getEmail(), dto.getSenha());
-            return ResponseEntity.ok(true);
+            String token = jwtService.gerarToken(dto.getEmail());
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.AUTHORIZATION, SecurityConstants.PREFIXO + token)
+                    .body(Map.of("token", token));
         } catch (SistemaExtensaoException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
     @PutMapping("{id}")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     public ResponseEntity atualizar(@PathVariable Integer id, @RequestBody UsuarioDTO dto) {
         Usuario usuario = new Usuario();
         usuario.setId(id);
@@ -50,37 +64,48 @@ public class UsuarioController {
         usuario.setEmail(dto.getEmail());
         usuario.setSenha(dto.getSenha());
         usuario.setMatricula(dto.getMatricula());
-        usuario.setAtivo(true);
         try {
-            return ResponseEntity.ok(service.atualizar(usuario));
+            return ResponseEntity.ok(UsuarioResponse.from(service.atualizar(usuario)));
         } catch (SistemaExtensaoException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
     @PutMapping("{id}/desativar")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     public ResponseEntity desativar(@PathVariable Integer id) {
         try {
-            return ResponseEntity.ok(service.desativarUsuario(id));
+            return ResponseEntity.ok(UsuarioResponse.from(service.desativarUsuario(id)));
         } catch (SistemaExtensaoException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
     @PutMapping("{id}/reativar")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     public ResponseEntity reativar(@PathVariable Integer id) {
         try {
-            return ResponseEntity.ok(service.reativarUsuario(id));
+            return ResponseEntity.ok(UsuarioResponse.from(service.reativarUsuario(id)));
         } catch (SistemaExtensaoException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
     @DeleteMapping("{id}")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     public ResponseEntity remover(@PathVariable Integer id) {
         try {
             service.remover(id);
             return ResponseEntity.noContent().build();
+        } catch (SistemaExtensaoException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("{id}")
+    public ResponseEntity buscarPorId(@PathVariable Integer id) {
+        try {
+            return ResponseEntity.ok(UsuarioResponse.from(service.buscarPorId(id)));
         } catch (SistemaExtensaoException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -92,6 +117,6 @@ public class UsuarioController {
         Usuario filtro = new Usuario();
         filtro.setNome(nome);
         filtro.setEmail(email);
-        return ResponseEntity.ok(service.buscar(filtro));
+        return ResponseEntity.ok(UsuarioResponse.fromList(service.buscar(filtro)));
     }
 }

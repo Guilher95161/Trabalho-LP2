@@ -7,6 +7,7 @@ import br.ufma.extensao.service.exceptions.SistemaExtensaoException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -17,6 +18,7 @@ public class CertificadoController {
     CertificadoService service;
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('DOCENTE', 'COORDENADOR', 'ADMINISTRADOR')")
     public ResponseEntity salvar(@RequestBody CertificadoDTO dto) {
         Certificado certificado = montar(null, dto);
         try {
@@ -28,6 +30,7 @@ public class CertificadoController {
     }
 
     @PutMapping("{id}")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     public ResponseEntity atualizar(@PathVariable Integer id, @RequestBody CertificadoDTO dto) {
         Certificado certificado = montar(id, dto);
         try {
@@ -38,10 +41,20 @@ public class CertificadoController {
     }
 
     @DeleteMapping("{id}")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     public ResponseEntity remover(@PathVariable Integer id) {
         try {
             service.remover(id);
             return ResponseEntity.noContent().build();
+        } catch (SistemaExtensaoException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("{id}")
+    public ResponseEntity buscarPorId(@PathVariable Integer id) {
+        try {
+            return ResponseEntity.ok(service.buscarPorId(id));
         } catch (SistemaExtensaoException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -61,7 +74,7 @@ public class CertificadoController {
         if (dto.getCargaHoraria() != null)
             certificado.setCargaHoraria(dto.getCargaHoraria());
         certificado.setData(dto.getData());
-        certificado.setAproveitamentoSolicitado(dto.isAproveitamentoSolicitado());
+        certificado.setAproveitamentoSolicitado(Boolean.TRUE.equals(dto.getAproveitamentoSolicitado()));
         return certificado;
     }
 }

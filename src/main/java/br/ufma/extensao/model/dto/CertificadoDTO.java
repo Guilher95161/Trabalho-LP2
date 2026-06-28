@@ -15,5 +15,5 @@ public class CertificadoDTO {
     private String tituloAtividade;
     private Integer cargaHoraria;
     private LocalDate data;
-    private boolean aproveitamentoSolicitado;
+    private Boolean aproveitamentoSolicitado;
 }

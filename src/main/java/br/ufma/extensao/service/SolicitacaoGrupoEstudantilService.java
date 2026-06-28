@@ -39,9 +39,16 @@ public class SolicitacaoGrupoEstudantilService {
     }
 
     @Transactional
-    public SolicitacaoGrupoEstudantil atualizar(SolicitacaoGrupoEstudantil solicitacao) {
-        verificarId(solicitacao);
-        return repository.save(solicitacao);
+    public SolicitacaoGrupoEstudantil atualizar(SolicitacaoGrupoEstudantil patch) {
+        verificarId(patch);
+        SolicitacaoGrupoEstudantil existente = buscarObrigatoria(patch.getId());
+        if (patch.getNomeGrupo() != null && !patch.getNomeGrupo().isBlank())
+            existente.setNomeGrupo(patch.getNomeGrupo());
+        if (patch.getDescricao() != null)
+            existente.setDescricao(patch.getDescricao());
+        if (patch.getDocenteResponsavel() != null)
+            existente.setDocenteResponsavel(patch.getDocenteResponsavel());
+        return repository.save(existente);
     }
 
     public void remover(SolicitacaoGrupoEstudantil solicitacao) {
@@ -101,6 +108,10 @@ public class SolicitacaoGrupoEstudantilService {
                 .historicoCargos(new ArrayList<>(List.of(historico)))
                 .build();
         grupoRepository.save(grupo);
+    }
+
+    public SolicitacaoGrupoEstudantil buscarPorId(Integer id) {
+        return buscarObrigatoria(id);
     }
 
     private SolicitacaoGrupoEstudantil buscarObrigatoria(Integer id) {

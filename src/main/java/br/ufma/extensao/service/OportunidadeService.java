@@ -18,9 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
 @Service
 public class OportunidadeService {
@@ -41,9 +39,24 @@ public class OportunidadeService {
     }
 
     @Transactional
-    public Oportunidade atualizar(Oportunidade oportunidade) {
-        verificarId(oportunidade);
-        return repository.save(oportunidade);
+    public Oportunidade atualizar(Oportunidade patch) {
+        verificarId(patch);
+        Oportunidade existente = buscarObrigatoria(patch.getId());
+        if (patch.getTitulo() != null && !patch.getTitulo().isBlank())
+            existente.setTitulo(patch.getTitulo());
+        if (patch.getDescricao() != null)
+            existente.setDescricao(patch.getDescricao());
+        if (patch.getModalidade() != null)
+            existente.setModalidade(patch.getModalidade());
+        if (patch.getPeriodoRealizacao() != null)
+            existente.setPeriodoRealizacao(patch.getPeriodoRealizacao());
+        if (patch.getCargaHoraria() > 0)
+            existente.setCargaHoraria(patch.getCargaHoraria());
+        if (patch.getVagas() > 0)
+            existente.setVagas(patch.getVagas());
+        if (patch.getResponsavel() != null)
+            existente.setResponsavel(patch.getResponsavel());
+        return repository.save(existente);
     }
 
     public void remover(Oportunidade oportunidade) {
@@ -116,10 +129,8 @@ public class OportunidadeService {
         if (!discente.isAtivo())
             throw new OperacaoInvalidaException("Discente inativo nao pode se inscrever.");
         // ja aprovado nao volta para a fila de espera
-        if (oportunidade.getInscritosAprovados() != null && oportunidade.getInscritosAprovados().contains(discente))
+        if (oportunidade.getInscritosAprovados().contains(discente))
             return oportunidade;
-        if (oportunidade.getFilaEspera() == null)
-            oportunidade.setFilaEspera(new LinkedHashSet<>());
         oportunidade.getFilaEspera().add(discente);
         return repository.save(oportunidade);
     }
@@ -130,12 +141,10 @@ public class OportunidadeService {
         if (oportunidade.getStatus() != StatusOportunidade.ABERTA)
             throw new OperacaoInvalidaException("So e possivel avaliar inscricoes de uma oportunidade ABERTA.");
         Discente discente = buscarDiscente(discenteId);
-        Set<Discente> fila = oportunidade.getFilaEspera();
-        if (fila == null || !fila.contains(discente))
+        List<Discente> fila = oportunidade.getFilaEspera();
+        if (!fila.contains(discente))
             throw new OperacaoInvalidaException("Discente nao esta na fila de espera.");
         if (aprovar) {
-            if (oportunidade.getInscritosAprovados() == null)
-                oportunidade.setInscritosAprovados(new LinkedHashSet<>());
             if (oportunidade.getInscritosAprovados().size() >= oportunidade.getVagas())
                 throw new OperacaoInvalidaException("Nao ha vagas disponiveis.");
             oportunidade.getInscritosAprovados().add(discente);
@@ -148,10 +157,8 @@ public class OportunidadeService {
     public Oportunidade cancelarInscricao(Integer oportunidadeId, Integer discenteId) {
         Oportunidade oportunidade = buscarObrigatoria(oportunidadeId);
         Discente discente = buscarDiscente(discenteId);
-        if (oportunidade.getFilaEspera() != null)
-            oportunidade.getFilaEspera().remove(discente);
-        if (oportunidade.getInscritosAprovados() != null)
-            oportunidade.getInscritosAprovados().remove(discente);
+        oportunidade.getFilaEspera().remove(discente);
+        oportunidade.getInscritosAprovados().remove(discente);
         return repository.save(oportunidade);
     }
 
@@ -164,11 +171,11 @@ public class OportunidadeService {
             throw new OperacaoInvalidaException("Substituicao so e possivel em oportunidade ABERTA ou EM_EXECUCAO.");
         Discente aRemover = buscarDiscente(aRemoverId);
         Discente substituto = buscarDiscente(substitutoId);
-        Set<Discente> aprovados = oportunidade.getInscritosAprovados();
-        Set<Discente> fila = oportunidade.getFilaEspera();
-        if (aprovados == null || !aprovados.contains(aRemover))
+        List<Discente> aprovados = oportunidade.getInscritosAprovados();
+        List<Discente> fila = oportunidade.getFilaEspera();
+        if (!aprovados.contains(aRemover))
             throw new OperacaoInvalidaException("Participante a remover nao esta entre os aprovados.");
-        if (fila == null || !fila.contains(substituto))
+        if (!fila.contains(substituto))
             throw new OperacaoInvalidaException("Substituto nao esta na fila de espera.");
         aprovados.remove(aRemover);
         fila.remove(substituto);
@@ -197,6 +204,10 @@ public class OportunidadeService {
             discenteRepository.save(discente);
         }
         return oportunidade;
+    }
+
+    public Oportunidade buscarPorId(Integer id) {
+        return buscarObrigatoria(id);
     }
 
     private Oportunidade buscarObrigatoria(Integer id) {

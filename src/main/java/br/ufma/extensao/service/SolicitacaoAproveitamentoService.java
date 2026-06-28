@@ -50,9 +50,12 @@ public class SolicitacaoAproveitamentoService {
     }
 
     @Transactional
-    public SolicitacaoAproveitamento atualizar(SolicitacaoAproveitamento solicitacao) {
-        verificarId(solicitacao);
-        return repository.save(solicitacao);
+    public SolicitacaoAproveitamento atualizar(SolicitacaoAproveitamento patch) {
+        verificarId(patch);
+        SolicitacaoAproveitamento existente = buscarObrigatoria(patch.getId());
+        if (patch.getParecer() != null)
+            existente.setParecer(patch.getParecer());
+        return repository.save(existente);
     }
 
     public void remover(SolicitacaoAproveitamento solicitacao) {
@@ -170,6 +173,10 @@ public class SolicitacaoAproveitamentoService {
                         .withIgnorePaths("delegadaParaComissao")
                         .withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING));
         return repository.findAll(example);
+    }
+
+    public SolicitacaoAproveitamento buscarPorId(Integer id) {
+        return buscarObrigatoria(id);
     }
 
     private SolicitacaoAproveitamento buscarObrigatoria(Integer id) {

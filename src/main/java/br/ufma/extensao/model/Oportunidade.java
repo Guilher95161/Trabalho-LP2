@@ -5,7 +5,8 @@ import br.ufma.extensao.model.enums.StatusOportunidade;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "oportunidade")
@@ -54,14 +55,16 @@ public class Oportunidade {
             name = "oportunidade_fila_espera",
             joinColumns = @JoinColumn(name = "id_oportunidade"),
             inverseJoinColumns = @JoinColumn(name = "id_usuario"))
+    @OrderColumn(name = "posicao")
     @ToString.Exclude
-    private Set<Discente> filaEspera;
+    private List<Discente> filaEspera = new ArrayList<>();
 
     @ManyToMany
     @JoinTable(
             name = "oportunidade_inscritos",
             joinColumns = @JoinColumn(name = "id_oportunidade"),
             inverseJoinColumns = @JoinColumn(name = "id_usuario"))
+    @OrderColumn(name = "posicao")
     @ToString.Exclude
-    private Set<Discente> inscritosAprovados;
+    private List<Discente> inscritosAprovados = new ArrayList<>();
 }

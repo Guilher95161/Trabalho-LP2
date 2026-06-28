@@ -7,10 +7,12 @@ import br.ufma.extensao.service.exceptions.SistemaExtensaoException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/papeis")
+@PreAuthorize("hasRole('ADMINISTRADOR')")
 public class PapelController {
 
     @Autowired
@@ -45,6 +47,15 @@ public class PapelController {
         try {
             service.remover(id);
             return ResponseEntity.noContent().build();
+        } catch (SistemaExtensaoException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("{id}")
+    public ResponseEntity buscarPorId(@PathVariable Integer id) {
+        try {
+            return ResponseEntity.ok(service.buscarPorId(id));
         } catch (SistemaExtensaoException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

@@ -25,9 +25,17 @@ public class CursoService {
     }
 
     @Transactional
-    public Curso atualizar(Curso curso) {
-        verificarId(curso);
-        return repository.save(curso);
+    public Curso atualizar(Curso patch) {
+        verificarId(patch);
+        Curso existente = repository.findById(patch.getId())
+                .orElseThrow(() -> new EntidadeNaoEncontradaException("Curso nao encontrado."));
+        if (patch.getNome() != null && !patch.getNome().isBlank())
+            existente.setNome(patch.getNome());
+        if (patch.getCurriculo() != null)
+            existente.setCurriculo(patch.getCurriculo());
+        if (patch.getCargaHoraria() != null)
+            existente.setCargaHoraria(patch.getCargaHoraria());
+        return repository.save(existente);
     }
 
     public void remover(Curso curso) {
@@ -39,6 +47,11 @@ public class CursoService {
         Curso curso = repository.findById(id)
                 .orElseThrow(() -> new EntidadeNaoEncontradaException("Curso nao encontrado."));
         remover(curso);
+    }
+
+    public Curso buscarPorId(Integer id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new EntidadeNaoEncontradaException("Curso nao encontrado."));
     }
 
     public List<Curso> buscar(Curso filtro) {

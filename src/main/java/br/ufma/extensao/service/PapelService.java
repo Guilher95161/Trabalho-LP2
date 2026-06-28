@@ -25,9 +25,13 @@ public class PapelService {
     }
 
     @Transactional
-    public Papel atualizar(Papel papel) {
-        verificarId(papel);
-        return repository.save(papel);
+    public Papel atualizar(Papel patch) {
+        verificarId(patch);
+        Papel existente = repository.findById(patch.getId())
+                .orElseThrow(() -> new EntidadeNaoEncontradaException("Papel nao encontrado."));
+        if (patch.getNome() != null && !patch.getNome().isBlank())
+            existente.setNome(patch.getNome());
+        return repository.save(existente);
     }
 
     public void remover(Papel papel) {
@@ -39,6 +43,11 @@ public class PapelService {
         Papel papel = repository.findById(id)
                 .orElseThrow(() -> new EntidadeNaoEncontradaException("Papel nao encontrado."));
         remover(papel);
+    }
+
+    public Papel buscarPorId(Integer id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new EntidadeNaoEncontradaException("Papel nao encontrado."));
     }
 
     public List<Papel> buscar(Papel filtro) {

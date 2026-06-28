@@ -1,5 +1,6 @@
 package br.ufma.extensao.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -29,6 +30,7 @@ public class Usuario {
 
     @Column(name = "senha")
     @ToString.Exclude
+    @JsonIgnore
     private String senha;
 
     @Column(name = "ativo")

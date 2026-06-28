@@ -16,7 +16,7 @@ public class SolicitacaoAproveitamentoDTO {
     private Integer certificadoId;
     private String status;
     private String parecer;
-    private boolean delegadaParaComissao;
+    private Boolean delegadaParaComissao;
     private LocalDate dataCriacao;
     private LocalDate dataAvaliacao;
 }
