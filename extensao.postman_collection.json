@@ -1,0 +1,765 @@
+{
+  "info": {
+    "name": "Sistema de Extensao UFMA (P3)",
+    "description": "Endpoints REST completos com JWT.\n\nPasso 1 — execute 'Autenticar' (pasta Autenticacao): o token e salvo automaticamente em {{token}}.\nPasso 2 — todos os demais requests ja enviam Authorization: Bearer {{token}}.\n\nSeed (senha 123): doc@ufma.br (DOCENTE id=1), coord1@ufma.br (COORDENADOR id=2), comissao@ufma.br (COMISSAO id=3), admin@ufma.br (ADMINISTRADOR id=4), aluno1@ufma.br (Discente id=5), aluno2@ufma.br (Discente id=6).\nCurso id=1 | Grupo id=1 | Oportunidades id=1..7 | Solicitacoes aproveitamento id=1..4.\nEndpoints sem autenticacao: POST /api/usuarios, POST /api/usuarios/autenticar, POST /api/discentes.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      { "key": "token", "value": "{{token}}", "type": "string" }
+    ]
+  },
+  "variable": [
+    { "key": "base",  "value": "http://localhost:8080", "type": "string" },
+    { "key": "token", "value": "", "type": "string", "description": "Preenchido automaticamente pelo request Autenticar" }
+  ],
+  "item": [
+
+    {
+      "name": "Autenticacao",
+      "item": [
+        {
+          "name": "Autenticar (salva token automaticamente)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var res = pm.response.json();",
+                  "if (res.token) { pm.collectionVariables.set('token', res.token); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base}}/api/usuarios/autenticar", "host": ["{{base}}"], "path": ["api","usuarios","autenticar"] },
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@ufma.br\",\n  \"senha\": \"123\"\n}" }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Usuarios",
+      "description": "Abertos sem token: POST / e POST /autenticar. Demais: token obrigatorio. PUT/DELETE: papel ADMINISTRADOR.",
+      "item": [
+        {
+          "name": "Criar usuario (sem token)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base}}/api/usuarios", "host": ["{{base}}"], "path": ["api","usuarios"] },
+            "body": { "mode": "raw", "raw": "{\n  \"nome\": \"Novo Usuario\",\n  \"email\": \"novo@ufma.br\",\n  \"senha\": \"123\",\n  \"matricula\": \"2024999\"\n}" }
+          }
+        },
+        {
+          "name": "Buscar por nome ou email",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base}}/api/usuarios/obter?nome=Ana",
+              "host": ["{{base}}"], "path": ["api","usuarios","obter"],
+              "query": [
+                { "key": "nome",  "value": "Ana" },
+                { "key": "email", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buscar por ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base}}/api/usuarios/1", "host": ["{{base}}"], "path": ["api","usuarios","1"] }
+          }
+        },
+        {
+          "name": "Atualizar [ADMIN]",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base}}/api/usuarios/1", "host": ["{{base}}"], "path": ["api","usuarios","1"] },
+            "body": { "mode": "raw", "raw": "{\n  \"nome\": \"Prof. Joao Docente (atualizado)\",\n  \"email\": \"doc@ufma.br\",\n  \"senha\": \"123\",\n  \"matricula\": \"DOC001\"\n}" }
+          }
+        },
+        {
+          "name": "Desativar conta [ADMIN]",
+          "request": {
+            "method": "PUT",
+            "url": { "raw": "{{base}}/api/usuarios/5/desativar", "host": ["{{base}}"], "path": ["api","usuarios","5","desativar"] }
+          }
+        },
+        {
+          "name": "Reativar conta [ADMIN]",
+          "request": {
+            "method": "PUT",
+            "url": { "raw": "{{base}}/api/usuarios/5/reativar", "host": ["{{base}}"], "path": ["api","usuarios","5","reativar"] }
+          }
+        },
+        {
+          "name": "Remover [ADMIN]",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{base}}/api/usuarios/7", "host": ["{{base}}"], "path": ["api","usuarios","7"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Discentes",
+      "description": "POST / aberto sem token. Demais: token obrigatorio. PUT/DELETE: ADMINISTRADOR.",
+      "item": [
+        {
+          "name": "Criar discente (sem token)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base}}/api/discentes", "host": ["{{base}}"], "path": ["api","discentes"] },
+            "body": { "mode": "raw", "raw": "{\n  \"nome\": \"Carlos Discente\",\n  \"email\": \"carlos@ufma.br\",\n  \"senha\": \"123\",\n  \"matricula\": \"2024100\",\n  \"cursoId\": 1\n}" }
+          }
+        },
+        {
+          "name": "Buscar por nome ou email",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base}}/api/discentes/obter?nome=Ana",
+              "host": ["{{base}}"], "path": ["api","discentes","obter"],
+              "query": [
+                { "key": "nome",  "value": "Ana" },
+                { "key": "email", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buscar por ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base}}/api/discentes/5", "host": ["{{base}}"], "path": ["api","discentes","5"] }
+          }
+        },
+        {
+          "name": "Painel de horas",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base}}/api/discentes/5/painel-horas", "host": ["{{base}}"], "path": ["api","discentes","5","painel-horas"] }
+          }
+        },
+        {
+          "name": "Atualizar [ADMIN]",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base}}/api/discentes/5", "host": ["{{base}}"], "path": ["api","discentes","5"] },
+            "body": { "mode": "raw", "raw": "{\n  \"nome\": \"Ana Aluno (atualizada)\",\n  \"email\": \"aluno1@ufma.br\",\n  \"senha\": \"123\",\n  \"matricula\": \"2020001\",\n  \"cursoId\": 1\n}" }
+          }
+        },
+        {
+          "name": "Remover [ADMIN]",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{base}}/api/discentes/7", "host": ["{{base}}"], "path": ["api","discentes","7"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Papeis",
+      "description": "Todos os endpoints exigem papel ADMINISTRADOR.",
+      "item": [
+        {
+          "name": "Criar papel [ADMIN]",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base}}/api/papeis", "host": ["{{base}}"], "path": ["api","papeis"] },
+            "body": { "mode": "raw", "raw": "{\n  \"nome\": \"VISITANTE\"\n}" }
+          }
+        },
+        {
+          "name": "Buscar por nome",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base}}/api/papeis/obter?nome=DOC",
+              "host": ["{{base}}"], "path": ["api","papeis","obter"],
+              "query": [{ "key": "nome", "value": "DOC" }]
+            }
+          }
+        },
+        {
+          "name": "Buscar por ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base}}/api/papeis/1", "host": ["{{base}}"], "path": ["api","papeis","1"] }
+          }
+        },
+        {
+          "name": "Atualizar [ADMIN]",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base}}/api/papeis/5", "host": ["{{base}}"], "path": ["api","papeis","5"] },
+            "body": { "mode": "raw", "raw": "{\n  \"nome\": \"VISITANTE_EXTERNO\"\n}" }
+          }
+        },
+        {
+          "name": "Remover [ADMIN]",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{base}}/api/papeis/5", "host": ["{{base}}"], "path": ["api","papeis","5"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Cursos",
+      "description": "Todos os endpoints exigem papel ADMINISTRADOR ou COORDENADOR.",
+      "item": [
+        {
+          "name": "Criar curso [ADMIN/COORD]",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base}}/api/cursos", "host": ["{{base}}"], "path": ["api","cursos"] },
+            "body": { "mode": "raw", "raw": "{\n  \"nome\": \"Engenharia de Software\",\n  \"curriculo\": \"2022\",\n  \"cargaHoraria\": 360\n}" }
+          }
+        },
+        {
+          "name": "Buscar por nome",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base}}/api/cursos/obter?nome=Comp",
+              "host": ["{{base}}"], "path": ["api","cursos","obter"],
+              "query": [{ "key": "nome", "value": "Comp" }]
+            }
+          }
+        },
+        {
+          "name": "Buscar por ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base}}/api/cursos/1", "host": ["{{base}}"], "path": ["api","cursos","1"] }
+          }
+        },
+        {
+          "name": "Atualizar [ADMIN/COORD]",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base}}/api/cursos/1", "host": ["{{base}}"], "path": ["api","cursos","1"] },
+            "body": { "mode": "raw", "raw": "{\n  \"nome\": \"Ciencia da Computacao\",\n  \"curriculo\": \"2025\",\n  \"cargaHoraria\": 320\n}" }
+          }
+        },
+        {
+          "name": "Remover [ADMIN/COORD]",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{base}}/api/cursos/2", "host": ["{{base}}"], "path": ["api","cursos","2"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Oportunidades",
+      "description": "Maquina de estados: RASCUNHO → AGUARDANDO_APROVACAO → ABERTA → EM_EXECUCAO → ENCERRADA (ou CANCELADA).\nSeed: id=3 ABERTA (Workshop Algoritmos), id=2 EM_EXECUCAO (Git).\nModalidades: CURSO, EVENTO, PROJETO, PROGRAMA, PRESTACAO_DE_SERVICOS, PRODUTO.",
+      "item": [
+        {
+          "name": "Criar oportunidade [DOCENTE/COORD/ADMIN]",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base}}/api/oportunidades", "host": ["{{base}}"], "path": ["api","oportunidades"] },
+            "body": { "mode": "raw", "raw": "{\n  \"titulo\": \"Curso de Spring Boot\",\n  \"descricao\": \"Desenvolvimento de APIs REST com Spring Boot.\",\n  \"modalidade\": \"CURSO\",\n  \"periodoRealizacao\": \"01/08/2026 - 31/08/2026\",\n  \"cargaHoraria\": 40,\n  \"vagas\": 20,\n  \"status\": \"RASCUNHO\"\n}" }
+          }
+        },
+        {
+          "name": "Buscar por titulo ou status",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base}}/api/oportunidades/obter?titulo=Java",
+              "host": ["{{base}}"], "path": ["api","oportunidades","obter"],
+              "query": [
+                { "key": "titulo", "value": "Java" },
+                { "key": "status", "value": "ABERTA", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buscar por ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base}}/api/oportunidades/3", "host": ["{{base}}"], "path": ["api","oportunidades","3"] }
+          }
+        },
+        {
+          "name": "Atualizar [DOCENTE/COORD]",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base}}/api/oportunidades/8", "host": ["{{base}}"], "path": ["api","oportunidades","8"] },
+            "body": { "mode": "raw", "raw": "{\n  \"titulo\": \"Curso de Spring Boot Avancado\",\n  \"modalidade\": \"CURSO\",\n  \"cargaHoraria\": 60,\n  \"vagas\": 15,\n  \"status\": \"RASCUNHO\"\n}" }
+          }
+        },
+        {
+          "name": "Remover [ADMIN]",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{base}}/api/oportunidades/8", "host": ["{{base}}"], "path": ["api","oportunidades","8"] }
+          }
+        },
+        {
+          "name": "— Maquina de estados —",
+          "item": [
+            {
+              "name": "Submeter (RASCUNHO → AGUARDANDO) [DOCENTE/COORD]",
+              "request": {
+                "method": "POST",
+                "url": { "raw": "{{base}}/api/oportunidades/8/submeter", "host": ["{{base}}"], "path": ["api","oportunidades","8","submeter"] }
+              }
+            },
+            {
+              "name": "Aprovar (AGUARDANDO → ABERTA) [COORD]",
+              "request": {
+                "method": "POST",
+                "url": { "raw": "{{base}}/api/oportunidades/8/aprovar", "host": ["{{base}}"], "path": ["api","oportunidades","8","aprovar"] }
+              }
+            },
+            {
+              "name": "Iniciar (ABERTA → EM_EXECUCAO) [DOCENTE/COORD]",
+              "request": {
+                "method": "POST",
+                "url": { "raw": "{{base}}/api/oportunidades/3/iniciar", "host": ["{{base}}"], "path": ["api","oportunidades","3","iniciar"] }
+              }
+            },
+            {
+              "name": "Encerrar (EM_EXECUCAO → ENCERRADA) [DOCENTE/COORD]",
+              "request": {
+                "method": "POST",
+                "url": { "raw": "{{base}}/api/oportunidades/2/encerrar", "host": ["{{base}}"], "path": ["api","oportunidades","2","encerrar"] }
+              }
+            },
+            {
+              "name": "Cancelar (qualquer estado) [DOCENTE/COORD/ADMIN]",
+              "request": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{base}}/api/oportunidades/8/cancelar?motivo=Falta%20de%20recursos",
+                  "host": ["{{base}}"], "path": ["api","oportunidades","8","cancelar"],
+                  "query": [{ "key": "motivo", "value": "Falta de recursos" }]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "— Inscricoes —",
+          "item": [
+            {
+              "name": "Inscrever discente (coloca na fila FIFO)",
+              "request": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{base}}/api/oportunidades/3/inscrever?discenteId=6",
+                  "host": ["{{base}}"], "path": ["api","oportunidades","3","inscrever"],
+                  "query": [{ "key": "discenteId", "value": "6" }]
+                }
+              }
+            },
+            {
+              "name": "Avaliar inscricao (aprovar/reprovar) [DOCENTE/COORD]",
+              "request": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{base}}/api/oportunidades/3/avaliar-inscricao?discenteId=6&aprovar=true",
+                  "host": ["{{base}}"], "path": ["api","oportunidades","3","avaliar-inscricao"],
+                  "query": [
+                    { "key": "discenteId", "value": "6" },
+                    { "key": "aprovar",    "value": "true" }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Cancelar inscricao",
+              "request": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{base}}/api/oportunidades/3/cancelar-inscricao?discenteId=6",
+                  "host": ["{{base}}"], "path": ["api","oportunidades","3","cancelar-inscricao"],
+                  "query": [{ "key": "discenteId", "value": "6" }]
+                }
+              }
+            },
+            {
+              "name": "Substituir participante [DOCENTE/COORD]",
+              "request": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{base}}/api/oportunidades/3/substituir?aRemoverId=5&substitutoId=6",
+                  "host": ["{{base}}"], "path": ["api","oportunidades","3","substituir"],
+                  "query": [
+                    { "key": "aRemoverId",  "value": "5" },
+                    { "key": "substitutoId","value": "6" }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Certificar participantes (gera Certificado) [DOCENTE/COORD]",
+              "request": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": { "raw": "{{base}}/api/oportunidades/2/certificar", "host": ["{{base}}"], "path": ["api","oportunidades","2","certificar"] },
+                "body": { "mode": "raw", "raw": "[5, 6]" }
+              }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "name": "Certificados",
+      "description": "POST: DOCENTE/COORD/ADMIN. PUT/DELETE: ADMIN. GET: token obrigatorio.",
+      "item": [
+        {
+          "name": "Criar certificado [DOCENTE/COORD/ADMIN]",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base}}/api/certificados", "host": ["{{base}}"], "path": ["api","certificados"] },
+            "body": { "mode": "raw", "raw": "{\n  \"tituloAtividade\": \"Curso de Docker e Containers\",\n  \"cargaHoraria\": 16,\n  \"data\": \"2026-05-10\"\n}" }
+          }
+        },
+        {
+          "name": "Buscar por titulo",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base}}/api/certificados/obter?tituloAtividade=Java",
+              "host": ["{{base}}"], "path": ["api","certificados","obter"],
+              "query": [{ "key": "tituloAtividade", "value": "Java" }]
+            }
+          }
+        },
+        {
+          "name": "Buscar por ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base}}/api/certificados/1", "host": ["{{base}}"], "path": ["api","certificados","1"] }
+          }
+        },
+        {
+          "name": "Atualizar [ADMIN]",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base}}/api/certificados/1", "host": ["{{base}}"], "path": ["api","certificados","1"] },
+            "body": { "mode": "raw", "raw": "{\n  \"tituloAtividade\": \"Curso de Java - Fundamentos (corrigido)\",\n  \"cargaHoraria\": 40,\n  \"data\": \"2026-02-28\"\n}" }
+          }
+        },
+        {
+          "name": "Remover [ADMIN]",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{base}}/api/certificados/6", "host": ["{{base}}"], "path": ["api","certificados","6"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Solicitacoes de Aproveitamento",
+      "description": "Maquina de estados: PENDENTE → DEFERIDA | INDEFERIDA | CANCELADA (reenvio INDEFERIDA → PENDENTE em ate 5 dias).\nSeed: id=1 DEFERIDA, id=2 PENDENTE (Bruno/Seminario), id=3 DELEGADA (Bruno/Python), id=4 INDEFERIDA com prazo estourado (Ana/BD).",
+      "item": [
+        {
+          "name": "Criar solicitacao",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base}}/api/solicitacoes", "host": ["{{base}}"], "path": ["api","solicitacoes"] },
+            "body": { "mode": "raw", "raw": "{\n  \"solicitanteId\": 5,\n  \"certificadoId\": 1\n}" }
+          }
+        },
+        {
+          "name": "Buscar por status",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base}}/api/solicitacoes/obter?status=PENDENTE",
+              "host": ["{{base}}"], "path": ["api","solicitacoes","obter"],
+              "query": [{ "key": "status", "value": "PENDENTE" }]
+            }
+          }
+        },
+        {
+          "name": "Listar pendentes [COORD/COMISSAO]",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base}}/api/solicitacoes/pendentes", "host": ["{{base}}"], "path": ["api","solicitacoes","pendentes"] }
+          }
+        },
+        {
+          "name": "Listar pendentes sem delegacao [COORD]",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base}}/api/solicitacoes/pendentes/nao-delegadas", "host": ["{{base}}"], "path": ["api","solicitacoes","pendentes","nao-delegadas"] }
+          }
+        },
+        {
+          "name": "Listar delegadas para comissao [COMISSAO]",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base}}/api/solicitacoes/delegadas", "host": ["{{base}}"], "path": ["api","solicitacoes","delegadas"] }
+          }
+        },
+        {
+          "name": "Buscar por ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base}}/api/solicitacoes/2", "host": ["{{base}}"], "path": ["api","solicitacoes","2"] }
+          }
+        },
+        {
+          "name": "Atualizar [ADMIN]",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base}}/api/solicitacoes/2", "host": ["{{base}}"], "path": ["api","solicitacoes","2"] },
+            "body": { "mode": "raw", "raw": "{\n  \"solicitanteId\": 6,\n  \"certificadoId\": 3,\n  \"status\": \"PENDENTE\"\n}" }
+          }
+        },
+        {
+          "name": "Remover [ADMIN]",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{base}}/api/solicitacoes/5", "host": ["{{base}}"], "path": ["api","solicitacoes","5"] }
+          }
+        },
+        {
+          "name": "— Transicoes —",
+          "item": [
+            {
+              "name": "Avaliar (deferir ou indeferir) [COORD/COMISSAO]",
+              "request": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{base}}/api/solicitacoes/2/avaliar?aprovado=true&parecer=Atividade%20compativel%20com%20a%20UCE",
+                  "host": ["{{base}}"], "path": ["api","solicitacoes","2","avaliar"],
+                  "query": [
+                    { "key": "aprovado", "value": "true" },
+                    { "key": "parecer",  "value": "Atividade compativel com a UCE" }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Delegar para comissao [COORD]",
+              "request": {
+                "method": "POST",
+                "url": { "raw": "{{base}}/api/solicitacoes/2/delegar", "host": ["{{base}}"], "path": ["api","solicitacoes","2","delegar"] }
+              }
+            },
+            {
+              "name": "Cancelar solicitacao",
+              "request": {
+                "method": "POST",
+                "url": { "raw": "{{base}}/api/solicitacoes/2/cancelar", "host": ["{{base}}"], "path": ["api","solicitacoes","2","cancelar"] }
+              }
+            },
+            {
+              "name": "Reenviar (INDEFERIDA → PENDENTE, prazo 5 dias)",
+              "request": {
+                "method": "POST",
+                "url": { "raw": "{{base}}/api/solicitacoes/4/reenviar", "host": ["{{base}}"], "path": ["api","solicitacoes","4","reenviar"] }
+              }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "name": "Grupos Estudantis",
+      "description": "Seed: id=1 Liga Academica de Computacao (responsavel id=1, membros: aluno1 id=5 PRESIDENTE, aluno2 id=6 MEMBRO).\nCargos validos: MEMBRO, VICE, TESOUREIRO, DIRETOR, PRESIDENTE.",
+      "item": [
+        {
+          "name": "Criar grupo [DOCENTE/COORD/ADMIN]",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base}}/api/grupos", "host": ["{{base}}"], "path": ["api","grupos"] },
+            "body": { "mode": "raw", "raw": "{\n  \"nome\": \"Grupo de Pesquisa em IA\",\n  \"descricao\": \"Estudos e publicacoes em inteligencia artificial.\",\n  \"responsavelId\": 1\n}" }
+          }
+        },
+        {
+          "name": "Buscar por nome",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base}}/api/grupos/obter?nome=Liga",
+              "host": ["{{base}}"], "path": ["api","grupos","obter"],
+              "query": [{ "key": "nome", "value": "Liga" }]
+            }
+          }
+        },
+        {
+          "name": "Buscar grupos de um usuario (responsavel ou membro)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base}}/api/grupos/por-usuario/5", "host": ["{{base}}"], "path": ["api","grupos","por-usuario","5"] }
+          }
+        },
+        {
+          "name": "Buscar por ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base}}/api/grupos/1", "host": ["{{base}}"], "path": ["api","grupos","1"] }
+          }
+        },
+        {
+          "name": "Atualizar [DOCENTE/COORD]",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base}}/api/grupos/1", "host": ["{{base}}"], "path": ["api","grupos","1"] },
+            "body": { "mode": "raw", "raw": "{\n  \"nome\": \"Liga Academica de Computacao (atualizada)\",\n  \"descricao\": \"Maratonas, palestras, minicursos e hackathons.\",\n  \"responsavelId\": 1\n}" }
+          }
+        },
+        {
+          "name": "Remover [ADMIN]",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{base}}/api/grupos/2", "host": ["{{base}}"], "path": ["api","grupos","2"] }
+          }
+        },
+        {
+          "name": "— Membros e cargos —",
+          "item": [
+            {
+              "name": "Adicionar membro [DOCENTE/COORD]",
+              "request": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{base}}/api/grupos/1/membros?discenteId=6",
+                  "host": ["{{base}}"], "path": ["api","grupos","1","membros"],
+                  "query": [{ "key": "discenteId", "value": "6" }]
+                }
+              }
+            },
+            {
+              "name": "Definir cargo do membro [DOCENTE/COORD]",
+              "request": {
+                "method": "PUT",
+                "url": {
+                  "raw": "{{base}}/api/grupos/1/membros/6/cargo?cargo=VICE",
+                  "host": ["{{base}}"], "path": ["api","grupos","1","membros","6","cargo"],
+                  "query": [{ "key": "cargo", "value": "VICE" }]
+                }
+              }
+            },
+            {
+              "name": "Remover membro [DOCENTE/COORD]",
+              "request": {
+                "method": "DELETE",
+                "url": { "raw": "{{base}}/api/grupos/1/membros/6", "host": ["{{base}}"], "path": ["api","grupos","1","membros","6"] }
+              }
+            },
+            {
+              "name": "Verificar se discente e lider",
+              "request": {
+                "method": "GET",
+                "url": { "raw": "{{base}}/api/grupos/discentes/5/lider", "host": ["{{base}}"], "path": ["api","grupos","discentes","5","lider"] }
+              }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "name": "Solicitacoes de Grupo Estudantil",
+      "description": "Ao deferir uma solicitacao (aprovado=true) o GrupoEstudantil e criado automaticamente com o solicitante como PRESIDENTE.\nSeed: sem solicitacoes — crie uma primeiro.",
+      "item": [
+        {
+          "name": "Criar solicitacao de grupo",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base}}/api/solicitacoes-grupo", "host": ["{{base}}"], "path": ["api","solicitacoes-grupo"] },
+            "body": { "mode": "raw", "raw": "{\n  \"solicitanteId\": 5,\n  \"nomeGrupo\": \"Liga de Robotica\",\n  \"descricao\": \"Desenvolvimento de projetos de robotica educacional.\",\n  \"docenteResponsavelId\": 1\n}" }
+          }
+        },
+        {
+          "name": "Buscar por status",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base}}/api/solicitacoes-grupo/obter?status=PENDENTE",
+              "host": ["{{base}}"], "path": ["api","solicitacoes-grupo","obter"],
+              "query": [{ "key": "status", "value": "PENDENTE" }]
+            }
+          }
+        },
+        {
+          "name": "Listar pendentes [COORD]",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base}}/api/solicitacoes-grupo/pendentes", "host": ["{{base}}"], "path": ["api","solicitacoes-grupo","pendentes"] }
+          }
+        },
+        {
+          "name": "Buscar por ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base}}/api/solicitacoes-grupo/1", "host": ["{{base}}"], "path": ["api","solicitacoes-grupo","1"] }
+          }
+        },
+        {
+          "name": "Atualizar [ADMIN]",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base}}/api/solicitacoes-grupo/1", "host": ["{{base}}"], "path": ["api","solicitacoes-grupo","1"] },
+            "body": { "mode": "raw", "raw": "{\n  \"solicitanteId\": 5,\n  \"nomeGrupo\": \"Liga de Robotica (revisada)\",\n  \"descricao\": \"Robotica educacional e competicoes.\",\n  \"docenteResponsavelId\": 1,\n  \"status\": \"PENDENTE\"\n}" }
+          }
+        },
+        {
+          "name": "Remover [ADMIN]",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{base}}/api/solicitacoes-grupo/1", "host": ["{{base}}"], "path": ["api","solicitacoes-grupo","1"] }
+          }
+        },
+        {
+          "name": "Avaliar (deferir cria o grupo automaticamente) [COORD]",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base}}/api/solicitacoes-grupo/1/avaliar?aprovado=true",
+              "host": ["{{base}}"], "path": ["api","solicitacoes-grupo","1","avaliar"],
+              "query": [{ "key": "aprovado", "value": "true" }]
+            }
+          }
+        }
+      ]
+    }
+
+  ]
+}

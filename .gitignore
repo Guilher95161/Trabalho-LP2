@@ -1,4 +1,5 @@
 ### IntelliJ IDEA ###
+.idea/
 out/
 !**/src/main/**/out/
 !**/src/test/**/out/
@@ -30,5 +31,8 @@ bin/
 ### Mac OS ###
 .DS_Store
 
-## Utilitarios
-DOCUMENTACAO.md
+### Maven / Spring Boot ###
+target/
+
+### H2 em arquivo (banco gerado em runtime) ###
+data/

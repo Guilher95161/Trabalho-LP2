@@ -1,0 +1,122 @@
+package br.ufma.extensao.controller;
+
+import br.ufma.extensao.config.JwtService;
+import br.ufma.extensao.config.SecurityConstants;
+import br.ufma.extensao.model.Usuario;
+import br.ufma.extensao.model.dto.UsuarioDTO;
+import br.ufma.extensao.model.dto.UsuarioResponse;
+import br.ufma.extensao.service.UsuarioService;
+import br.ufma.extensao.service.exceptions.RegraNegocioRunTime;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/usuarios")
+public class UsuarioController {
+
+    @Autowired
+    UsuarioService service;
+
+    @Autowired
+    JwtService jwtService;
+
+    @PostMapping
+    public ResponseEntity salvar(@RequestBody UsuarioDTO dto) {
+        Usuario usuario = new Usuario();
+        usuario.setNome(dto.getNome());
+        usuario.setEmail(dto.getEmail());
+        usuario.setSenha(dto.getSenha());
+        usuario.setMatricula(dto.getMatricula());
+        usuario.setAtivo(true);
+        try {
+            Usuario salvo = service.salvar(usuario);
+            return new ResponseEntity(UsuarioResponse.from(salvo), HttpStatus.CREATED);
+        } catch (RegraNegocioRunTime e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/autenticar")
+    public ResponseEntity autenticar(@RequestBody UsuarioDTO dto) {
+        try {
+            service.efetuarLogin(dto.getEmail(), dto.getSenha());
+            String token = jwtService.gerarToken(dto.getEmail());
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.AUTHORIZATION, SecurityConstants.PREFIXO + token)
+                    .body(Map.of("token", token));
+        } catch (RegraNegocioRunTime e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PutMapping("{id}")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    public ResponseEntity atualizar(@PathVariable Integer id, @RequestBody UsuarioDTO dto) {
+        Usuario usuario = new Usuario();
+        usuario.setId(id);
+        usuario.setNome(dto.getNome());
+        usuario.setEmail(dto.getEmail());
+        usuario.setSenha(dto.getSenha());
+        usuario.setMatricula(dto.getMatricula());
+        try {
+            return ResponseEntity.ok(UsuarioResponse.from(service.atualizar(usuario)));
+        } catch (RegraNegocioRunTime e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PutMapping("{id}/desativar")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    public ResponseEntity desativar(@PathVariable Integer id) {
+        try {
+            return ResponseEntity.ok(UsuarioResponse.from(service.desativarUsuario(id)));
+        } catch (RegraNegocioRunTime e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PutMapping("{id}/reativar")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    public ResponseEntity reativar(@PathVariable Integer id) {
+        try {
+            return ResponseEntity.ok(UsuarioResponse.from(service.reativarUsuario(id)));
+        } catch (RegraNegocioRunTime e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @DeleteMapping("{id}")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    public ResponseEntity remover(@PathVariable Integer id) {
+        try {
+            service.remover(id);
+            return ResponseEntity.noContent().build();
+        } catch (RegraNegocioRunTime e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("{id}")
+    public ResponseEntity buscarPorId(@PathVariable Integer id) {
+        try {
+            return ResponseEntity.ok(UsuarioResponse.from(service.buscarPorId(id)));
+        } catch (RegraNegocioRunTime e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/obter")
+    public ResponseEntity buscar(@RequestParam(value = "nome", required = false) String nome,
+                                 @RequestParam(value = "email", required = false) String email) {
+        Usuario filtro = new Usuario();
+        filtro.setNome(nome);
+        filtro.setEmail(email);
+        return ResponseEntity.ok(UsuarioResponse.fromList(service.buscar(filtro)));
+    }
+}
