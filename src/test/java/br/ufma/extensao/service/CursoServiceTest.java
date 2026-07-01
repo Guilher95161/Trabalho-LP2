@@ -3,14 +3,17 @@ package br.ufma.extensao.service;
 import br.ufma.extensao.model.Curso;
 import br.ufma.extensao.service.exceptions.EntidadeNaoEncontradaException;
 import br.ufma.extensao.service.exceptions.RegraNegocioRunTime;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
+@ExtendWith(SpringExtension.class)
+@ActiveProfiles("test")
 @SpringBootTest
 @Transactional
 class CursoServiceTest {
@@ -23,35 +26,54 @@ class CursoServiceTest {
     }
 
     @Test
-    void salvar_devePersistirCurso() {
-        Curso salvo = service.salvar(novoCurso());
-        assertThat(salvo.getId()).isNotNull();
-        assertThat(salvo.getNome()).isEqualTo("Engenharia de Software");
+    void deveSalvarCurso() {
+        //cenario
+        Curso curso = novoCurso();
+
+        //acao
+        Curso salvo = service.salvar(curso);
+
+        //verificacao
+        Assertions.assertNotNull(salvo.getId());
+        Assertions.assertEquals("Engenharia de Software", salvo.getNome());
     }
 
     @Test
-    void salvar_deveLancarExcecaoSemNome() {
-        assertThatThrownBy(() -> service.salvar(Curso.builder().cargaHoraria(100).build()))
-                .isInstanceOf(RegraNegocioRunTime.class);
+    void deveLancarExcecaoAoSalvarCursoSemNome() {
+        //cenario
+        Curso curso = Curso.builder().cargaHoraria(100).build();
+
+        //acao e verificacao
+        Assertions.assertThrows(RegraNegocioRunTime.class, () -> service.salvar(curso));
     }
 
     @Test
-    void atualizar_devePreservarCamposNaoEnviados() {
+    void devePreservarCamposNaoEnviadosAoAtualizarCurso() {
+        //cenario
         Curso salvo = service.salvar(novoCurso());
+
+        //acao
         Curso patch = new Curso();
         patch.setId(salvo.getId());
         patch.setNome("Ciencia da Computacao");
         Curso atualizado = service.atualizar(patch);
-        assertThat(atualizado.getNome()).isEqualTo("Ciencia da Computacao");
-        assertThat(atualizado.getCurriculo()).isEqualTo("2022");
-        assertThat(atualizado.getCargaHoraria()).isEqualTo(240);
+
+        //verificacao
+        Assertions.assertEquals("Ciencia da Computacao", atualizado.getNome());
+        Assertions.assertEquals("2022", atualizado.getCurriculo());
+        Assertions.assertEquals(240, atualizado.getCargaHoraria());
     }
 
     @Test
-    void remover_deveExcluirCurso() {
+    void deveRemoverCurso() {
+        //cenario
         Curso salvo = service.salvar(novoCurso());
+
+        //acao
         service.remover(salvo.getId());
-        assertThatThrownBy(() -> service.buscarPorId(salvo.getId()))
-                .isInstanceOf(EntidadeNaoEncontradaException.class);
+
+        //verificacao
+        Assertions.assertThrows(EntidadeNaoEncontradaException.class,
+                () -> service.buscarPorId(salvo.getId()));
     }
 }

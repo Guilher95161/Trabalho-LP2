@@ -1,14 +1,18 @@
 package br.ufma.extensao.repo;
 
 import br.ufma.extensao.model.Usuario;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
+@ExtendWith(SpringExtension.class)
+@ActiveProfiles("test")
 @DataJpaTest
 class UsuarioRepositoryTest {
 
@@ -26,35 +30,54 @@ class UsuarioRepositoryTest {
     }
 
     @Test
-    void salvar_deveGerarIdAutoIncrementado() {
-        Usuario salvo = repository.save(novoUsuario("repo@test.com"));
-        assertThat(salvo.getId()).isNotNull().isPositive();
+    void deveGerarIdAutoIncrementadoAoSalvar() {
+        //cenario
+        Usuario usuario = novoUsuario("repo@test.com");
+
+        //acao
+        Usuario salvo = repository.save(usuario);
+
+        //verificacao
+        Assertions.assertNotNull(salvo.getId());
+        Assertions.assertTrue(salvo.getId() > 0);
     }
 
     @Test
-    void findByEmail_deveRetornarPresent_quandoEmailExiste() {
+    void deveEncontrarUsuarioPorEmailExistente() {
+        //cenario
         repository.save(novoUsuario("find@test.com"));
 
+        //acao
         Optional<Usuario> resultado = repository.findByEmail("find@test.com");
 
-        assertThat(resultado).isPresent();
-        assertThat(resultado.get().getNome()).isEqualTo("Teste Repo");
+        //verificacao
+        Assertions.assertTrue(resultado.isPresent());
+        Assertions.assertEquals("Teste Repo", resultado.get().getNome());
     }
 
     @Test
-    void findByEmail_deveRetornarEmpty_quandoEmailNaoExiste() {
+    void deveRetornarVazioAoBuscarEmailInexistente() {
+        //cenario
+        //acao
         Optional<Usuario> resultado = repository.findByEmail("nao-existe@test.com");
-        assertThat(resultado).isEmpty();
+
+        //verificacao
+        Assertions.assertTrue(resultado.isEmpty());
     }
 
     @Test
-    void existsByEmail_deveRetornarTrue_quandoEmailCadastrado() {
+    void deveConfirmarQueEmailCadastradoExiste() {
+        //cenario
         repository.save(novoUsuario("exists@test.com"));
-        assertThat(repository.existsByEmail("exists@test.com")).isTrue();
+
+        //acao e verificacao
+        Assertions.assertTrue(repository.existsByEmail("exists@test.com"));
     }
 
     @Test
-    void existsByEmail_deveRetornarFalse_quandoEmailNaoCadastrado() {
-        assertThat(repository.existsByEmail("nao-tem@test.com")).isFalse();
+    void deveConfirmarQueEmailNaoCadastradoNaoExiste() {
+        //cenario
+        //acao e verificacao
+        Assertions.assertFalse(repository.existsByEmail("nao-tem@test.com"));
     }
 }

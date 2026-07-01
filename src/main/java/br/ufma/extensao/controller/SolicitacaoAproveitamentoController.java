@@ -7,7 +7,7 @@ import br.ufma.extensao.model.dto.SolicitacaoAproveitamentoDTO;
 import br.ufma.extensao.model.dto.SolicitacaoAproveitamentoResponse;
 import br.ufma.extensao.model.enums.StatusSolicitacao;
 import br.ufma.extensao.service.SolicitacaoAproveitamentoService;
-import br.ufma.extensao.service.exceptions.SistemaExtensaoException;
+import br.ufma.extensao.service.exceptions.RegraNegocioRunTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,7 +27,7 @@ public class SolicitacaoAproveitamentoController {
         try {
             SolicitacaoAproveitamento salvo = service.salvar(solicitacao);
             return new ResponseEntity(SolicitacaoAproveitamentoResponse.from(salvo), HttpStatus.CREATED);
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -38,7 +38,7 @@ public class SolicitacaoAproveitamentoController {
         SolicitacaoAproveitamento solicitacao = montar(id, dto);
         try {
             return ResponseEntity.ok(SolicitacaoAproveitamentoResponse.from(service.atualizar(solicitacao)));
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -49,7 +49,7 @@ public class SolicitacaoAproveitamentoController {
         try {
             service.remover(id);
             return ResponseEntity.noContent().build();
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -58,7 +58,7 @@ public class SolicitacaoAproveitamentoController {
     public ResponseEntity buscarPorId(@PathVariable Integer id) {
         try {
             return ResponseEntity.ok(SolicitacaoAproveitamentoResponse.from(service.buscarPorId(id)));
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -98,7 +98,7 @@ public class SolicitacaoAproveitamentoController {
                                   @RequestParam(value = "parecer", required = false) String parecer) {
         try {
             return ResponseEntity.ok(SolicitacaoAproveitamentoResponse.from(service.avaliar(id, aprovado, parecer)));
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -108,7 +108,7 @@ public class SolicitacaoAproveitamentoController {
     public ResponseEntity delegar(@PathVariable Integer id) {
         try {
             return ResponseEntity.ok(SolicitacaoAproveitamentoResponse.from(service.delegar(id)));
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -117,7 +117,7 @@ public class SolicitacaoAproveitamentoController {
     public ResponseEntity cancelar(@PathVariable Integer id) {
         try {
             return ResponseEntity.ok(SolicitacaoAproveitamentoResponse.from(service.cancelar(id)));
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -126,7 +126,7 @@ public class SolicitacaoAproveitamentoController {
     public ResponseEntity reenviar(@PathVariable Integer id) {
         try {
             return ResponseEntity.ok(SolicitacaoAproveitamentoResponse.from(service.reenviar(id)));
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }

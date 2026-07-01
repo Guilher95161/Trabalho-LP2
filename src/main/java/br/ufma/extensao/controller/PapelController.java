@@ -3,7 +3,7 @@ package br.ufma.extensao.controller;
 import br.ufma.extensao.model.Papel;
 import br.ufma.extensao.model.dto.PapelDTO;
 import br.ufma.extensao.service.PapelService;
-import br.ufma.extensao.service.exceptions.SistemaExtensaoException;
+import br.ufma.extensao.service.exceptions.RegraNegocioRunTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,7 +25,7 @@ public class PapelController {
         try {
             Papel salvo = service.salvar(papel);
             return new ResponseEntity(salvo, HttpStatus.CREATED);
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -37,7 +37,7 @@ public class PapelController {
         papel.setNome(dto.getNome());
         try {
             return ResponseEntity.ok(service.atualizar(papel));
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -47,7 +47,7 @@ public class PapelController {
         try {
             service.remover(id);
             return ResponseEntity.noContent().build();
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -56,7 +56,7 @@ public class PapelController {
     public ResponseEntity buscarPorId(@PathVariable Integer id) {
         try {
             return ResponseEntity.ok(service.buscarPorId(id));
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }

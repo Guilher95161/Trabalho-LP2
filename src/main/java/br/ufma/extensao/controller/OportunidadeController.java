@@ -7,7 +7,7 @@ import br.ufma.extensao.model.dto.OportunidadeResponse;
 import br.ufma.extensao.model.enums.ModalidadeOportunidade;
 import br.ufma.extensao.model.enums.StatusOportunidade;
 import br.ufma.extensao.service.OportunidadeService;
-import br.ufma.extensao.service.exceptions.SistemaExtensaoException;
+import br.ufma.extensao.service.exceptions.RegraNegocioRunTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,7 +30,7 @@ public class OportunidadeController {
         try {
             Oportunidade salvo = service.salvar(oportunidade);
             return new ResponseEntity(OportunidadeResponse.from(salvo), HttpStatus.CREATED);
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -41,7 +41,7 @@ public class OportunidadeController {
         Oportunidade oportunidade = montar(id, dto);
         try {
             return ResponseEntity.ok(OportunidadeResponse.from(service.atualizar(oportunidade)));
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -52,7 +52,7 @@ public class OportunidadeController {
         try {
             service.remover(id);
             return ResponseEntity.noContent().build();
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -61,7 +61,7 @@ public class OportunidadeController {
     public ResponseEntity buscarPorId(@PathVariable Integer id) {
         try {
             return ResponseEntity.ok(OportunidadeResponse.from(service.buscarPorId(id)));
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -106,7 +106,7 @@ public class OportunidadeController {
                                    @RequestParam(value = "motivo", required = false) String motivo) {
         try {
             return ResponseEntity.ok(OportunidadeResponse.from(service.cancelar(id, motivo)));
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -120,7 +120,7 @@ public class OportunidadeController {
                 default -> service.encerrar(id);
             };
             return ResponseEntity.ok(OportunidadeResponse.from(oportunidade));
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -131,7 +131,7 @@ public class OportunidadeController {
     public ResponseEntity inscrever(@PathVariable Integer id, @RequestParam Integer discenteId) {
         try {
             return ResponseEntity.ok(OportunidadeResponse.from(service.inscrever(id, discenteId)));
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -143,7 +143,7 @@ public class OportunidadeController {
                                            @RequestParam boolean aprovar) {
         try {
             return ResponseEntity.ok(OportunidadeResponse.from(service.avaliarInscricao(id, discenteId, aprovar)));
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -152,7 +152,7 @@ public class OportunidadeController {
     public ResponseEntity cancelarInscricao(@PathVariable Integer id, @RequestParam Integer discenteId) {
         try {
             return ResponseEntity.ok(OportunidadeResponse.from(service.cancelarInscricao(id, discenteId)));
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -164,7 +164,7 @@ public class OportunidadeController {
                                      @RequestParam Integer substitutoId) {
         try {
             return ResponseEntity.ok(OportunidadeResponse.from(service.substituirParticipante(id, aRemoverId, substitutoId)));
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -174,7 +174,7 @@ public class OportunidadeController {
     public ResponseEntity certificar(@PathVariable Integer id, @RequestBody List<Integer> discenteIds) {
         try {
             return ResponseEntity.ok(service.certificar(id, discenteIds));
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }

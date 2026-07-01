@@ -24,14 +24,27 @@ public class DiscenteService {
     @Autowired
     PasswordEncoder passwordEncoder;
 
+    /**
+     * Salva um novo discente, validando os campos e codificando a senha com BCrypt.
+     * @param discente discente a ser cadastrado
+     * @return o discente salvo (com id gerado)
+     * @throws RegraNegocioRunTime se nome ou email nao forem informados
+     */
     @Transactional
     public Discente salvar(Discente discente) {
-        verificaDiscente(discente);
-        if (discente.getSenha() != null && !discente.getSenha().trim().isEmpty())
+        verificarDiscente(discente);
+        if (discente.getSenha() != null && !discente.getSenha().isBlank())
             discente.setSenha(passwordEncoder.encode(discente.getSenha()));
         return repository.save(discente);
     }
 
+    /**
+     * Atualiza os campos informados de um discente existente (so altera o que vier preenchido).
+     * @param patch discente com o id e os campos a atualizar
+     * @return o discente atualizado
+     * @throws RegraNegocioRunTime se o id nao for informado
+     * @throws EntidadeNaoEncontradaException se nao existir discente com esse id
+     */
     @Transactional
     public Discente atualizar(Discente patch) {
         verificarId(patch);
@@ -52,17 +65,32 @@ public class DiscenteService {
         return repository.save(existente);
     }
 
+    /**
+     * Remove o discente informado.
+     * @param discente discente a remover (precisa ter id)
+     * @throws RegraNegocioRunTime se o id nao for informado
+     */
     public void remover(Discente discente) {
         verificarId(discente);
         repository.delete(discente);
     }
 
+    /**
+     * Remove o discente pelo id.
+     * @param id id do discente a remover
+     * @throws EntidadeNaoEncontradaException se nao existir discente com esse id
+     */
     public void remover(Integer id) {
         Discente discente = repository.findById(id)
                 .orElseThrow(() -> new EntidadeNaoEncontradaException("Discente nao encontrado."));
         remover(discente);
     }
 
+    /**
+     * Busca discentes usando o filtro como exemplo (contains e ignorando maiusculas/minusculas).
+     * @param filtro discente com os campos que servem de criterio de busca
+     * @return a lista de discentes que casam com o filtro
+     */
     public List<Discente> buscar(Discente filtro) {
         Example<Discente> example = Example.of(filtro,
                 ExampleMatcher.matching()
@@ -72,7 +100,12 @@ public class DiscenteService {
         return repository.findAll(example);
     }
 
-    // painel de progresso: horas cumpridas x meta do curso (carga horaria da UCE)
+    /**
+     * Monta o painel de progresso de horas: cumpridas x meta do curso, com restante e percentual.
+     * @param id id do discente
+     * @return um mapa com horasCumpridas, metaHoras, horasRestantes, percentualConcluido e concluido
+     * @throws EntidadeNaoEncontradaException se nao existir discente com esse id
+     */
     public Map<String, Object> painelHoras(Integer id) {
         Discente discente = repository.findById(id)
                 .orElseThrow(() -> new EntidadeNaoEncontradaException("Discente nao encontrado."));
@@ -92,6 +125,12 @@ public class DiscenteService {
         return painel;
     }
 
+    /**
+     * Busca um discente pelo id.
+     * @param id id do discente
+     * @return o discente encontrado
+     * @throws EntidadeNaoEncontradaException se nao existir discente com esse id
+     */
     public Discente buscarPorId(Integer id) {
         return repository.findById(id)
                 .orElseThrow(() -> new EntidadeNaoEncontradaException("Discente nao encontrado."));
@@ -102,12 +141,12 @@ public class DiscenteService {
             throw new RegraNegocioRunTime("Discente invalido (sem id).");
     }
 
-    private void verificaDiscente(Discente discente) {
+    private void verificarDiscente(Discente discente) {
         if (discente == null)
             throw new RegraNegocioRunTime("Um discente valido deve ser informado.");
-        if ((discente.getNome() == null) || (discente.getNome().trim().equals("")))
+        if ((discente.getNome() == null) || (discente.getNome().isBlank()))
             throw new RegraNegocioRunTime("Nome do discente deve ser informado.");
-        if ((discente.getEmail() == null) || (discente.getEmail().trim().equals("")))
+        if ((discente.getEmail() == null) || (discente.getEmail().isBlank()))
             throw new RegraNegocioRunTime("Email do discente deve ser informado.");
     }
 }

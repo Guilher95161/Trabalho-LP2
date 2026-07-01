@@ -3,19 +3,21 @@ package br.ufma.extensao.service;
 import br.ufma.extensao.model.Discente;
 import br.ufma.extensao.model.SolicitacaoGrupoEstudantil;
 import br.ufma.extensao.model.Usuario;
-import br.ufma.extensao.model.enums.CargoGrupo;
 import br.ufma.extensao.model.enums.StatusSolicitacao;
 import br.ufma.extensao.service.exceptions.OperacaoInvalidaException;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
+@ExtendWith(SpringExtension.class)
+@ActiveProfiles("test")
 @SpringBootTest
 @Transactional
 class SolicitacaoGrupoEstudantilServiceTest {
@@ -55,43 +57,63 @@ class SolicitacaoGrupoEstudantilServiceTest {
     }
 
     @Test
-    void salvar_deveIniciarComStatusPendente() {
+    void deveSalvarComStatusPendente() {
+        //cenario
+        //acao
         SolicitacaoGrupoEstudantil salva = novaSolicitacao(novoDiscente(), novoDocente());
-        assertThat(salva.getId()).isNotNull();
-        assertThat(salva.getStatus()).isEqualTo(StatusSolicitacao.PENDENTE);
+
+        //verificacao
+        Assertions.assertNotNull(salva.getId());
+        Assertions.assertEquals(StatusSolicitacao.PENDENTE, salva.getStatus());
     }
 
     @Test
-    void avaliar_aprovado_deveDeferirECriarGrupo() {
+    void deveDeferirECriarGrupoAoAprovar() {
+        //cenario
         Discente solicitante = novoDiscente();
         SolicitacaoGrupoEstudantil salva = novaSolicitacao(solicitante, novoDocente());
+
+        //acao
         SolicitacaoGrupoEstudantil avaliada = service.avaliar(salva.getId(), true);
-        assertThat(avaliada.getStatus()).isEqualTo(StatusSolicitacao.DEFERIDA);
+
+        //verificacao
+        Assertions.assertEquals(StatusSolicitacao.DEFERIDA, avaliada.getStatus());
         // grupo materializado com o solicitante como PRESIDENTE
-        assertThat(grupoService.isLider(solicitante.getId())).isTrue();
+        Assertions.assertTrue(grupoService.isLider(solicitante.getId()));
     }
 
     @Test
-    void avaliar_reprovado_deveIndefirir() {
+    void deveIndeferirAoReprovar() {
+        //cenario
         SolicitacaoGrupoEstudantil salva = novaSolicitacao(novoDiscente(), novoDocente());
+
+        //acao
         SolicitacaoGrupoEstudantil avaliada = service.avaliar(salva.getId(), false);
-        assertThat(avaliada.getStatus()).isEqualTo(StatusSolicitacao.INDEFERIDA);
+
+        //verificacao
+        Assertions.assertEquals(StatusSolicitacao.INDEFERIDA, avaliada.getStatus());
     }
 
     @Test
-    void avaliar_deveLancarExcecaoSeNaoPendente() {
+    void deveLancarExcecaoAoAvaliarSeNaoPendente() {
+        //cenario
         SolicitacaoGrupoEstudantil salva = novaSolicitacao(novoDiscente(), novoDocente());
         service.avaliar(salva.getId(), true);
-        assertThatThrownBy(() -> service.avaliar(salva.getId(), true))
-                .isInstanceOf(OperacaoInvalidaException.class);
+
+        //acao e verificacao
+        Assertions.assertThrows(OperacaoInvalidaException.class,
+                () -> service.avaliar(salva.getId(), true));
     }
 
     @Test
-    void listarPendentes_deveRetornarApenasPendentes() {
+    void deveListarApenasPendentes() {
+        //cenario
         novaSolicitacao(novoDiscente(), novoDocente());
         SolicitacaoGrupoEstudantil outra = novaSolicitacao(novoDiscente(), novoDocente());
         service.avaliar(outra.getId(), false);
-        assertThat(service.listarPendentes())
-                .allMatch(s -> s.getStatus() == StatusSolicitacao.PENDENTE);
+
+        //acao e verificacao
+        Assertions.assertTrue(service.listarPendentes().stream()
+                .allMatch(s -> s.getStatus() == StatusSolicitacao.PENDENTE));
     }
 }

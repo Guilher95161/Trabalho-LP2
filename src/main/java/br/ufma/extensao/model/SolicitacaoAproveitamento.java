@@ -8,10 +8,11 @@ import java.time.LocalDate;
 
 @Entity
 @Table(name = "solicitacao_aproveitamento")
-@Getter
-@Setter
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode(of = "id")
-@ToString
 public class SolicitacaoAproveitamento {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

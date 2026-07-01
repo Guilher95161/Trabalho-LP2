@@ -6,7 +6,7 @@ import br.ufma.extensao.model.Usuario;
 import br.ufma.extensao.model.dto.UsuarioDTO;
 import br.ufma.extensao.model.dto.UsuarioResponse;
 import br.ufma.extensao.service.UsuarioService;
-import br.ufma.extensao.service.exceptions.SistemaExtensaoException;
+import br.ufma.extensao.service.exceptions.RegraNegocioRunTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -37,7 +37,7 @@ public class UsuarioController {
         try {
             Usuario salvo = service.salvar(usuario);
             return new ResponseEntity(UsuarioResponse.from(salvo), HttpStatus.CREATED);
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -50,7 +50,7 @@ public class UsuarioController {
             return ResponseEntity.ok()
                     .header(HttpHeaders.AUTHORIZATION, SecurityConstants.PREFIXO + token)
                     .body(Map.of("token", token));
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -66,7 +66,7 @@ public class UsuarioController {
         usuario.setMatricula(dto.getMatricula());
         try {
             return ResponseEntity.ok(UsuarioResponse.from(service.atualizar(usuario)));
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -76,7 +76,7 @@ public class UsuarioController {
     public ResponseEntity desativar(@PathVariable Integer id) {
         try {
             return ResponseEntity.ok(UsuarioResponse.from(service.desativarUsuario(id)));
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -86,7 +86,7 @@ public class UsuarioController {
     public ResponseEntity reativar(@PathVariable Integer id) {
         try {
             return ResponseEntity.ok(UsuarioResponse.from(service.reativarUsuario(id)));
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -97,7 +97,7 @@ public class UsuarioController {
         try {
             service.remover(id);
             return ResponseEntity.noContent().build();
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -106,7 +106,7 @@ public class UsuarioController {
     public ResponseEntity buscarPorId(@PathVariable Integer id) {
         try {
             return ResponseEntity.ok(UsuarioResponse.from(service.buscarPorId(id)));
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }

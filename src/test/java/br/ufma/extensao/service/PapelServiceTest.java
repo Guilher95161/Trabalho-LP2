@@ -3,14 +3,17 @@ package br.ufma.extensao.service;
 import br.ufma.extensao.model.Papel;
 import br.ufma.extensao.service.exceptions.EntidadeNaoEncontradaException;
 import br.ufma.extensao.service.exceptions.RegraNegocioRunTime;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
+@ExtendWith(SpringExtension.class)
+@ActiveProfiles("test")
 @SpringBootTest
 @Transactional
 class PapelServiceTest {
@@ -19,33 +22,52 @@ class PapelServiceTest {
     PapelService service;
 
     @Test
-    void salvar_devePersistirPapel() {
-        Papel salvo = service.salvar(Papel.builder().nome("DOCENTE_T").build());
-        assertThat(salvo.getId()).isNotNull();
-        assertThat(salvo.getNome()).isEqualTo("DOCENTE_T");
+    void deveSalvarPapel() {
+        //cenario
+        Papel papel = Papel.builder().nome("DOCENTE_T").build();
+
+        //acao
+        Papel salvo = service.salvar(papel);
+
+        //verificacao
+        Assertions.assertNotNull(salvo.getId());
+        Assertions.assertEquals("DOCENTE_T", salvo.getNome());
     }
 
     @Test
-    void salvar_deveLancarExcecaoSemNome() {
-        assertThatThrownBy(() -> service.salvar(Papel.builder().nome("").build()))
-                .isInstanceOf(RegraNegocioRunTime.class);
+    void deveLancarExcecaoAoSalvarPapelSemNome() {
+        //cenario
+        Papel papel = Papel.builder().nome("").build();
+
+        //acao e verificacao
+        Assertions.assertThrows(RegraNegocioRunTime.class, () -> service.salvar(papel));
     }
 
     @Test
-    void atualizar_deveAlterarNome() {
+    void deveAlterarNomeAoAtualizarPapel() {
+        //cenario
         Papel salvo = service.salvar(Papel.builder().nome("ANTIGO").build());
+
+        //acao
         Papel patch = new Papel();
         patch.setId(salvo.getId());
         patch.setNome("NOVO");
         Papel atualizado = service.atualizar(patch);
-        assertThat(atualizado.getNome()).isEqualTo("NOVO");
+
+        //verificacao
+        Assertions.assertEquals("NOVO", atualizado.getNome());
     }
 
     @Test
-    void remover_deveExcluirPapel() {
+    void deveRemoverPapel() {
+        //cenario
         Papel salvo = service.salvar(Papel.builder().nome("TEMP").build());
+
+        //acao
         service.remover(salvo.getId());
-        assertThatThrownBy(() -> service.buscarPorId(salvo.getId()))
-                .isInstanceOf(EntidadeNaoEncontradaException.class);
+
+        //verificacao
+        Assertions.assertThrows(EntidadeNaoEncontradaException.class,
+                () -> service.buscarPorId(salvo.getId()));
     }
 }

@@ -7,7 +7,7 @@ import br.ufma.extensao.model.dto.SolicitacaoGrupoEstudantilDTO;
 import br.ufma.extensao.model.dto.SolicitacaoGrupoEstudantilResponse;
 import br.ufma.extensao.model.enums.StatusSolicitacao;
 import br.ufma.extensao.service.SolicitacaoGrupoEstudantilService;
-import br.ufma.extensao.service.exceptions.SistemaExtensaoException;
+import br.ufma.extensao.service.exceptions.RegraNegocioRunTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,7 +27,7 @@ public class SolicitacaoGrupoEstudantilController {
         try {
             SolicitacaoGrupoEstudantil salvo = service.salvar(solicitacao);
             return new ResponseEntity(SolicitacaoGrupoEstudantilResponse.from(salvo), HttpStatus.CREATED);
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -38,7 +38,7 @@ public class SolicitacaoGrupoEstudantilController {
         SolicitacaoGrupoEstudantil solicitacao = montar(id, dto);
         try {
             return ResponseEntity.ok(SolicitacaoGrupoEstudantilResponse.from(service.atualizar(solicitacao)));
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -49,7 +49,7 @@ public class SolicitacaoGrupoEstudantilController {
         try {
             service.remover(id);
             return ResponseEntity.noContent().build();
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -58,7 +58,7 @@ public class SolicitacaoGrupoEstudantilController {
     public ResponseEntity buscarPorId(@PathVariable Integer id) {
         try {
             return ResponseEntity.ok(SolicitacaoGrupoEstudantilResponse.from(service.buscarPorId(id)));
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -82,7 +82,7 @@ public class SolicitacaoGrupoEstudantilController {
     public ResponseEntity avaliar(@PathVariable Integer id, @RequestParam boolean aprovado) {
         try {
             return ResponseEntity.ok(SolicitacaoGrupoEstudantilResponse.from(service.avaliar(id, aprovado)));
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }

@@ -6,10 +6,13 @@ import br.ufma.extensao.service.PapelService;
 import br.ufma.extensao.service.UsuarioService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
@@ -19,6 +22,8 @@ import java.util.UUID;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@ExtendWith(SpringExtension.class)
+@ActiveProfiles("test")
 @SpringBootTest
 @AutoConfigureMockMvc
 class SolicitacaoGrupoEstudantilControllerTest {
@@ -77,9 +82,12 @@ class SolicitacaoGrupoEstudantilControllerTest {
     }
 
     @Test
-    void criar_comTokenValido_deveRetornar201() throws Exception {
+    void deveCriarComTokenValidoRetornando201() throws Exception {
+        //cenario
         String token = tokenParaPapel("COORDENADOR");
         Integer discenteId = criarDiscente();
+
+        //acao e verificacao
         mockMvc.perform(post("/api/solicitacoes-grupo")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -90,11 +98,13 @@ class SolicitacaoGrupoEstudantilControllerTest {
     }
 
     @Test
-    void avaliar_comPapelCoordenador_deveRetornar200() throws Exception {
+    void deveAvaliarComPapelCoordenadorRetornando200() throws Exception {
+        //cenario
         String tokenCoord = tokenParaPapel("COORDENADOR");
         Integer discenteId = criarDiscente();
         Integer solId = criarSolicitacao(discenteId, tokenCoord);
 
+        //acao e verificacao
         mockMvc.perform(post("/api/solicitacoes-grupo/" + solId + "/avaliar")
                         .header("Authorization", "Bearer " + tokenCoord)
                         .param("aprovado", "false"))
@@ -102,7 +112,8 @@ class SolicitacaoGrupoEstudantilControllerTest {
     }
 
     @Test
-    void avaliar_semPapelCoordenador_deveRetornar403() throws Exception {
+    void deveRetornar403AoAvaliarSemPapelCoordenador() throws Exception {
+        //cenario
         String tokenCoord = tokenParaPapel("COORDENADOR");
         Integer discenteId = criarDiscente();
         Integer solId = criarSolicitacao(discenteId, tokenCoord);
@@ -117,6 +128,7 @@ class SolicitacaoGrupoEstudantilControllerTest {
                 .andReturn().getResponse().getContentAsString();
         String tokenSemPapel = objectMapper.readTree(resp).get("token").asText();
 
+        //acao e verificacao
         mockMvc.perform(post("/api/solicitacoes-grupo/" + solId + "/avaliar")
                         .header("Authorization", "Bearer " + tokenSemPapel)
                         .param("aprovado", "false"))
@@ -124,8 +136,11 @@ class SolicitacaoGrupoEstudantilControllerTest {
     }
 
     @Test
-    void listarPendentes_comPapelCoordenador_deveRetornar200() throws Exception {
+    void deveListarPendentesComPapelCoordenadorRetornando200() throws Exception {
+        //cenario
         String token = tokenParaPapel("COORDENADOR");
+
+        //acao e verificacao
         mockMvc.perform(get("/api/solicitacoes-grupo/pendentes")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk());

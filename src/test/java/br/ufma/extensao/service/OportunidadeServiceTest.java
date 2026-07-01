@@ -4,15 +4,17 @@ import br.ufma.extensao.model.Oportunidade;
 import br.ufma.extensao.model.enums.ModalidadeOportunidade;
 import br.ufma.extensao.model.enums.StatusOportunidade;
 import br.ufma.extensao.service.exceptions.OperacaoInvalidaException;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
+@ExtendWith(SpringExtension.class)
+@ActiveProfiles("test")
 @SpringBootTest
 @Transactional
 class OportunidadeServiceTest {
@@ -20,7 +22,7 @@ class OportunidadeServiceTest {
     @Autowired
     OportunidadeService service;
 
-    private Oportunidade salvarRascunho() {
+    private Oportunidade novaOportunidade() {
         Oportunidade o = new Oportunidade();
         o.setTitulo("Curso de Teste");
         o.setDescricao("Descricao");
@@ -28,95 +30,155 @@ class OportunidadeServiceTest {
         o.setPeriodoRealizacao("01/01/2026 - 31/01/2026");
         o.setCargaHoraria(20);
         o.setVagas(10);
+        return o;
+    }
+
+    private Oportunidade salvarRascunho() {
+        Oportunidade o = novaOportunidade();
         o.setStatus(StatusOportunidade.RASCUNHO);
         return service.salvar(o);
     }
 
     @Test
-    void salvar_devePersistirOportunidade() {
+    void deveSalvarOportunidade() {
+        //cenario
+        //acao
         Oportunidade salva = salvarRascunho();
-        assertThat(salva.getId()).isNotNull();
-        assertThat(salva.getStatus()).isEqualTo(StatusOportunidade.RASCUNHO);
+
+        //verificacao
+        Assertions.assertNotNull(salva.getId());
+        Assertions.assertEquals(StatusOportunidade.RASCUNHO, salva.getStatus());
     }
 
     @Test
-    void submeter_deveMudarStatusParaAguardandoAprovacao() {
+    void deveAbrirEmAbertaQuandoStatusNaoInformadoESemResponsavelDiscente() {
+        //cenario
+        Oportunidade o = novaOportunidade(); // sem status e sem responsavel discente
+
+        //acao
+        Oportunidade salva = service.salvar(o);
+
+        //verificacao
+        Assertions.assertEquals(StatusOportunidade.ABERTA, salva.getStatus());
+    }
+
+    @Test
+    void deveSubmeterMudandoStatusParaAguardandoAprovacao() {
+        //cenario
         Oportunidade o = salvarRascunho();
+
+        //acao
         Oportunidade submetida = service.submeter(o.getId());
-        assertThat(submetida.getStatus()).isEqualTo(StatusOportunidade.AGUARDANDO_APROVACAO);
+
+        //verificacao
+        Assertions.assertEquals(StatusOportunidade.AGUARDANDO_APROVACAO, submetida.getStatus());
     }
 
     @Test
-    void submeter_deveLancarExcecaoSeNaoForRascunho() {
+    void deveLancarExcecaoAoSubmeterSeNaoForRascunho() {
+        //cenario
         Oportunidade o = salvarRascunho();
         service.submeter(o.getId());
-        assertThatThrownBy(() -> service.submeter(o.getId()))
-                .isInstanceOf(OperacaoInvalidaException.class);
+
+        //acao e verificacao
+        Assertions.assertThrows(OperacaoInvalidaException.class,
+                () -> service.submeter(o.getId()));
     }
 
     @Test
-    void aprovar_deveMudarStatusParaAberta() {
+    void deveAprovarMudandoStatusParaAberta() {
+        //cenario
         Oportunidade o = salvarRascunho();
         service.submeter(o.getId());
+
+        //acao
         Oportunidade aprovada = service.aprovar(o.getId());
-        assertThat(aprovada.getStatus()).isEqualTo(StatusOportunidade.ABERTA);
+
+        //verificacao
+        Assertions.assertEquals(StatusOportunidade.ABERTA, aprovada.getStatus());
     }
 
     @Test
-    void aprovar_deveLancarExcecaoSeNaoForAguardandoAprovacao() {
+    void deveLancarExcecaoAoAprovarSeNaoForAguardandoAprovacao() {
+        //cenario
         Oportunidade o = salvarRascunho();
-        assertThatThrownBy(() -> service.aprovar(o.getId()))
-                .isInstanceOf(OperacaoInvalidaException.class);
+
+        //acao e verificacao
+        Assertions.assertThrows(OperacaoInvalidaException.class,
+                () -> service.aprovar(o.getId()));
     }
 
     @Test
-    void iniciar_deveMudarStatusParaEmExecucao() {
+    void deveIniciarMudandoStatusParaEmExecucao() {
+        //cenario
         Oportunidade o = salvarRascunho();
         service.submeter(o.getId());
         service.aprovar(o.getId());
+
+        //acao
         Oportunidade iniciada = service.iniciar(o.getId());
-        assertThat(iniciada.getStatus()).isEqualTo(StatusOportunidade.EM_EXECUCAO);
+
+        //verificacao
+        Assertions.assertEquals(StatusOportunidade.EM_EXECUCAO, iniciada.getStatus());
     }
 
     @Test
-    void encerrar_deveMudarStatusParaEncerrada() {
+    void deveEncerrarMudandoStatusParaEncerrada() {
+        //cenario
         Oportunidade o = salvarRascunho();
         service.submeter(o.getId());
         service.aprovar(o.getId());
         service.iniciar(o.getId());
+
+        //acao
         Oportunidade encerrada = service.encerrar(o.getId());
-        assertThat(encerrada.getStatus()).isEqualTo(StatusOportunidade.ENCERRADA);
+
+        //verificacao
+        Assertions.assertEquals(StatusOportunidade.ENCERRADA, encerrada.getStatus());
     }
 
     @Test
-    void cancelar_deveMudarStatusEGravarMotivo() {
+    void deveCancelarGravandoMotivo() {
+        //cenario
         Oportunidade o = salvarRascunho();
         service.submeter(o.getId());
+
+        //acao
         Oportunidade cancelada = service.cancelar(o.getId(), "Motivo teste");
-        assertThat(cancelada.getStatus()).isEqualTo(StatusOportunidade.CANCELADA);
-        assertThat(cancelada.getMotivoCancelamento()).isEqualTo("Motivo teste");
+
+        //verificacao
+        Assertions.assertEquals(StatusOportunidade.CANCELADA, cancelada.getStatus());
+        Assertions.assertEquals("Motivo teste", cancelada.getMotivoCancelamento());
     }
 
     @Test
-    void cancelar_deveLancarExcecaoSeJaEncerrada() {
+    void deveLancarExcecaoAoCancelarSeJaEncerrada() {
+        //cenario
         Oportunidade o = salvarRascunho();
         service.submeter(o.getId());
         service.aprovar(o.getId());
         service.iniciar(o.getId());
         service.encerrar(o.getId());
-        assertThatThrownBy(() -> service.cancelar(o.getId(), "motivo"))
-                .isInstanceOf(OperacaoInvalidaException.class);
+
+        //acao e verificacao
+        Assertions.assertThrows(OperacaoInvalidaException.class,
+                () -> service.cancelar(o.getId(), "motivo"));
     }
 
     @Test
-    void atualizar_devePreservarCamposNaoInformados() {
+    void devePreservarCamposNaoInformadosAoAtualizar() {
+        //cenario
         Oportunidade original = salvarRascunho();
+
+        //acao
         Oportunidade patch = new Oportunidade();
         patch.setId(original.getId());
         patch.setTitulo("Novo Titulo");
         Oportunidade atualizada = service.atualizar(patch);
-        assertThat(atualizada.getTitulo()).isEqualTo("Novo Titulo");
-        assertThat(atualizada.getModalidade()).isEqualTo(ModalidadeOportunidade.CURSO);
-        assertThat(atualizada.getCargaHoraria()).isEqualTo(20);
+
+        //verificacao
+        Assertions.assertEquals("Novo Titulo", atualizada.getTitulo());
+        Assertions.assertEquals(ModalidadeOportunidade.CURSO, atualizada.getModalidade());
+        Assertions.assertEquals(20, atualizada.getCargaHoraria());
     }
 }

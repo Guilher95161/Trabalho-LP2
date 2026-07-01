@@ -7,13 +7,11 @@ import java.util.List;
 
 @Entity
 @Table(name = "grupo_estudantil")
-@Getter
-@Setter
-@EqualsAndHashCode(of = "id")
-@ToString
+@Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@EqualsAndHashCode(of = "id")
 public class GrupoEstudantil {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

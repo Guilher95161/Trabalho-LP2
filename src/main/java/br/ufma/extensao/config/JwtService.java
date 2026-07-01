@@ -9,9 +9,7 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
-/**
- * Geração e validação de JWT (jjwt 0.12.x). O token carrega o email no `subject`.
- */
+// Gera e valida o token JWT. O email fica no subject do token.
 @Component
 public class JwtService {
 

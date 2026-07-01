@@ -33,9 +33,12 @@ public class UsuarioService implements UserDetailsService {
     @Autowired
     PasswordEncoder passwordEncoder;
 
-    // Usado pelo Spring Security (filtro de autorizacao) para carregar o usuario e seus papeis.
-    // @Transactional para a coleção LAZY `papeis` inicializar dentro da sessão (o filtro roda
-    // antes do open-in-view, então sem isso daria LazyInitializationException).
+    /**
+     * Carrega o usuario e seus papeis para o Spring Security (usado pelo filtro de autorizacao).
+     * @param email email do usuario que esta autenticando
+     * @return os dados do usuario (UserDetails) com os papeis como ROLE_*
+     * @throws UsernameNotFoundException se nao existir usuario com esse email
+     */
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
@@ -54,9 +57,17 @@ public class UsuarioService implements UserDetailsService {
                 .build();
     }
 
+    /**
+     * Confere email e senha para autenticar o usuario (senha comparada com BCrypt).
+     * @param email email informado no login
+     * @param senha senha em texto puro informada no login
+     * @return true se as credenciais forem validas
+     * @throws RegraNegocioRunTime se o email nao existir ou a senha estiver errada
+     * @throws UsuarioInativoException se a conta estiver desativada
+     */
     public boolean efetuarLogin(String email, String senha) {
         Optional<Usuario> usr = repository.findByEmail(email);
-        if (!usr.isPresent())
+        if (usr.isEmpty())
             throw new RegraNegocioRunTime("Erro de autenticacao. Email nao encontrado.");
         if (!usr.get().isAtivo())
             throw new UsuarioInativoException("Conta desativada. Procure o administrador.");
@@ -65,13 +76,28 @@ public class UsuarioService implements UserDetailsService {
         return true;
     }
 
+    /**
+     * Salva um novo usuario, validando os campos e codificando a senha com BCrypt.
+     * @param usuario usuario a ser cadastrado
+     * @return o usuario salvo (com id gerado)
+     * @throws RegraNegocioRunTime se nome, email ou senha forem invalidos
+     * @throws EmailJaCadastradoException se ja existir usuario com esse email
+     */
     @Transactional
     public Usuario salvar(Usuario usuario) {
-        verificaUsuario(usuario);
+        verificarUsuario(usuario);
         usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
         return repository.save(usuario);
     }
 
+    /**
+     * Atualiza os campos informados de um usuario existente (so altera o que vier preenchido).
+     * @param patch usuario com o id e os campos a atualizar
+     * @return o usuario atualizado
+     * @throws RegraNegocioRunTime se o id nao for informado
+     * @throws EntidadeNaoEncontradaException se nao existir usuario com esse id
+     * @throws EmailJaCadastradoException se o novo email pertencer a outro usuario
+     */
     @Transactional
     public Usuario atualizar(Usuario patch) {
         verificarId(patch);
@@ -91,6 +117,12 @@ public class UsuarioService implements UserDetailsService {
         return repository.save(existente);
     }
 
+    /**
+     * Desativa a conta do usuario (login passa a ser bloqueado).
+     * @param id id do usuario
+     * @return o usuario ja desativado
+     * @throws EntidadeNaoEncontradaException se nao existir usuario com esse id
+     */
     @Transactional
     public Usuario desativarUsuario(Integer id) {
         Usuario usuario = repository.findById(id)
@@ -99,6 +131,12 @@ public class UsuarioService implements UserDetailsService {
         return repository.save(usuario);
     }
 
+    /**
+     * Reativa a conta de um usuario que estava desativado.
+     * @param id id do usuario
+     * @return o usuario ja reativado
+     * @throws EntidadeNaoEncontradaException se nao existir usuario com esse id
+     */
     @Transactional
     public Usuario reativarUsuario(Integer id) {
         Usuario usuario = repository.findById(id)
@@ -107,17 +145,32 @@ public class UsuarioService implements UserDetailsService {
         return repository.save(usuario);
     }
 
+    /**
+     * Remove o usuario informado.
+     * @param usuario usuario a remover (precisa ter id)
+     * @throws RegraNegocioRunTime se o id nao for informado
+     */
     public void remover(Usuario usuario) {
         verificarId(usuario);
         repository.delete(usuario);
     }
 
+    /**
+     * Remove o usuario pelo id.
+     * @param id id do usuario a remover
+     * @throws EntidadeNaoEncontradaException se nao existir usuario com esse id
+     */
     public void remover(Integer id) {
         Usuario usuario = repository.findById(id)
                 .orElseThrow(() -> new EntidadeNaoEncontradaException("Usuario nao encontrado."));
         remover(usuario);
     }
 
+    /**
+     * Busca usuarios usando o filtro como exemplo (contains e ignorando maiusculas/minusculas).
+     * @param filtro usuario com os campos que servem de criterio de busca
+     * @return a lista de usuarios que casam com o filtro
+     */
     public List<Usuario> buscar(Usuario filtro) {
         Example<Usuario> example = Example.of(filtro,
                 ExampleMatcher.matching()
@@ -127,6 +180,12 @@ public class UsuarioService implements UserDetailsService {
         return repository.findAll(example);
     }
 
+    /**
+     * Busca um usuario pelo id.
+     * @param id id do usuario
+     * @return o usuario encontrado
+     * @throws EntidadeNaoEncontradaException se nao existir usuario com esse id
+     */
     public Usuario buscarPorId(Integer id) {
         return repository.findById(id)
                 .orElseThrow(() -> new EntidadeNaoEncontradaException("Usuario nao encontrado."));
@@ -137,16 +196,16 @@ public class UsuarioService implements UserDetailsService {
             throw new RegraNegocioRunTime("Usuario invalido (sem id).");
     }
 
-    private void verificaUsuario(Usuario usuario) {
+    private void verificarUsuario(Usuario usuario) {
         if (usuario == null)
             throw new RegraNegocioRunTime("Um usuario valido deve ser informado.");
-        if ((usuario.getNome() == null) || (usuario.getNome().trim().equals("")))
+        if ((usuario.getNome() == null) || (usuario.getNome().isBlank()))
             throw new RegraNegocioRunTime("Nome do usuario deve ser informado.");
-        if ((usuario.getEmail() == null) || (usuario.getEmail().trim().equals("")))
+        if ((usuario.getEmail() == null) || (usuario.getEmail().isBlank()))
             throw new RegraNegocioRunTime("Email deve ser informado.");
         if (emailDeOutroUsuario(usuario))
             throw new EmailJaCadastradoException("Email informado ja existe.");
-        if ((usuario.getSenha() == null) || (usuario.getSenha().trim().equals("")))
+        if ((usuario.getSenha() == null) || (usuario.getSenha().isBlank()))
             throw new RegraNegocioRunTime("Usuario deve possuir senha.");
     }
 

@@ -10,10 +10,13 @@ import br.ufma.extensao.service.PapelService;
 import br.ufma.extensao.service.UsuarioService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
@@ -24,6 +27,8 @@ import java.util.UUID;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@ExtendWith(SpringExtension.class)
+@ActiveProfiles("test")
 @SpringBootTest
 @AutoConfigureMockMvc
 class SolicitacaoAproveitamentoControllerTest {
@@ -92,11 +97,13 @@ class SolicitacaoAproveitamentoControllerTest {
     }
 
     @Test
-    void criar_comTokenValido_deveRetornar201() throws Exception {
+    void deveCriarComTokenValidoRetornando201() throws Exception {
+        //cenario
         String tokenCoord = tokenParaPapel("COORDENADOR");
         Integer discenteId = criarDiscenteEObterToken();
         Integer certId = criarCertificado();
 
+        //acao e verificacao
         mockMvc.perform(post("/api/solicitacoes")
                         .header("Authorization", "Bearer " + tokenCoord)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -105,12 +112,14 @@ class SolicitacaoAproveitamentoControllerTest {
     }
 
     @Test
-    void avaliar_comPapelCoordenador_deveRetornar200() throws Exception {
+    void deveAvaliarComPapelCoordenadorRetornando200() throws Exception {
+        //cenario
         String tokenCoord = tokenParaPapel("COORDENADOR");
         Integer discenteId = criarDiscenteEObterToken();
         Integer certId = criarCertificado();
         Integer solId = criarSolicitacao(discenteId, certId, tokenCoord);
 
+        //acao e verificacao
         mockMvc.perform(post("/api/solicitacoes/" + solId + "/avaliar")
                         .header("Authorization", "Bearer " + tokenCoord)
                         .param("aprovado", "true")
@@ -119,7 +128,8 @@ class SolicitacaoAproveitamentoControllerTest {
     }
 
     @Test
-    void avaliar_semPapelCoordenadorOuComissao_deveRetornar403() throws Exception {
+    void deveRetornar403AoAvaliarSemPapelAdequado() throws Exception {
+        //cenario
         String tokenCoord = tokenParaPapel("COORDENADOR");
         Integer discenteId = criarDiscenteEObterToken();
         Integer certId = criarCertificado();
@@ -135,6 +145,7 @@ class SolicitacaoAproveitamentoControllerTest {
                 .andReturn().getResponse().getContentAsString();
         String tokenSemPapel = objectMapper.readTree(resp).get("token").asText();
 
+        //acao e verificacao
         mockMvc.perform(post("/api/solicitacoes/" + solId + "/avaliar")
                         .header("Authorization", "Bearer " + tokenSemPapel)
                         .param("aprovado", "true"))
@@ -142,15 +153,19 @@ class SolicitacaoAproveitamentoControllerTest {
     }
 
     @Test
-    void listarPendentes_comPapelComissao_deveRetornar200() throws Exception {
+    void deveListarPendentesComPapelComissaoRetornando200() throws Exception {
+        //cenario
         String tokenComissao = tokenParaPapel("COMISSAO");
+
+        //acao e verificacao
         mockMvc.perform(get("/api/solicitacoes/pendentes")
                         .header("Authorization", "Bearer " + tokenComissao))
                 .andExpect(status().isOk());
     }
 
     @Test
-    void listarPendentes_semPapelAdequado_deveRetornar403() throws Exception {
+    void deveRetornar403AoListarPendentesSemPapelAdequado() throws Exception {
+        //cenario
         String email = "sact-" + UUID.randomUUID() + "@test.com";
         mockMvc.perform(post("/api/discentes")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -161,6 +176,7 @@ class SolicitacaoAproveitamentoControllerTest {
                 .andReturn().getResponse().getContentAsString();
         String token = objectMapper.readTree(resp).get("token").asText();
 
+        //acao e verificacao
         mockMvc.perform(get("/api/solicitacoes/pendentes")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isForbidden());

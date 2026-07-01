@@ -21,6 +21,7 @@ import br.ufma.extensao.service.OportunidadeService;
 import br.ufma.extensao.service.PapelService;
 import br.ufma.extensao.service.SolicitacaoAproveitamentoService;
 import br.ufma.extensao.service.UsuarioService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -29,48 +30,32 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.List;
 
-/**
- * Semeia dados de demonstracao reproduzindo os 7 cenarios da P2 (Main.popularDemo),
- * agora via os services Spring. Idempotente: so roda quando o banco esta vazio
- * (H2 em arquivo persiste entre execucoes). A senha de todos os usuarios e "123".
- */
+// Popula os 7 cenarios de demonstracao da P2. So roda com o banco vazio. Senha de todos: "123".
 @Component
 @Order(1)
 public class DemoDataInitializer implements CommandLineRunner {
 
-    private final UsuarioService usuarioService;
-    private final DiscenteService discenteService;
-    private final CursoService cursoService;
-    private final PapelService papelService;
-    private final OportunidadeService oportunidadeService;
-    private final SolicitacaoAproveitamentoService aproveitamentoService;
-    private final GrupoEstudantilService grupoService;
+    @Autowired
+    private UsuarioService usuarioService;
+    @Autowired
+    private DiscenteService discenteService;
+    @Autowired
+    private CursoService cursoService;
+    @Autowired
+    private PapelService papelService;
+    @Autowired
+    private OportunidadeService oportunidadeService;
+    @Autowired
+    private SolicitacaoAproveitamentoService aproveitamentoService;
+    @Autowired
+    private GrupoEstudantilService grupoService;
 
-    private final UsuarioRepository usuarioRepository;
-    private final DiscenteRepository discenteRepository;
-    private final SolicitacaoAproveitamentoRepository aproveitamentoRepository;
-
-    public DemoDataInitializer(UsuarioService usuarioService,
-                               DiscenteService discenteService,
-                               CursoService cursoService,
-                               PapelService papelService,
-                               OportunidadeService oportunidadeService,
-                               SolicitacaoAproveitamentoService aproveitamentoService,
-                               GrupoEstudantilService grupoService,
-                               UsuarioRepository usuarioRepository,
-                               DiscenteRepository discenteRepository,
-                               SolicitacaoAproveitamentoRepository aproveitamentoRepository) {
-        this.usuarioService = usuarioService;
-        this.discenteService = discenteService;
-        this.cursoService = cursoService;
-        this.papelService = papelService;
-        this.oportunidadeService = oportunidadeService;
-        this.aproveitamentoService = aproveitamentoService;
-        this.grupoService = grupoService;
-        this.usuarioRepository = usuarioRepository;
-        this.discenteRepository = discenteRepository;
-        this.aproveitamentoRepository = aproveitamentoRepository;
-    }
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+    @Autowired
+    private DiscenteRepository discenteRepository;
+    @Autowired
+    private SolicitacaoAproveitamentoRepository aproveitamentoRepository;
 
     @Override
     @Transactional

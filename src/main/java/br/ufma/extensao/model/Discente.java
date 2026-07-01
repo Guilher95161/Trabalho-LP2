@@ -8,8 +8,9 @@ import java.util.List;
 @Entity
 @Table(name = "discente")
 @PrimaryKeyJoinColumn(name = "id_usuario")
-@Getter
-@Setter
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 @ToString(callSuper = true)
 public class Discente extends Usuario {

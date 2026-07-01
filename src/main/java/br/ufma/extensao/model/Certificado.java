@@ -7,13 +7,11 @@ import java.time.LocalDate;
 
 @Entity
 @Table(name = "certificado")
-@Getter
-@Setter
-@EqualsAndHashCode(of = "id")
-@ToString
+@Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@EqualsAndHashCode(of = "id")
 public class Certificado {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -10,10 +10,10 @@ import java.util.List;
 
 @Entity
 @Table(name = "oportunidade")
-@Getter
-@Setter
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode(of = "id")
-@ToString
 public class Oportunidade {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

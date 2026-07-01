@@ -33,7 +33,7 @@ public class SolicitacaoGrupoEstudantilService {
 
     @Transactional
     public SolicitacaoGrupoEstudantil salvar(SolicitacaoGrupoEstudantil solicitacao) {
-        verificaSolicitacao(solicitacao);
+        verificarSolicitacao(solicitacao);
         solicitacao.setStatus(StatusSolicitacao.PENDENTE);
         return repository.save(solicitacao);
     }
@@ -41,7 +41,7 @@ public class SolicitacaoGrupoEstudantilService {
     @Transactional
     public SolicitacaoGrupoEstudantil atualizar(SolicitacaoGrupoEstudantil patch) {
         verificarId(patch);
-        SolicitacaoGrupoEstudantil existente = buscarObrigatoria(patch.getId());
+        SolicitacaoGrupoEstudantil existente = buscarSolicitacaoGrupo(patch.getId());
         if (patch.getNomeGrupo() != null && !patch.getNomeGrupo().isBlank())
             existente.setNomeGrupo(patch.getNomeGrupo());
         if (patch.getDescricao() != null)
@@ -57,13 +57,13 @@ public class SolicitacaoGrupoEstudantilService {
     }
 
     public void remover(Integer id) {
-        remover(buscarObrigatoria(id));
+        remover(buscarSolicitacaoGrupo(id));
     }
 
     // aprovar cria o grupo a partir da solicitacao; o solicitante vira PRESIDENTE
     @Transactional
     public SolicitacaoGrupoEstudantil avaliar(Integer id, boolean aprovado) {
-        SolicitacaoGrupoEstudantil solicitacao = buscarObrigatoria(id);
+        SolicitacaoGrupoEstudantil solicitacao = buscarSolicitacaoGrupo(id);
         if (solicitacao.getStatus() != StatusSolicitacao.PENDENTE)
             throw new OperacaoInvalidaException("So e possivel avaliar uma solicitacao PENDENTE.");
         if (aprovado) {
@@ -111,10 +111,10 @@ public class SolicitacaoGrupoEstudantilService {
     }
 
     public SolicitacaoGrupoEstudantil buscarPorId(Integer id) {
-        return buscarObrigatoria(id);
+        return buscarSolicitacaoGrupo(id);
     }
 
-    private SolicitacaoGrupoEstudantil buscarObrigatoria(Integer id) {
+    private SolicitacaoGrupoEstudantil buscarSolicitacaoGrupo(Integer id) {
         return repository.findById(id)
                 .orElseThrow(() -> new EntidadeNaoEncontradaException("Solicitacao de grupo nao encontrada."));
     }
@@ -124,12 +124,12 @@ public class SolicitacaoGrupoEstudantilService {
             throw new RegraNegocioRunTime("Solicitacao de grupo invalida (sem id).");
     }
 
-    private void verificaSolicitacao(SolicitacaoGrupoEstudantil solicitacao) {
+    private void verificarSolicitacao(SolicitacaoGrupoEstudantil solicitacao) {
         if (solicitacao == null)
             throw new RegraNegocioRunTime("Uma solicitacao valida deve ser informada.");
         if (solicitacao.getSolicitante() == null)
             throw new RegraNegocioRunTime("Solicitante deve ser informado.");
-        if ((solicitacao.getNomeGrupo() == null) || (solicitacao.getNomeGrupo().trim().equals("")))
+        if ((solicitacao.getNomeGrupo() == null) || (solicitacao.getNomeGrupo().isBlank()))
             throw new RegraNegocioRunTime("Nome do grupo deve ser informado.");
     }
 }

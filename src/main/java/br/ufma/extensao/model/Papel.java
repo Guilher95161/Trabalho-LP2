@@ -5,13 +5,11 @@ import lombok.*;
 
 @Entity
 @Table(name = "papel")
-@Getter
-@Setter
-@EqualsAndHashCode(of = "id")
-@ToString
+@Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@EqualsAndHashCode(of = "id")
 public class Papel {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

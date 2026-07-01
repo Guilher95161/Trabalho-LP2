@@ -5,16 +5,19 @@ import br.ufma.extensao.model.GrupoEstudantil;
 import br.ufma.extensao.model.Usuario;
 import br.ufma.extensao.model.enums.CargoGrupo;
 import br.ufma.extensao.service.exceptions.OperacaoInvalidaException;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
+@ExtendWith(SpringExtension.class)
+@ActiveProfiles("test")
 @SpringBootTest
 @Transactional
 class GrupoEstudantilServiceTest {
@@ -51,73 +54,108 @@ class GrupoEstudantilServiceTest {
     }
 
     @Test
-    void salvar_devePersistirGrupo() {
-        GrupoEstudantil salvo = novoGrupo(novoResponsavel());
-        assertThat(salvo.getId()).isNotNull();
+    void deveSalvarGrupo() {
+        //cenario
+        Usuario responsavel = novoResponsavel();
+
+        //acao
+        GrupoEstudantil salvo = novoGrupo(responsavel);
+
+        //verificacao
+        Assertions.assertNotNull(salvo.getId());
     }
 
     @Test
-    void adicionarMembro_deveEntrarComoMembro() {
+    void deveAdicionarMembroComoMembro() {
+        //cenario
         GrupoEstudantil grupo = novoGrupo(novoResponsavel());
         Discente discente = novoDiscente();
+
+        //acao
         GrupoEstudantil atualizado = service.adicionarMembro(grupo.getId(), discente.getId());
-        assertThat(atualizado.getMembros()).hasSize(1);
-        assertThat(atualizado.getMembros().get(0).getCargo()).isEqualTo(CargoGrupo.MEMBRO);
+
+        //verificacao
+        Assertions.assertEquals(1, atualizado.getMembros().size());
+        Assertions.assertEquals(CargoGrupo.MEMBRO, atualizado.getMembros().get(0).getCargo());
     }
 
     @Test
-    void adicionarMembro_deveLancarExcecaoSeJaMembro() {
+    void deveLancarExcecaoAoAdicionarMembroJaExistente() {
+        //cenario
         GrupoEstudantil grupo = novoGrupo(novoResponsavel());
         Discente discente = novoDiscente();
         service.adicionarMembro(grupo.getId(), discente.getId());
-        assertThatThrownBy(() -> service.adicionarMembro(grupo.getId(), discente.getId()))
-                .isInstanceOf(OperacaoInvalidaException.class);
+
+        //acao e verificacao
+        Assertions.assertThrows(OperacaoInvalidaException.class,
+                () -> service.adicionarMembro(grupo.getId(), discente.getId()));
     }
 
     @Test
-    void removerMembro_deveRetirarDoGrupo() {
+    void deveRemoverMembroDoGrupo() {
+        //cenario
         GrupoEstudantil grupo = novoGrupo(novoResponsavel());
         Discente discente = novoDiscente();
         service.adicionarMembro(grupo.getId(), discente.getId());
+
+        //acao
         GrupoEstudantil atualizado = service.removerMembro(grupo.getId(), discente.getId());
-        assertThat(atualizado.getMembros()).isEmpty();
+
+        //verificacao
+        Assertions.assertTrue(atualizado.getMembros().isEmpty());
     }
 
     @Test
-    void definirCargo_deveAlterarCargoDoMembro() {
+    void deveAlterarCargoDoMembroAoDefinirCargo() {
+        //cenario
         GrupoEstudantil grupo = novoGrupo(novoResponsavel());
         Discente discente = novoDiscente();
         service.adicionarMembro(grupo.getId(), discente.getId());
+
+        //acao
         GrupoEstudantil atualizado = service.definirCargo(grupo.getId(), discente.getId(), CargoGrupo.PRESIDENTE);
-        assertThat(atualizado.getMembros().get(0).getCargo()).isEqualTo(CargoGrupo.PRESIDENTE);
+
+        //verificacao
+        Assertions.assertEquals(CargoGrupo.PRESIDENTE, atualizado.getMembros().get(0).getCargo());
     }
 
     @Test
-    void definirCargo_deveRegistrarHistorico() {
+    void deveRegistrarHistoricoAoDefinirCargo() {
+        //cenario
         GrupoEstudantil grupo = novoGrupo(novoResponsavel());
         Discente discente = novoDiscente();
         service.adicionarMembro(grupo.getId(), discente.getId());
+
+        //acao
         GrupoEstudantil atualizado = service.definirCargo(grupo.getId(), discente.getId(), CargoGrupo.VICE);
-        // entrada + mudança de cargo = 2 registros no historico
-        assertThat(atualizado.getHistoricoCargos()).hasSize(2);
+
+        //verificacao
+        // entrada + mudanca de cargo = 2 registros no historico
+        Assertions.assertEquals(2, atualizado.getHistoricoCargos().size());
         // primeiro registro (entrada como MEMBRO) deve ter dataFim preenchida
-        assertThat(atualizado.getHistoricoCargos().get(0).getDataFim()).isNotNull();
+        Assertions.assertNotNull(atualizado.getHistoricoCargos().get(0).getDataFim());
     }
 
     @Test
-    void isLider_deveRetornarTrueParaPresidente() {
+    void deveConfirmarQuePresidenteEhLider() {
+        //cenario
         GrupoEstudantil grupo = novoGrupo(novoResponsavel());
         Discente discente = novoDiscente();
         service.adicionarMembro(grupo.getId(), discente.getId());
         service.definirCargo(grupo.getId(), discente.getId(), CargoGrupo.PRESIDENTE);
-        assertThat(service.isLider(discente.getId())).isTrue();
+
+        //acao e verificacao
+        Assertions.assertTrue(service.isLider(discente.getId()));
     }
 
     @Test
-    void isLider_deveRetornarFalseParaMembro() {
+    void deveConfirmarQueMembroComumNaoEhLider() {
+        //cenario
         GrupoEstudantil grupo = novoGrupo(novoResponsavel());
         Discente discente = novoDiscente();
         service.adicionarMembro(grupo.getId(), discente.getId());
-        assertThat(service.isLider(discente.getId())).isFalse();
+
+        //acao e verificacao
+        Assertions.assertFalse(service.isLider(discente.getId()));
     }
 }

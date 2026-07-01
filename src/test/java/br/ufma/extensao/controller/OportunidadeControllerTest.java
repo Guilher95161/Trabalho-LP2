@@ -6,10 +6,13 @@ import br.ufma.extensao.service.PapelService;
 import br.ufma.extensao.service.UsuarioService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
@@ -19,6 +22,8 @@ import java.util.UUID;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@ExtendWith(SpringExtension.class)
+@ActiveProfiles("test")
 @SpringBootTest
 @AutoConfigureMockMvc
 class OportunidadeControllerTest {
@@ -85,8 +90,11 @@ class OportunidadeControllerTest {
     }
 
     @Test
-    void criar_comPapelDocente_deveRetornar201() throws Exception {
+    void deveCriarComPapelDocenteRetornando201() throws Exception {
+        //cenario
         String token = tokenParaPapel("DOCENTE");
+
+        //acao e verificacao
         mockMvc.perform(post("/api/oportunidades")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -95,8 +103,11 @@ class OportunidadeControllerTest {
     }
 
     @Test
-    void criar_semPapelAdequado_deveRetornar403() throws Exception {
+    void deveRetornar403AoCriarSemPapelAdequado() throws Exception {
+        //cenario
         String token = tokenSemPapel();
+
+        //acao e verificacao
         mockMvc.perform(post("/api/oportunidades")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -105,7 +116,8 @@ class OportunidadeControllerTest {
     }
 
     @Test
-    void aprovar_comPapelCoordenador_deveRetornar200() throws Exception {
+    void deveAprovarComPapelCoordenadorRetornando200() throws Exception {
+        //cenario
         String tokenDocente = tokenParaPapel("DOCENTE");
         String tokenCoord = tokenParaPapel("COORDENADOR");
 
@@ -119,13 +131,15 @@ class OportunidadeControllerTest {
         mockMvc.perform(post("/api/oportunidades/" + id + "/submeter")
                 .header("Authorization", "Bearer " + tokenDocente));
 
+        //acao e verificacao
         mockMvc.perform(post("/api/oportunidades/" + id + "/aprovar")
                         .header("Authorization", "Bearer " + tokenCoord))
                 .andExpect(status().isOk());
     }
 
     @Test
-    void aprovar_comPapelDocente_deveRetornar403() throws Exception {
+    void deveRetornar403AoAprovarComPapelDocente() throws Exception {
+        //cenario
         String tokenDocente = tokenParaPapel("DOCENTE");
 
         String criado = mockMvc.perform(post("/api/oportunidades")
@@ -138,13 +152,15 @@ class OportunidadeControllerTest {
         mockMvc.perform(post("/api/oportunidades/" + id + "/submeter")
                 .header("Authorization", "Bearer " + tokenDocente));
 
+        //acao e verificacao
         mockMvc.perform(post("/api/oportunidades/" + id + "/aprovar")
                         .header("Authorization", "Bearer " + tokenDocente))
                 .andExpect(status().isForbidden());
     }
 
     @Test
-    void remover_comPapelAdmin_deveRetornar204() throws Exception {
+    void deveRemoverComPapelAdminRetornando204() throws Exception {
+        //cenario
         String tokenAdmin = tokenParaPapel("ADMINISTRADOR");
         String tokenDocente = tokenParaPapel("DOCENTE");
 
@@ -155,13 +171,15 @@ class OportunidadeControllerTest {
                 .andReturn().getResponse().getContentAsString();
         Integer id = objectMapper.readTree(criado).get("id").asInt();
 
+        //acao e verificacao
         mockMvc.perform(delete("/api/oportunidades/" + id)
                         .header("Authorization", "Bearer " + tokenAdmin))
                 .andExpect(status().isNoContent());
     }
 
     @Test
-    void remover_comPapelDocente_deveRetornar403() throws Exception {
+    void deveRetornar403AoRemoverComPapelDocente() throws Exception {
+        //cenario
         String tokenDocente = tokenParaPapel("DOCENTE");
 
         String criado = mockMvc.perform(post("/api/oportunidades")
@@ -171,6 +189,7 @@ class OportunidadeControllerTest {
                 .andReturn().getResponse().getContentAsString();
         Integer id = objectMapper.readTree(criado).get("id").asInt();
 
+        //acao e verificacao
         mockMvc.perform(delete("/api/oportunidades/" + id)
                         .header("Authorization", "Bearer " + tokenDocente))
                 .andExpect(status().isForbidden());

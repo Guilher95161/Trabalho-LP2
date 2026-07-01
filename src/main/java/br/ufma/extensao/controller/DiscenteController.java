@@ -5,7 +5,7 @@ import br.ufma.extensao.model.Discente;
 import br.ufma.extensao.model.dto.DiscenteDTO;
 import br.ufma.extensao.model.dto.DiscenteResponse;
 import br.ufma.extensao.service.DiscenteService;
-import br.ufma.extensao.service.exceptions.SistemaExtensaoException;
+import br.ufma.extensao.service.exceptions.RegraNegocioRunTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,7 +25,7 @@ public class DiscenteController {
         try {
             Discente salvo = service.salvar(discente);
             return new ResponseEntity(DiscenteResponse.from(salvo), HttpStatus.CREATED);
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -36,7 +36,7 @@ public class DiscenteController {
         Discente discente = montar(id, dto);
         try {
             return ResponseEntity.ok(DiscenteResponse.from(service.atualizar(discente)));
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -47,7 +47,7 @@ public class DiscenteController {
         try {
             service.remover(id);
             return ResponseEntity.noContent().build();
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -56,7 +56,7 @@ public class DiscenteController {
     public ResponseEntity buscarPorId(@PathVariable Integer id) {
         try {
             return ResponseEntity.ok(DiscenteResponse.from(service.buscarPorId(id)));
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -74,7 +74,7 @@ public class DiscenteController {
     public ResponseEntity painelHoras(@PathVariable Integer id) {
         try {
             return ResponseEntity.ok(service.painelHoras(id));
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }

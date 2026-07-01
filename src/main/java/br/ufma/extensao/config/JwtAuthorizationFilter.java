@@ -13,11 +13,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-/**
- * Lê o header `Authorization: Bearer <token>`, valida o JWT e popula o SecurityContext com o
- * usuário (e seus papéis). NÃO é @Component de propósito: é instanciado no SecurityConfig para
- * não ser registrado também na cadeia de filtros do servlet (evita execução dupla).
- */
+// Le o header Authorization, valida o token e coloca o usuario no SecurityContext.
+// Nao e @Component: e criado no SecurityConfig para nao rodar duas vezes na cadeia de filtros.
 public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;

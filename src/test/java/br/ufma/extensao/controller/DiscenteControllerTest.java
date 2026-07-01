@@ -2,10 +2,13 @@ package br.ufma.extensao.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Map;
@@ -14,6 +17,8 @@ import java.util.UUID;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@ExtendWith(SpringExtension.class)
+@ActiveProfiles("test")
 @SpringBootTest
 @AutoConfigureMockMvc
 class DiscenteControllerTest {
@@ -47,30 +52,39 @@ class DiscenteControllerTest {
     }
 
     @Test
-    void salvar_semToken_deveRetornar201() throws Exception {
+    void deveSalvarSemTokenRetornando201() throws Exception {
+        //cenario
+        Map<String, Object> corpo = Map.of(
+                "nome", "Novo Discente",
+                "email", unicoEmail(),
+                "senha", "senha123",
+                "matricula", UUID.randomUUID().toString().substring(0, 8));
+
+        //acao e verificacao
         mockMvc.perform(post("/api/discentes")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(json(Map.of(
-                                "nome", "Novo Discente",
-                                "email", unicoEmail(),
-                                "senha", "senha123",
-                                "matricula", UUID.randomUUID().toString().substring(0, 8)))))
+                        .content(json(corpo)))
                 .andExpect(status().isCreated());
     }
 
     @Test
-    void salvar_semNome_deveRetornar400() throws Exception {
+    void deveRetornar400AoSalvarSemNome() throws Exception {
+        //cenario
+        Map<String, Object> corpo = Map.of(
+                "email", unicoEmail(),
+                "senha", "senha123",
+                "matricula", "M001");
+
+        //acao e verificacao
         mockMvc.perform(post("/api/discentes")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(json(Map.of(
-                                "email", unicoEmail(),
-                                "senha", "senha123",
-                                "matricula", "M001"))))
+                        .content(json(corpo)))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
-    void buscarPorId_comToken_deveRetornar200() throws Exception {
+    void deveBuscarPorIdComTokenRetornando200() throws Exception {
+        //cenario
         String email = unicoEmail();
         String respCadastro = mockMvc.perform(post("/api/discentes")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -83,13 +97,15 @@ class DiscenteControllerTest {
         Integer id = objectMapper.readTree(respCadastro).get("id").asInt();
         String token = cadastrarEObterToken(unicoEmail());
 
+        //acao e verificacao
         mockMvc.perform(get("/api/discentes/" + id)
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk());
     }
 
     @Test
-    void painelHoras_comToken_deveRetornar200() throws Exception {
+    void deveRetornarPainelHorasComTokenRetornando200() throws Exception {
+        //cenario
         String email = unicoEmail();
         String respCadastro = mockMvc.perform(post("/api/discentes")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -100,13 +116,14 @@ class DiscenteControllerTest {
                                 "matricula", UUID.randomUUID().toString().substring(0, 8)))))
                 .andReturn().getResponse().getContentAsString();
         Integer id = objectMapper.readTree(respCadastro).get("id").asInt();
-        // discente já criado — apenas autentica sem criar novamente
+        // discente ja criado - apenas autentica sem criar novamente
         String authResp = mockMvc.perform(post("/api/usuarios/autenticar")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json(Map.of("email", email, "senha", "senha123"))))
                 .andReturn().getResponse().getContentAsString();
         String token = objectMapper.readTree(authResp).get("token").asText();
 
+        //acao e verificacao
         mockMvc.perform(get("/api/discentes/" + id + "/painel-horas")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
@@ -114,7 +131,9 @@ class DiscenteControllerTest {
     }
 
     @Test
-    void buscarPorId_semToken_deveRetornar4xx() throws Exception {
+    void deveRetornar4xxAoBuscarPorIdSemToken() throws Exception {
+        //cenario
+        //acao e verificacao
         mockMvc.perform(get("/api/discentes/1"))
                 .andExpect(status().is4xxClientError());
     }

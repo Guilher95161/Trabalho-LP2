@@ -3,16 +3,19 @@ package br.ufma.extensao.service;
 import br.ufma.extensao.model.Curso;
 import br.ufma.extensao.model.Discente;
 import br.ufma.extensao.service.exceptions.RegraNegocioRunTime;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
+@ExtendWith(SpringExtension.class)
+@ActiveProfiles("test")
 @SpringBootTest
 @Transactional
 class DiscenteServiceTest {
@@ -34,43 +37,57 @@ class DiscenteServiceTest {
     }
 
     @Test
-    void salvar_devePersistirDiscente() {
-        Discente salvo = service.salvar(novoDiscente("disc@test.com"));
-        assertThat(salvo.getId()).isNotNull();
-        assertThat(salvo.getNome()).isEqualTo("Aluno Teste");
+    void deveSalvarDiscente() {
+        //cenario
+        Discente discente = novoDiscente("disc@test.com");
+
+        //acao
+        Discente salvo = service.salvar(discente);
+
+        //verificacao
+        Assertions.assertNotNull(salvo.getId());
+        Assertions.assertEquals("Aluno Teste", salvo.getNome());
     }
 
     @Test
-    void salvar_deveLancarExcecao_semNome() {
+    void deveLancarExcecaoAoSalvarDiscenteSemNome() {
+        //cenario
         Discente d = novoDiscente("semnom@test.com");
         d.setNome(null);
-        assertThatThrownBy(() -> service.salvar(d))
-                .isInstanceOf(RegraNegocioRunTime.class);
+
+        //acao e verificacao
+        Assertions.assertThrows(RegraNegocioRunTime.class, () -> service.salvar(d));
     }
 
     @Test
-    void salvar_deveLancarExcecao_semEmail() {
+    void deveLancarExcecaoAoSalvarDiscenteSemEmail() {
+        //cenario
         Discente d = novoDiscente(null);
-        assertThatThrownBy(() -> service.salvar(d))
-                .isInstanceOf(RegraNegocioRunTime.class);
+
+        //acao e verificacao
+        Assertions.assertThrows(RegraNegocioRunTime.class, () -> service.salvar(d));
     }
 
     @Test
-    void atualizar_devePreservarCamposNaoEnviados() {
+    void devePreservarCamposNaoEnviadosAoAtualizarDiscente() {
+        //cenario
         Discente original = service.salvar(novoDiscente("patch@test.com"));
 
+        //acao
         Discente patch = new Discente();
         patch.setId(original.getId());
         patch.setNome("Novo Nome");
         Discente atualizado = service.atualizar(patch);
 
-        assertThat(atualizado.getNome()).isEqualTo("Novo Nome");
-        assertThat(atualizado.getEmail()).isEqualTo("patch@test.com");
-        assertThat(atualizado.getMatricula()).isEqualTo("DIS001");
+        //verificacao
+        Assertions.assertEquals("Novo Nome", atualizado.getNome());
+        Assertions.assertEquals("patch@test.com", atualizado.getEmail());
+        Assertions.assertEquals("DIS001", atualizado.getMatricula());
     }
 
     @Test
-    void painelHoras_deveCalcularPercentualCorretamente() {
+    void deveCalcularPercentualNoPainelDeHoras() {
+        //cenario
         Curso curso = new Curso();
         curso.setNome("Engenharia de Software");
         curso.setCurriculo("2023");
@@ -82,17 +99,20 @@ class DiscenteServiceTest {
         d.setHorasCumpridas(50);
         Discente salvo = service.salvar(d);
 
+        //acao
         Map<String, Object> painel = service.painelHoras(salvo.getId());
 
-        assertThat(painel.get("horasCumpridas")).isEqualTo(50);
-        assertThat(painel.get("metaHoras")).isEqualTo(200);
-        assertThat(painel.get("horasRestantes")).isEqualTo(150);
-        assertThat((Double) painel.get("percentualConcluido")).isEqualTo(25.0);
-        assertThat(painel.get("concluido")).isEqualTo(false);
+        //verificacao
+        Assertions.assertEquals(50, painel.get("horasCumpridas"));
+        Assertions.assertEquals(200, painel.get("metaHoras"));
+        Assertions.assertEquals(150, painel.get("horasRestantes"));
+        Assertions.assertEquals(25.0, painel.get("percentualConcluido"));
+        Assertions.assertEquals(false, painel.get("concluido"));
     }
 
     @Test
-    void painelHoras_deveMostrarConcluidoQuandoMetaAtingida() {
+    void deveMostrarConcluidoQuandoMetaAtingidaNoPainel() {
+        //cenario
         Curso curso = new Curso();
         curso.setNome("Ciencias da Computacao");
         curso.setCurriculo("2023");
@@ -104,10 +124,12 @@ class DiscenteServiceTest {
         d.setHorasCumpridas(100);
         Discente salvo = service.salvar(d);
 
+        //acao
         Map<String, Object> painel = service.painelHoras(salvo.getId());
 
-        assertThat(painel.get("concluido")).isEqualTo(true);
-        assertThat((Double) painel.get("percentualConcluido")).isEqualTo(100.0);
-        assertThat(painel.get("horasRestantes")).isEqualTo(0);
+        //verificacao
+        Assertions.assertEquals(true, painel.get("concluido"));
+        Assertions.assertEquals(100.0, painel.get("percentualConcluido"));
+        Assertions.assertEquals(0, painel.get("horasRestantes"));
     }
 }

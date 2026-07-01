@@ -18,12 +18,25 @@ public class PapelService {
     @Autowired
     PapelRepository repository;
 
+    /**
+     * Salva um novo papel, validando os campos obrigatorios.
+     * @param papel papel a ser cadastrado
+     * @return o papel salvo (com id gerado)
+     * @throws RegraNegocioRunTime se o nome nao for informado
+     */
     @Transactional
     public Papel salvar(Papel papel) {
-        verificaPapel(papel);
+        verificarPapel(papel);
         return repository.save(papel);
     }
 
+    /**
+     * Atualiza o nome de um papel existente.
+     * @param patch papel com o id e o nome a atualizar
+     * @return o papel atualizado
+     * @throws RegraNegocioRunTime se o id nao for informado
+     * @throws EntidadeNaoEncontradaException se nao existir papel com esse id
+     */
     @Transactional
     public Papel atualizar(Papel patch) {
         verificarId(patch);
@@ -34,22 +47,43 @@ public class PapelService {
         return repository.save(existente);
     }
 
+    /**
+     * Remove o papel informado.
+     * @param papel papel a remover (precisa ter id)
+     * @throws RegraNegocioRunTime se o id nao for informado
+     */
     public void remover(Papel papel) {
         verificarId(papel);
         repository.delete(papel);
     }
 
+    /**
+     * Remove o papel pelo id.
+     * @param id id do papel a remover
+     * @throws EntidadeNaoEncontradaException se nao existir papel com esse id
+     */
     public void remover(Integer id) {
         Papel papel = repository.findById(id)
                 .orElseThrow(() -> new EntidadeNaoEncontradaException("Papel nao encontrado."));
         remover(papel);
     }
 
+    /**
+     * Busca um papel pelo id.
+     * @param id id do papel
+     * @return o papel encontrado
+     * @throws EntidadeNaoEncontradaException se nao existir papel com esse id
+     */
     public Papel buscarPorId(Integer id) {
         return repository.findById(id)
                 .orElseThrow(() -> new EntidadeNaoEncontradaException("Papel nao encontrado."));
     }
 
+    /**
+     * Busca papeis usando o filtro como exemplo (contains e ignorando maiusculas/minusculas).
+     * @param filtro papel com os campos que servem de criterio de busca
+     * @return a lista de papeis que casam com o filtro
+     */
     public List<Papel> buscar(Papel filtro) {
         Example<Papel> example = Example.of(filtro,
                 ExampleMatcher.matching()
@@ -63,10 +97,10 @@ public class PapelService {
             throw new RegraNegocioRunTime("Papel invalido (sem id).");
     }
 
-    private void verificaPapel(Papel papel) {
+    private void verificarPapel(Papel papel) {
         if (papel == null)
             throw new RegraNegocioRunTime("Um papel valido deve ser informado.");
-        if ((papel.getNome() == null) || (papel.getNome().trim().equals("")))
+        if ((papel.getNome() == null) || (papel.getNome().isBlank()))
             throw new RegraNegocioRunTime("Nome do papel deve ser informado.");
     }
 }

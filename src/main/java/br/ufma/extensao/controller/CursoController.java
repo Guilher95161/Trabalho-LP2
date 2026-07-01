@@ -3,7 +3,7 @@ package br.ufma.extensao.controller;
 import br.ufma.extensao.model.Curso;
 import br.ufma.extensao.model.dto.CursoDTO;
 import br.ufma.extensao.service.CursoService;
-import br.ufma.extensao.service.exceptions.SistemaExtensaoException;
+import br.ufma.extensao.service.exceptions.RegraNegocioRunTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,7 +27,7 @@ public class CursoController {
         try {
             Curso salvo = service.salvar(curso);
             return new ResponseEntity(salvo, HttpStatus.CREATED);
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -41,7 +41,7 @@ public class CursoController {
         curso.setCargaHoraria(dto.getCargaHoraria());
         try {
             return ResponseEntity.ok(service.atualizar(curso));
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -51,7 +51,7 @@ public class CursoController {
         try {
             service.remover(id);
             return ResponseEntity.noContent().build();
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -60,7 +60,7 @@ public class CursoController {
     public ResponseEntity buscarPorId(@PathVariable Integer id) {
         try {
             return ResponseEntity.ok(service.buscarPorId(id));
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }

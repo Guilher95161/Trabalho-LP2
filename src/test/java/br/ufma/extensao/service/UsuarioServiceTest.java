@@ -5,17 +5,20 @@ import br.ufma.extensao.model.Usuario;
 import br.ufma.extensao.service.exceptions.EmailJaCadastradoException;
 import br.ufma.extensao.service.exceptions.RegraNegocioRunTime;
 import br.ufma.extensao.service.exceptions.UsuarioInativoException;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
+@ExtendWith(SpringExtension.class)
+@ActiveProfiles("test")
 @SpringBootTest
 @Transactional
 class UsuarioServiceTest {
@@ -40,42 +43,64 @@ class UsuarioServiceTest {
     }
 
     @Test
-    void salvar_deveCodificarSenha() {
-        Usuario salvo = service.salvar(novoUsuario("a@test.com"));
-        assertThat(salvo.getId()).isNotNull();
-        assertThat(encoder.matches("senha123", salvo.getSenha())).isTrue();
+    void deveSalvarCodificandoASenha() {
+        //cenario
+        Usuario usuario = novoUsuario("a@test.com");
+
+        //acao
+        Usuario salvo = service.salvar(usuario);
+
+        //verificacao
+        Assertions.assertNotNull(salvo.getId());
+        Assertions.assertTrue(encoder.matches("senha123", salvo.getSenha()));
     }
 
     @Test
-    void salvar_deveLancarExcecaoEmailDuplicado() {
+    void deveLancarExcecaoAoSalvarEmailDuplicado() {
+        //cenario
         service.salvar(novoUsuario("dup@test.com"));
-        assertThatThrownBy(() -> service.salvar(novoUsuario("dup@test.com")))
-                .isInstanceOf(EmailJaCadastradoException.class);
+
+        //acao e verificacao
+        Assertions.assertThrows(EmailJaCadastradoException.class,
+                () -> service.salvar(novoUsuario("dup@test.com")));
     }
 
     @Test
-    void efetuarLogin_deveRetornarTrueParaCredenciaisCorretas() {
+    void deveEfetuarLoginComCredenciaisCorretas() {
+        //cenario
         service.salvar(novoUsuario("login@test.com"));
-        assertThat(service.efetuarLogin("login@test.com", "senha123")).isTrue();
+
+        //acao
+        boolean logado = service.efetuarLogin("login@test.com", "senha123");
+
+        //verificacao
+        Assertions.assertTrue(logado);
     }
 
     @Test
-    void efetuarLogin_deveLancarExcecaoSenhaErrada() {
+    void deveLancarExcecaoNoLoginComSenhaErrada() {
+        //cenario
         service.salvar(novoUsuario("wrong@test.com"));
-        assertThatThrownBy(() -> service.efetuarLogin("wrong@test.com", "errada"))
-                .isInstanceOf(RegraNegocioRunTime.class);
+
+        //acao e verificacao
+        Assertions.assertThrows(RegraNegocioRunTime.class,
+                () -> service.efetuarLogin("wrong@test.com", "errada"));
     }
 
     @Test
-    void efetuarLogin_deveLancarExcecaoContaDesativada() {
+    void deveLancarExcecaoNoLoginComContaDesativada() {
+        //cenario
         Usuario u = service.salvar(novoUsuario("inativo@test.com"));
         service.desativarUsuario(u.getId());
-        assertThatThrownBy(() -> service.efetuarLogin("inativo@test.com", "senha123"))
-                .isInstanceOf(UsuarioInativoException.class);
+
+        //acao e verificacao
+        Assertions.assertThrows(UsuarioInativoException.class,
+                () -> service.efetuarLogin("inativo@test.com", "senha123"));
     }
 
     @Test
-    void atualizar_devePreservarPapeis() {
+    void devePreservarPapeisAoAtualizar() {
+        //cenario
         Papel papel = papelService.salvar(Papel.builder().nome("DOCENTE_TEST").build());
         Usuario u = new Usuario();
         u.setNome("Original");
@@ -86,38 +111,47 @@ class UsuarioServiceTest {
         u.setPapeis(List.of(papel));
         Usuario salvo = service.salvar(u);
 
+        //acao
         Usuario patch = new Usuario();
         patch.setId(salvo.getId());
         patch.setNome("Atualizado");
         Usuario atualizado = service.atualizar(patch);
 
-        assertThat(atualizado.getNome()).isEqualTo("Atualizado");
-        assertThat(atualizado.getPapeis()).hasSize(1);
-        assertThat(atualizado.getPapeis().get(0).getNome()).isEqualTo("DOCENTE_TEST");
+        //verificacao
+        Assertions.assertEquals("Atualizado", atualizado.getNome());
+        Assertions.assertEquals(1, atualizado.getPapeis().size());
+        Assertions.assertEquals("DOCENTE_TEST", atualizado.getPapeis().get(0).getNome());
     }
 
     @Test
-    void atualizar_devePreservarAtivo() {
+    void devePreservarAtivoAoAtualizar() {
+        //cenario
         Usuario u = service.salvar(novoUsuario("ativo@test.com"));
         service.desativarUsuario(u.getId());
 
+        //acao
         Usuario patch = new Usuario();
         patch.setId(u.getId());
         patch.setNome("Novo Nome");
         Usuario atualizado = service.atualizar(patch);
 
-        assertThat(atualizado.isAtivo()).isFalse();
+        //verificacao
+        Assertions.assertFalse(atualizado.isAtivo());
     }
 
     @Test
-    void desativarReativar_deveMudarFlagAtivo() {
+    void deveDesativarEReativarUsuario() {
+        //cenario
         Usuario u = service.salvar(novoUsuario("toggle@test.com"));
-        assertThat(u.isAtivo()).isTrue();
 
-        Usuario desativado = service.desativarUsuario(u.getId());
-        assertThat(desativado.isAtivo()).isFalse();
+        //acao
+        boolean ativoInicial = u.isAtivo();
+        boolean aposDesativar = service.desativarUsuario(u.getId()).isAtivo();
+        boolean aposReativar = service.reativarUsuario(u.getId()).isAtivo();
 
-        Usuario reativado = service.reativarUsuario(u.getId());
-        assertThat(reativado.isAtivo()).isTrue();
+        //verificacao
+        Assertions.assertTrue(ativoInicial);
+        Assertions.assertFalse(aposDesativar);
+        Assertions.assertTrue(aposReativar);
     }
 }

@@ -6,10 +6,13 @@ import br.ufma.extensao.service.PapelService;
 import br.ufma.extensao.service.UsuarioService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
@@ -19,6 +22,8 @@ import java.util.UUID;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@ExtendWith(SpringExtension.class)
+@ActiveProfiles("test")
 @SpringBootTest
 @AutoConfigureMockMvc
 class PapelControllerTest {
@@ -53,8 +58,11 @@ class PapelControllerTest {
     }
 
     @Test
-    void criar_comPapelAdmin_deveRetornar201() throws Exception {
+    void deveCriarComPapelAdminRetornando201() throws Exception {
+        //cenario
         String token = tokenParaPapel("ADMINISTRADOR");
+
+        //acao e verificacao
         mockMvc.perform(post("/api/papeis")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -63,8 +71,11 @@ class PapelControllerTest {
     }
 
     @Test
-    void criar_semPapelAdmin_deveRetornar403() throws Exception {
+    void deveRetornar403AoCriarSemPapelAdmin() throws Exception {
+        //cenario
         String token = tokenParaPapel("DOCENTE");
+
+        //acao e verificacao
         mockMvc.perform(post("/api/papeis")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -73,15 +84,20 @@ class PapelControllerTest {
     }
 
     @Test
-    void buscar_comPapelAdmin_deveRetornar200() throws Exception {
+    void deveBuscarComPapelAdminRetornando200() throws Exception {
+        //cenario
         String token = tokenParaPapel("ADMINISTRADOR");
+
+        //acao e verificacao
         mockMvc.perform(get("/api/papeis/obter")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk());
     }
 
     @Test
-    void criar_semToken_deveRetornar4xx() throws Exception {
+    void deveRetornar4xxAoCriarSemToken() throws Exception {
+        //cenario
+        //acao e verificacao
         mockMvc.perform(post("/api/papeis")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json(Map.of("nome", "SEM_TOKEN"))))

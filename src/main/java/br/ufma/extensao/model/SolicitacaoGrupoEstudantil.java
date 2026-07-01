@@ -6,13 +6,11 @@ import lombok.*;
 
 @Entity
 @Table(name = "solicitacao_grupo_estudantil")
-@Getter
-@Setter
-@EqualsAndHashCode(of = "id")
-@ToString
+@Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@EqualsAndHashCode(of = "id")
 public class SolicitacaoGrupoEstudantil {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

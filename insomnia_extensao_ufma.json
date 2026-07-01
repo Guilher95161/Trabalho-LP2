@@ -1,0 +1,614 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2026-07-01T12:00:00.000Z",
+  "__export_source": "insomnia.desktop.app:v2023.5.8",
+  "resources": [
+    {
+      "_id": "wrk_extensao",
+      "_type": "workspace",
+      "parentId": null,
+      "name": "Sistema de Extensao UFMA (P3)",
+      "description": "Colecao para testar a API do sistema de extensao.\n\nComo usar:\n1) Suba a aplicacao: mvnw.cmd spring-boot:run (Tomcat em :8080). O seed cria os usuarios abaixo (senha 123).\n2) Abra a pasta 'Autenticacao' e rode o login do papel desejado (ex.: Login ADMINISTRADOR).\n3) Copie o valor de 'token' da resposta e cole na variavel 'token' do Environment (canto superior esquerdo -> Manage Environments).\n4) Os endpoints protegidos ja usam Authorization: Bearer {{ _.token }}.\n\nUsuarios do seed (senha 123): admin@ufma.br (ADMINISTRADOR), coord1@ufma.br (COORDENADOR), comissao@ufma.br (COMISSAO), doc@ufma.br (DOCENTE), aluno1@ufma.br e aluno2@ufma.br (discentes).\n\nOs ids ({id}, discenteId, etc.) sao exemplos: rode um GET /obter antes para descobrir os ids reais do seu banco.",
+      "scope": "collection"
+    },
+    {
+      "_id": "env_base",
+      "_type": "environment",
+      "parentId": "wrk_extensao",
+      "name": "Base Environment",
+      "data": {
+        "base_url": "http://localhost:8080",
+        "token": ""
+      },
+      "dataPropertyOrder": {
+        "&": ["base_url", "token"]
+      },
+      "metaSortKey": 1
+    },
+
+    { "_id": "fld_auth", "_type": "request_group", "parentId": "wrk_extensao", "name": "1. Autenticacao", "description": "Rode um login, copie o token da resposta e cole na variavel 'token' do Environment.", "metaSortKey": 100 },
+    {
+      "_id": "req_login_admin", "_type": "request", "parentId": "fld_auth",
+      "name": "Login ADMINISTRADOR", "method": "POST",
+      "url": "{{ _.base_url }}/api/usuarios/autenticar",
+      "body": { "mimeType": "application/json", "text": "{\n  \"email\": \"admin@ufma.br\",\n  \"senha\": \"123\"\n}" },
+      "headers": [ { "name": "Content-Type", "value": "application/json" } ],
+      "description": "Publico. Responde { token }. Copie o token para a variavel de environment.",
+      "metaSortKey": 101
+    },
+    {
+      "_id": "req_login_coord", "_type": "request", "parentId": "fld_auth",
+      "name": "Login COORDENADOR", "method": "POST",
+      "url": "{{ _.base_url }}/api/usuarios/autenticar",
+      "body": { "mimeType": "application/json", "text": "{\n  \"email\": \"coord1@ufma.br\",\n  \"senha\": \"123\"\n}" },
+      "headers": [ { "name": "Content-Type", "value": "application/json" } ],
+      "description": "Publico.", "metaSortKey": 102
+    },
+    {
+      "_id": "req_login_comissao", "_type": "request", "parentId": "fld_auth",
+      "name": "Login COMISSAO", "method": "POST",
+      "url": "{{ _.base_url }}/api/usuarios/autenticar",
+      "body": { "mimeType": "application/json", "text": "{\n  \"email\": \"comissao@ufma.br\",\n  \"senha\": \"123\"\n}" },
+      "headers": [ { "name": "Content-Type", "value": "application/json" } ],
+      "description": "Publico.", "metaSortKey": 103
+    },
+    {
+      "_id": "req_login_docente", "_type": "request", "parentId": "fld_auth",
+      "name": "Login DOCENTE", "method": "POST",
+      "url": "{{ _.base_url }}/api/usuarios/autenticar",
+      "body": { "mimeType": "application/json", "text": "{\n  \"email\": \"doc@ufma.br\",\n  \"senha\": \"123\"\n}" },
+      "headers": [ { "name": "Content-Type", "value": "application/json" } ],
+      "description": "Publico.", "metaSortKey": 104
+    },
+    {
+      "_id": "req_login_aluno", "_type": "request", "parentId": "fld_auth",
+      "name": "Login discente (aluno1)", "method": "POST",
+      "url": "{{ _.base_url }}/api/usuarios/autenticar",
+      "body": { "mimeType": "application/json", "text": "{\n  \"email\": \"aluno1@ufma.br\",\n  \"senha\": \"123\"\n}" },
+      "headers": [ { "name": "Content-Type", "value": "application/json" } ],
+      "description": "Publico. Discente nao tem papel ROLE_*, entao recebe 403 em endpoints com @PreAuthorize.", "metaSortKey": 105
+    },
+
+    { "_id": "fld_usuarios", "_type": "request_group", "parentId": "wrk_extensao", "name": "2. Usuarios", "description": "/api/usuarios", "metaSortKey": 200 },
+    {
+      "_id": "req_usuario_cadastrar", "_type": "request", "parentId": "fld_usuarios",
+      "name": "Cadastrar usuario", "method": "POST",
+      "url": "{{ _.base_url }}/api/usuarios",
+      "body": { "mimeType": "application/json", "text": "{\n  \"nome\": \"Novo Usuario\",\n  \"email\": \"novo@ufma.br\",\n  \"senha\": \"123\",\n  \"matricula\": \"NOVO001\"\n}" },
+      "headers": [ { "name": "Content-Type", "value": "application/json" } ],
+      "description": "Publico (sem token).", "metaSortKey": 201
+    },
+    {
+      "_id": "req_usuario_atualizar", "_type": "request", "parentId": "fld_usuarios",
+      "name": "Atualizar usuario", "method": "PUT",
+      "url": "{{ _.base_url }}/api/usuarios/1",
+      "body": { "mimeType": "application/json", "text": "{\n  \"nome\": \"Nome Atualizado\",\n  \"email\": \"novo@ufma.br\"\n}" },
+      "headers": [ { "name": "Content-Type", "value": "application/json" }, { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: ADMINISTRADOR.", "metaSortKey": 202
+    },
+    {
+      "_id": "req_usuario_desativar", "_type": "request", "parentId": "fld_usuarios",
+      "name": "Desativar usuario", "method": "PUT",
+      "url": "{{ _.base_url }}/api/usuarios/1/desativar",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: ADMINISTRADOR.", "metaSortKey": 203
+    },
+    {
+      "_id": "req_usuario_reativar", "_type": "request", "parentId": "fld_usuarios",
+      "name": "Reativar usuario", "method": "PUT",
+      "url": "{{ _.base_url }}/api/usuarios/1/reativar",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: ADMINISTRADOR.", "metaSortKey": 204
+    },
+    {
+      "_id": "req_usuario_remover", "_type": "request", "parentId": "fld_usuarios",
+      "name": "Remover usuario", "method": "DELETE",
+      "url": "{{ _.base_url }}/api/usuarios/1",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: ADMINISTRADOR.", "metaSortKey": 205
+    },
+    {
+      "_id": "req_usuario_buscar_id", "_type": "request", "parentId": "fld_usuarios",
+      "name": "Buscar por id", "method": "GET",
+      "url": "{{ _.base_url }}/api/usuarios/1",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Requer estar autenticado.", "metaSortKey": 206
+    },
+    {
+      "_id": "req_usuario_obter", "_type": "request", "parentId": "fld_usuarios",
+      "name": "Buscar (filtro nome/email)", "method": "GET",
+      "url": "{{ _.base_url }}/api/usuarios/obter?nome=",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Requer estar autenticado. Filtros opcionais: nome, email.", "metaSortKey": 207
+    },
+
+    { "_id": "fld_discentes", "_type": "request_group", "parentId": "wrk_extensao", "name": "3. Discentes", "description": "/api/discentes", "metaSortKey": 300 },
+    {
+      "_id": "req_discente_cadastrar", "_type": "request", "parentId": "fld_discentes",
+      "name": "Cadastrar discente", "method": "POST",
+      "url": "{{ _.base_url }}/api/discentes",
+      "body": { "mimeType": "application/json", "text": "{\n  \"nome\": \"Novo Discente\",\n  \"email\": \"disc.novo@ufma.br\",\n  \"senha\": \"123\",\n  \"matricula\": \"2026001\",\n  \"horasCumpridas\": 0,\n  \"cursoId\": 1\n}" },
+      "headers": [ { "name": "Content-Type", "value": "application/json" } ],
+      "description": "Publico (sem token). cursoId deve existir.", "metaSortKey": 301
+    },
+    {
+      "_id": "req_discente_atualizar", "_type": "request", "parentId": "fld_discentes",
+      "name": "Atualizar discente", "method": "PUT",
+      "url": "{{ _.base_url }}/api/discentes/1",
+      "body": { "mimeType": "application/json", "text": "{\n  \"nome\": \"Discente Atualizado\"\n}" },
+      "headers": [ { "name": "Content-Type", "value": "application/json" }, { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: ADMINISTRADOR.", "metaSortKey": 302
+    },
+    {
+      "_id": "req_discente_remover", "_type": "request", "parentId": "fld_discentes",
+      "name": "Remover discente", "method": "DELETE",
+      "url": "{{ _.base_url }}/api/discentes/1",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: ADMINISTRADOR.", "metaSortKey": 303
+    },
+    {
+      "_id": "req_discente_buscar_id", "_type": "request", "parentId": "fld_discentes",
+      "name": "Buscar por id", "method": "GET",
+      "url": "{{ _.base_url }}/api/discentes/1",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Requer estar autenticado.", "metaSortKey": 304
+    },
+    {
+      "_id": "req_discente_obter", "_type": "request", "parentId": "fld_discentes",
+      "name": "Buscar (filtro nome/email)", "method": "GET",
+      "url": "{{ _.base_url }}/api/discentes/obter?nome=",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Requer estar autenticado.", "metaSortKey": 305
+    },
+    {
+      "_id": "req_discente_painel", "_type": "request", "parentId": "fld_discentes",
+      "name": "Painel de horas", "method": "GET",
+      "url": "{{ _.base_url }}/api/discentes/1/painel-horas",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Requer estar autenticado. Compara horas cumpridas x exigidas pelo curso.", "metaSortKey": 306
+    },
+
+    { "_id": "fld_cursos", "_type": "request_group", "parentId": "wrk_extensao", "name": "4. Cursos", "description": "/api/cursos (papel ADMINISTRADOR ou COORDENADOR em toda a classe)", "metaSortKey": 400 },
+    {
+      "_id": "req_curso_cadastrar", "_type": "request", "parentId": "fld_cursos",
+      "name": "Cadastrar curso", "method": "POST",
+      "url": "{{ _.base_url }}/api/cursos",
+      "body": { "mimeType": "application/json", "text": "{\n  \"nome\": \"Engenharia de Software\",\n  \"curriculo\": \"2024\",\n  \"cargaHoraria\": 300\n}" },
+      "headers": [ { "name": "Content-Type", "value": "application/json" }, { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: ADMINISTRADOR ou COORDENADOR.", "metaSortKey": 401
+    },
+    {
+      "_id": "req_curso_atualizar", "_type": "request", "parentId": "fld_cursos",
+      "name": "Atualizar curso", "method": "PUT",
+      "url": "{{ _.base_url }}/api/cursos/1",
+      "body": { "mimeType": "application/json", "text": "{\n  \"nome\": \"Engenharia de Software\",\n  \"curriculo\": \"2025\",\n  \"cargaHoraria\": 320\n}" },
+      "headers": [ { "name": "Content-Type", "value": "application/json" }, { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: ADMINISTRADOR ou COORDENADOR.", "metaSortKey": 402
+    },
+    {
+      "_id": "req_curso_remover", "_type": "request", "parentId": "fld_cursos",
+      "name": "Remover curso", "method": "DELETE",
+      "url": "{{ _.base_url }}/api/cursos/1",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: ADMINISTRADOR ou COORDENADOR.", "metaSortKey": 403
+    },
+    {
+      "_id": "req_curso_buscar_id", "_type": "request", "parentId": "fld_cursos",
+      "name": "Buscar por id", "method": "GET",
+      "url": "{{ _.base_url }}/api/cursos/1",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: ADMINISTRADOR ou COORDENADOR.", "metaSortKey": 404
+    },
+    {
+      "_id": "req_curso_obter", "_type": "request", "parentId": "fld_cursos",
+      "name": "Buscar (filtro nome)", "method": "GET",
+      "url": "{{ _.base_url }}/api/cursos/obter?nome=",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: ADMINISTRADOR ou COORDENADOR.", "metaSortKey": 405
+    },
+
+    { "_id": "fld_papeis", "_type": "request_group", "parentId": "wrk_extensao", "name": "5. Papeis", "description": "/api/papeis (papel ADMINISTRADOR em toda a classe)", "metaSortKey": 500 },
+    {
+      "_id": "req_papel_cadastrar", "_type": "request", "parentId": "fld_papeis",
+      "name": "Cadastrar papel", "method": "POST",
+      "url": "{{ _.base_url }}/api/papeis",
+      "body": { "mimeType": "application/json", "text": "{\n  \"nome\": \"DOCENTE\"\n}" },
+      "headers": [ { "name": "Content-Type", "value": "application/json" }, { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: ADMINISTRADOR.", "metaSortKey": 501
+    },
+    {
+      "_id": "req_papel_atualizar", "_type": "request", "parentId": "fld_papeis",
+      "name": "Atualizar papel", "method": "PUT",
+      "url": "{{ _.base_url }}/api/papeis/1",
+      "body": { "mimeType": "application/json", "text": "{\n  \"nome\": \"DOCENTE\"\n}" },
+      "headers": [ { "name": "Content-Type", "value": "application/json" }, { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: ADMINISTRADOR.", "metaSortKey": 502
+    },
+    {
+      "_id": "req_papel_remover", "_type": "request", "parentId": "fld_papeis",
+      "name": "Remover papel", "method": "DELETE",
+      "url": "{{ _.base_url }}/api/papeis/1",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: ADMINISTRADOR.", "metaSortKey": 503
+    },
+    {
+      "_id": "req_papel_buscar_id", "_type": "request", "parentId": "fld_papeis",
+      "name": "Buscar por id", "method": "GET",
+      "url": "{{ _.base_url }}/api/papeis/1",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: ADMINISTRADOR.", "metaSortKey": 504
+    },
+    {
+      "_id": "req_papel_obter", "_type": "request", "parentId": "fld_papeis",
+      "name": "Buscar (filtro nome)", "method": "GET",
+      "url": "{{ _.base_url }}/api/papeis/obter?nome=",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: ADMINISTRADOR.", "metaSortKey": 505
+    },
+
+    { "_id": "fld_certificados", "_type": "request_group", "parentId": "wrk_extensao", "name": "6. Certificados", "description": "/api/certificados", "metaSortKey": 600 },
+    {
+      "_id": "req_cert_cadastrar", "_type": "request", "parentId": "fld_certificados",
+      "name": "Cadastrar certificado", "method": "POST",
+      "url": "{{ _.base_url }}/api/certificados",
+      "body": { "mimeType": "application/json", "text": "{\n  \"tituloAtividade\": \"Curso de Java\",\n  \"cargaHoraria\": 40,\n  \"data\": \"2026-02-28\",\n  \"aproveitamentoSolicitado\": false\n}" },
+      "headers": [ { "name": "Content-Type", "value": "application/json" }, { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: DOCENTE, COORDENADOR ou ADMINISTRADOR. data no formato yyyy-MM-dd.", "metaSortKey": 601
+    },
+    {
+      "_id": "req_cert_atualizar", "_type": "request", "parentId": "fld_certificados",
+      "name": "Atualizar certificado", "method": "PUT",
+      "url": "{{ _.base_url }}/api/certificados/1",
+      "body": { "mimeType": "application/json", "text": "{\n  \"tituloAtividade\": \"Curso de Java (revisado)\",\n  \"cargaHoraria\": 45,\n  \"data\": \"2026-02-28\"\n}" },
+      "headers": [ { "name": "Content-Type", "value": "application/json" }, { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: ADMINISTRADOR.", "metaSortKey": 602
+    },
+    {
+      "_id": "req_cert_remover", "_type": "request", "parentId": "fld_certificados",
+      "name": "Remover certificado", "method": "DELETE",
+      "url": "{{ _.base_url }}/api/certificados/1",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: ADMINISTRADOR.", "metaSortKey": 603
+    },
+    {
+      "_id": "req_cert_buscar_id", "_type": "request", "parentId": "fld_certificados",
+      "name": "Buscar por id", "method": "GET",
+      "url": "{{ _.base_url }}/api/certificados/1",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Requer estar autenticado.", "metaSortKey": 604
+    },
+    {
+      "_id": "req_cert_obter", "_type": "request", "parentId": "fld_certificados",
+      "name": "Buscar (filtro titulo)", "method": "GET",
+      "url": "{{ _.base_url }}/api/certificados/obter?tituloAtividade=",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Requer estar autenticado.", "metaSortKey": 605
+    },
+
+    { "_id": "fld_oport", "_type": "request_group", "parentId": "wrk_extensao", "name": "7. Oportunidades", "description": "/api/oportunidades - inclui a maquina de estados (submeter -> aprovar -> iniciar -> encerrar / cancelar) e inscricoes.", "metaSortKey": 700 },
+    {
+      "_id": "req_oport_cadastrar", "_type": "request", "parentId": "fld_oport",
+      "name": "Cadastrar oportunidade", "method": "POST",
+      "url": "{{ _.base_url }}/api/oportunidades",
+      "body": { "mimeType": "application/json", "text": "{\n  \"titulo\": \"Curso de Docker\",\n  \"descricao\": \"Conteineres na pratica\",\n  \"modalidade\": \"CURSO\",\n  \"periodoRealizacao\": \"01/08/2026 - 31/08/2026\",\n  \"cargaHoraria\": 20,\n  \"vagas\": 30,\n  \"status\": \"ABERTA\",\n  \"responsavelId\": 1\n}" },
+      "headers": [ { "name": "Content-Type", "value": "application/json" }, { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: DOCENTE, COORDENADOR ou ADMINISTRADOR. modalidade: CURSO, EVENTO, PROJETO, PROGRAMA, PRESTACAO_DE_SERVICOS, PRODUTO. status inicial: RASCUNHO (passa pela maquina de estados) ou ABERTA para ja aceitar inscricoes.", "metaSortKey": 701
+    },
+    {
+      "_id": "req_oport_atualizar", "_type": "request", "parentId": "fld_oport",
+      "name": "Atualizar oportunidade", "method": "PUT",
+      "url": "{{ _.base_url }}/api/oportunidades/1",
+      "body": { "mimeType": "application/json", "text": "{\n  \"titulo\": \"Curso de Docker (avancado)\",\n  \"vagas\": 40\n}" },
+      "headers": [ { "name": "Content-Type", "value": "application/json" }, { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: DOCENTE ou COORDENADOR.", "metaSortKey": 702
+    },
+    {
+      "_id": "req_oport_remover", "_type": "request", "parentId": "fld_oport",
+      "name": "Remover oportunidade", "method": "DELETE",
+      "url": "{{ _.base_url }}/api/oportunidades/1",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: ADMINISTRADOR.", "metaSortKey": 703
+    },
+    {
+      "_id": "req_oport_buscar_id", "_type": "request", "parentId": "fld_oport",
+      "name": "Buscar por id", "method": "GET",
+      "url": "{{ _.base_url }}/api/oportunidades/1",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Requer estar autenticado.", "metaSortKey": 704
+    },
+    {
+      "_id": "req_oport_obter", "_type": "request", "parentId": "fld_oport",
+      "name": "Buscar (filtro titulo/status)", "method": "GET",
+      "url": "{{ _.base_url }}/api/oportunidades/obter?status=ABERTA",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Requer estar autenticado. status: RASCUNHO, AGUARDANDO_APROVACAO, ABERTA, EM_EXECUCAO, ENCERRADA, CANCELADA.", "metaSortKey": 705
+    },
+    {
+      "_id": "req_oport_submeter", "_type": "request", "parentId": "fld_oport",
+      "name": "Submeter", "method": "POST",
+      "url": "{{ _.base_url }}/api/oportunidades/1/submeter",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: DOCENTE ou COORDENADOR. RASCUNHO -> AGUARDANDO_APROVACAO.", "metaSortKey": 706
+    },
+    {
+      "_id": "req_oport_aprovar", "_type": "request", "parentId": "fld_oport",
+      "name": "Aprovar", "method": "POST",
+      "url": "{{ _.base_url }}/api/oportunidades/1/aprovar",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: COORDENADOR. AGUARDANDO_APROVACAO -> ABERTA.", "metaSortKey": 707
+    },
+    {
+      "_id": "req_oport_iniciar", "_type": "request", "parentId": "fld_oport",
+      "name": "Iniciar", "method": "POST",
+      "url": "{{ _.base_url }}/api/oportunidades/1/iniciar",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: DOCENTE ou COORDENADOR. ABERTA -> EM_EXECUCAO.", "metaSortKey": 708
+    },
+    {
+      "_id": "req_oport_encerrar", "_type": "request", "parentId": "fld_oport",
+      "name": "Encerrar", "method": "POST",
+      "url": "{{ _.base_url }}/api/oportunidades/1/encerrar",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: DOCENTE ou COORDENADOR. EM_EXECUCAO -> ENCERRADA.", "metaSortKey": 709
+    },
+    {
+      "_id": "req_oport_cancelar", "_type": "request", "parentId": "fld_oport",
+      "name": "Cancelar", "method": "POST",
+      "url": "{{ _.base_url }}/api/oportunidades/1/cancelar?motivo=Sem quorum",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: DOCENTE, COORDENADOR ou ADMINISTRADOR. Grava o motivo.", "metaSortKey": 710
+    },
+    {
+      "_id": "req_oport_inscrever", "_type": "request", "parentId": "fld_oport",
+      "name": "Inscrever discente", "method": "POST",
+      "url": "{{ _.base_url }}/api/oportunidades/1/inscrever?discenteId=1",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Requer estar autenticado. Entra na fila de espera.", "metaSortKey": 711
+    },
+    {
+      "_id": "req_oport_avaliar_insc", "_type": "request", "parentId": "fld_oport",
+      "name": "Avaliar inscricao", "method": "POST",
+      "url": "{{ _.base_url }}/api/oportunidades/1/avaliar-inscricao?discenteId=1&aprovar=true",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: DOCENTE ou COORDENADOR. aprovar=true move da fila para aprovados.", "metaSortKey": 712
+    },
+    {
+      "_id": "req_oport_cancelar_insc", "_type": "request", "parentId": "fld_oport",
+      "name": "Cancelar inscricao", "method": "POST",
+      "url": "{{ _.base_url }}/api/oportunidades/1/cancelar-inscricao?discenteId=1",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Requer estar autenticado.", "metaSortKey": 713
+    },
+    {
+      "_id": "req_oport_substituir", "_type": "request", "parentId": "fld_oport",
+      "name": "Substituir participante", "method": "POST",
+      "url": "{{ _.base_url }}/api/oportunidades/1/substituir?aRemoverId=1&substitutoId=2",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: DOCENTE ou COORDENADOR. Troca um aprovado por alguem da fila.", "metaSortKey": 714
+    },
+    {
+      "_id": "req_oport_certificar", "_type": "request", "parentId": "fld_oport",
+      "name": "Certificar participantes", "method": "POST",
+      "url": "{{ _.base_url }}/api/oportunidades/1/certificar",
+      "body": { "mimeType": "application/json", "text": "[1, 2]" },
+      "headers": [ { "name": "Content-Type", "value": "application/json" }, { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: DOCENTE ou COORDENADOR. Corpo = lista de ids de discentes. Gera certificados.", "metaSortKey": 715
+    },
+
+    { "_id": "fld_solic", "_type": "request_group", "parentId": "wrk_extensao", "name": "8. Solicitacoes de aproveitamento", "description": "/api/solicitacoes - PENDENTE -> DEFERIDA | INDEFERIDA | CANCELADA, com delegacao e reenvio.", "metaSortKey": 800 },
+    {
+      "_id": "req_solic_cadastrar", "_type": "request", "parentId": "fld_solic",
+      "name": "Criar solicitacao", "method": "POST",
+      "url": "{{ _.base_url }}/api/solicitacoes",
+      "body": { "mimeType": "application/json", "text": "{\n  \"solicitanteId\": 1,\n  \"certificadoId\": 1\n}" },
+      "headers": [ { "name": "Content-Type", "value": "application/json" }, { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Requer estar autenticado.", "metaSortKey": 801
+    },
+    {
+      "_id": "req_solic_atualizar", "_type": "request", "parentId": "fld_solic",
+      "name": "Atualizar solicitacao", "method": "PUT",
+      "url": "{{ _.base_url }}/api/solicitacoes/1",
+      "body": { "mimeType": "application/json", "text": "{\n  \"parecer\": \"Ajuste de parecer\"\n}" },
+      "headers": [ { "name": "Content-Type", "value": "application/json" }, { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: ADMINISTRADOR.", "metaSortKey": 802
+    },
+    {
+      "_id": "req_solic_remover", "_type": "request", "parentId": "fld_solic",
+      "name": "Remover solicitacao", "method": "DELETE",
+      "url": "{{ _.base_url }}/api/solicitacoes/1",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: ADMINISTRADOR.", "metaSortKey": 803
+    },
+    {
+      "_id": "req_solic_buscar_id", "_type": "request", "parentId": "fld_solic",
+      "name": "Buscar por id", "method": "GET",
+      "url": "{{ _.base_url }}/api/solicitacoes/1",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Requer estar autenticado.", "metaSortKey": 804
+    },
+    {
+      "_id": "req_solic_obter", "_type": "request", "parentId": "fld_solic",
+      "name": "Buscar (filtro status)", "method": "GET",
+      "url": "{{ _.base_url }}/api/solicitacoes/obter?status=PENDENTE",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Requer estar autenticado. status: PENDENTE, DEFERIDA, INDEFERIDA, CANCELADA.", "metaSortKey": 805
+    },
+    {
+      "_id": "req_solic_pendentes", "_type": "request", "parentId": "fld_solic",
+      "name": "Listar pendentes", "method": "GET",
+      "url": "{{ _.base_url }}/api/solicitacoes/pendentes",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: COORDENADOR ou COMISSAO.", "metaSortKey": 806
+    },
+    {
+      "_id": "req_solic_pendentes_nd", "_type": "request", "parentId": "fld_solic",
+      "name": "Pendentes nao delegadas", "method": "GET",
+      "url": "{{ _.base_url }}/api/solicitacoes/pendentes/nao-delegadas",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: COORDENADOR.", "metaSortKey": 807
+    },
+    {
+      "_id": "req_solic_delegadas", "_type": "request", "parentId": "fld_solic",
+      "name": "Listar delegadas", "method": "GET",
+      "url": "{{ _.base_url }}/api/solicitacoes/delegadas",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: COMISSAO.", "metaSortKey": 808
+    },
+    {
+      "_id": "req_solic_avaliar", "_type": "request", "parentId": "fld_solic",
+      "name": "Avaliar (deferir/indeferir)", "method": "POST",
+      "url": "{{ _.base_url }}/api/solicitacoes/1/avaliar?aprovado=true&parecer=Compativel com a UCE",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: COORDENADOR ou COMISSAO. aprovado=true soma as horas ao discente.", "metaSortKey": 809
+    },
+    {
+      "_id": "req_solic_delegar", "_type": "request", "parentId": "fld_solic",
+      "name": "Delegar para comissao", "method": "POST",
+      "url": "{{ _.base_url }}/api/solicitacoes/1/delegar",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: COORDENADOR.", "metaSortKey": 810
+    },
+    {
+      "_id": "req_solic_cancelar", "_type": "request", "parentId": "fld_solic",
+      "name": "Cancelar", "method": "POST",
+      "url": "{{ _.base_url }}/api/solicitacoes/1/cancelar",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Requer estar autenticado. Libera o certificado.", "metaSortKey": 811
+    },
+    {
+      "_id": "req_solic_reenviar", "_type": "request", "parentId": "fld_solic",
+      "name": "Reenviar (apos indeferida)", "method": "POST",
+      "url": "{{ _.base_url }}/api/solicitacoes/1/reenviar",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Requer estar autenticado. INDEFERIDA -> PENDENTE dentro do prazo de 5 dias.", "metaSortKey": 812
+    },
+
+    { "_id": "fld_grupos", "_type": "request_group", "parentId": "wrk_extensao", "name": "9. Grupos estudantis", "description": "/api/grupos - grupo, membros, cargos e historico.", "metaSortKey": 900 },
+    {
+      "_id": "req_grupo_cadastrar", "_type": "request", "parentId": "fld_grupos",
+      "name": "Cadastrar grupo", "method": "POST",
+      "url": "{{ _.base_url }}/api/grupos",
+      "body": { "mimeType": "application/json", "text": "{\n  \"nome\": \"Grupo de Robotica\",\n  \"descricao\": \"Projetos de robotica educacional\",\n  \"responsavelId\": 1\n}" },
+      "headers": [ { "name": "Content-Type", "value": "application/json" }, { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: DOCENTE, COORDENADOR ou ADMINISTRADOR.", "metaSortKey": 901
+    },
+    {
+      "_id": "req_grupo_atualizar", "_type": "request", "parentId": "fld_grupos",
+      "name": "Atualizar grupo", "method": "PUT",
+      "url": "{{ _.base_url }}/api/grupos/1",
+      "body": { "mimeType": "application/json", "text": "{\n  \"nome\": \"Grupo de Robotica\",\n  \"descricao\": \"Nova descricao\"\n}" },
+      "headers": [ { "name": "Content-Type", "value": "application/json" }, { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: DOCENTE ou COORDENADOR.", "metaSortKey": 902
+    },
+    {
+      "_id": "req_grupo_remover", "_type": "request", "parentId": "fld_grupos",
+      "name": "Remover grupo", "method": "DELETE",
+      "url": "{{ _.base_url }}/api/grupos/1",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: ADMINISTRADOR.", "metaSortKey": 903
+    },
+    {
+      "_id": "req_grupo_buscar_id", "_type": "request", "parentId": "fld_grupos",
+      "name": "Buscar por id", "method": "GET",
+      "url": "{{ _.base_url }}/api/grupos/1",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Requer estar autenticado.", "metaSortKey": 904
+    },
+    {
+      "_id": "req_grupo_obter", "_type": "request", "parentId": "fld_grupos",
+      "name": "Buscar (filtro nome)", "method": "GET",
+      "url": "{{ _.base_url }}/api/grupos/obter?nome=",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Requer estar autenticado.", "metaSortKey": 905
+    },
+    {
+      "_id": "req_grupo_por_usuario", "_type": "request", "parentId": "fld_grupos",
+      "name": "Listar por usuario", "method": "GET",
+      "url": "{{ _.base_url }}/api/grupos/por-usuario/1",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Requer estar autenticado. Grupos onde o usuario e responsavel OU membro.", "metaSortKey": 906
+    },
+    {
+      "_id": "req_grupo_add_membro", "_type": "request", "parentId": "fld_grupos",
+      "name": "Adicionar membro", "method": "POST",
+      "url": "{{ _.base_url }}/api/grupos/1/membros?discenteId=1",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: DOCENTE ou COORDENADOR. Entra como MEMBRO.", "metaSortKey": 907
+    },
+    {
+      "_id": "req_grupo_rem_membro", "_type": "request", "parentId": "fld_grupos",
+      "name": "Remover membro", "method": "DELETE",
+      "url": "{{ _.base_url }}/api/grupos/1/membros/1",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: DOCENTE ou COORDENADOR.", "metaSortKey": 908
+    },
+    {
+      "_id": "req_grupo_cargo", "_type": "request", "parentId": "fld_grupos",
+      "name": "Definir cargo do membro", "method": "PUT",
+      "url": "{{ _.base_url }}/api/grupos/1/membros/1/cargo?cargo=PRESIDENTE",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: DOCENTE ou COORDENADOR. cargo: MEMBRO, VICE, TESOUREIRO, DIRETOR, PRESIDENTE.", "metaSortKey": 909
+    },
+    {
+      "_id": "req_grupo_lider", "_type": "request", "parentId": "fld_grupos",
+      "name": "Discente e lider?", "method": "GET",
+      "url": "{{ _.base_url }}/api/grupos/discentes/1/lider",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Requer estar autenticado. true se o discente for PRESIDENTE/DIRETOR de algum grupo.", "metaSortKey": 910
+    },
+
+    { "_id": "fld_solic_grupo", "_type": "request_group", "parentId": "wrk_extensao", "name": "10. Solicitacoes de grupo", "description": "/api/solicitacoes-grupo - aprovar materializa o GrupoEstudantil.", "metaSortKey": 1000 },
+    {
+      "_id": "req_sg_cadastrar", "_type": "request", "parentId": "fld_solic_grupo",
+      "name": "Criar solicitacao de grupo", "method": "POST",
+      "url": "{{ _.base_url }}/api/solicitacoes-grupo",
+      "body": { "mimeType": "application/json", "text": "{\n  \"nomeGrupo\": \"Liga de IA\",\n  \"descricao\": \"Estudos de inteligencia artificial\",\n  \"solicitanteId\": 1,\n  \"docenteResponsavelId\": 1\n}" },
+      "headers": [ { "name": "Content-Type", "value": "application/json" }, { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Requer estar autenticado.", "metaSortKey": 1001
+    },
+    {
+      "_id": "req_sg_atualizar", "_type": "request", "parentId": "fld_solic_grupo",
+      "name": "Atualizar solicitacao de grupo", "method": "PUT",
+      "url": "{{ _.base_url }}/api/solicitacoes-grupo/1",
+      "body": { "mimeType": "application/json", "text": "{\n  \"nomeGrupo\": \"Liga de IA\",\n  \"descricao\": \"Nova descricao\"\n}" },
+      "headers": [ { "name": "Content-Type", "value": "application/json" }, { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: ADMINISTRADOR.", "metaSortKey": 1002
+    },
+    {
+      "_id": "req_sg_remover", "_type": "request", "parentId": "fld_solic_grupo",
+      "name": "Remover solicitacao de grupo", "method": "DELETE",
+      "url": "{{ _.base_url }}/api/solicitacoes-grupo/1",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: ADMINISTRADOR.", "metaSortKey": 1003
+    },
+    {
+      "_id": "req_sg_buscar_id", "_type": "request", "parentId": "fld_solic_grupo",
+      "name": "Buscar por id", "method": "GET",
+      "url": "{{ _.base_url }}/api/solicitacoes-grupo/1",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Requer estar autenticado.", "metaSortKey": 1004
+    },
+    {
+      "_id": "req_sg_obter", "_type": "request", "parentId": "fld_solic_grupo",
+      "name": "Buscar (filtro status)", "method": "GET",
+      "url": "{{ _.base_url }}/api/solicitacoes-grupo/obter?status=PENDENTE",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Requer estar autenticado.", "metaSortKey": 1005
+    },
+    {
+      "_id": "req_sg_pendentes", "_type": "request", "parentId": "fld_solic_grupo",
+      "name": "Listar pendentes", "method": "GET",
+      "url": "{{ _.base_url }}/api/solicitacoes-grupo/pendentes",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: COORDENADOR.", "metaSortKey": 1006
+    },
+    {
+      "_id": "req_sg_avaliar", "_type": "request", "parentId": "fld_solic_grupo",
+      "name": "Avaliar (aprovar cria o grupo)", "method": "POST",
+      "url": "{{ _.base_url }}/api/solicitacoes-grupo/1/avaliar?aprovado=true",
+      "headers": [ { "name": "Authorization", "value": "Bearer {{ _.token }}" } ],
+      "description": "Papel: COORDENADOR. aprovado=true materializa o GrupoEstudantil com o solicitante como PRESIDENTE.", "metaSortKey": 1007
+    }
+  ]
+}

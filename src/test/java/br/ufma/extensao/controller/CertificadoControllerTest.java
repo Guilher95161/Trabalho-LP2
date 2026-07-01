@@ -6,10 +6,13 @@ import br.ufma.extensao.service.PapelService;
 import br.ufma.extensao.service.UsuarioService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
@@ -19,6 +22,8 @@ import java.util.UUID;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@ExtendWith(SpringExtension.class)
+@ActiveProfiles("test")
 @SpringBootTest
 @AutoConfigureMockMvc
 class CertificadoControllerTest {
@@ -57,8 +62,11 @@ class CertificadoControllerTest {
     }
 
     @Test
-    void criar_comPapelDocente_deveRetornar201() throws Exception {
+    void deveCriarComPapelDocenteRetornando201() throws Exception {
+        //cenario
         String token = tokenParaPapel("DOCENTE");
+
+        //acao e verificacao
         mockMvc.perform(post("/api/certificados")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -67,7 +75,8 @@ class CertificadoControllerTest {
     }
 
     @Test
-    void criar_semPapelAdequado_deveRetornar403() throws Exception {
+    void deveRetornar403AoCriarSemPapelAdequado() throws Exception {
+        //cenario
         String email = "cft-" + UUID.randomUUID() + "@test.com";
         mockMvc.perform(post("/api/discentes")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -78,6 +87,7 @@ class CertificadoControllerTest {
                 .andReturn().getResponse().getContentAsString();
         String token = objectMapper.readTree(resp).get("token").asText();
 
+        //acao e verificacao
         mockMvc.perform(post("/api/certificados")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -86,7 +96,8 @@ class CertificadoControllerTest {
     }
 
     @Test
-    void buscarPorId_comToken_deveRetornar200() throws Exception {
+    void deveBuscarPorIdComTokenRetornando200() throws Exception {
+        //cenario
         String token = tokenParaPapel("DOCENTE");
         String resp = mockMvc.perform(post("/api/certificados")
                         .header("Authorization", "Bearer " + token)
@@ -95,13 +106,15 @@ class CertificadoControllerTest {
                 .andReturn().getResponse().getContentAsString();
         Integer id = objectMapper.readTree(resp).get("id").asInt();
 
+        //acao e verificacao
         mockMvc.perform(get("/api/certificados/" + id)
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk());
     }
 
     @Test
-    void remover_comPapelAdmin_deveRetornar204() throws Exception {
+    void deveRemoverComPapelAdminRetornando204() throws Exception {
+        //cenario
         String tokenDocente = tokenParaPapel("DOCENTE");
         String tokenAdmin = tokenParaPapel("ADMINISTRADOR");
 
@@ -112,6 +125,7 @@ class CertificadoControllerTest {
                 .andReturn().getResponse().getContentAsString();
         Integer id = objectMapper.readTree(resp).get("id").asInt();
 
+        //acao e verificacao
         mockMvc.perform(delete("/api/certificados/" + id)
                         .header("Authorization", "Bearer " + tokenAdmin))
                 .andExpect(status().isNoContent());

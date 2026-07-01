@@ -6,10 +6,13 @@ import br.ufma.extensao.service.PapelService;
 import br.ufma.extensao.service.UsuarioService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
@@ -19,6 +22,8 @@ import java.util.UUID;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@ExtendWith(SpringExtension.class)
+@ActiveProfiles("test")
 @SpringBootTest
 @AutoConfigureMockMvc
 class GrupoEstudantilControllerTest {
@@ -67,8 +72,11 @@ class GrupoEstudantilControllerTest {
     }
 
     @Test
-    void criar_comPapelDocente_deveRetornar201() throws Exception {
+    void deveCriarComPapelDocenteRetornando201() throws Exception {
+        //cenario
         TokenComId docente = criarUsuarioComPapel("DOCENTE");
+
+        //acao e verificacao
         mockMvc.perform(post("/api/grupos")
                         .header("Authorization", "Bearer " + docente.token())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -79,7 +87,8 @@ class GrupoEstudantilControllerTest {
     }
 
     @Test
-    void criar_semPapelAdequado_deveRetornar403() throws Exception {
+    void deveRetornar403AoCriarSemPapelAdequado() throws Exception {
+        //cenario
         String email = "gct-" + UUID.randomUUID() + "@test.com";
         mockMvc.perform(post("/api/discentes")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -90,6 +99,7 @@ class GrupoEstudantilControllerTest {
                 .andReturn().getResponse().getContentAsString();
         String token = objectMapper.readTree(resp).get("token").asText();
 
+        //acao e verificacao
         mockMvc.perform(post("/api/grupos")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -98,29 +108,36 @@ class GrupoEstudantilControllerTest {
     }
 
     @Test
-    void buscar_comToken_deveRetornar200() throws Exception {
+    void deveBuscarComTokenRetornando200() throws Exception {
+        //cenario
         TokenComId docente = criarUsuarioComPapel("DOCENTE");
+
+        //acao e verificacao
         mockMvc.perform(get("/api/grupos/obter")
                         .header("Authorization", "Bearer " + docente.token()))
                 .andExpect(status().isOk());
     }
 
     @Test
-    void remover_comPapelAdmin_deveRetornar204() throws Exception {
+    void deveRemoverComPapelAdminRetornando204() throws Exception {
+        //cenario
         TokenComId docente = criarUsuarioComPapel("DOCENTE");
         TokenComId admin = criarUsuarioComPapel("ADMINISTRADOR");
         Integer grupoId = criarGrupo(docente.token(), docente.id());
 
+        //acao e verificacao
         mockMvc.perform(delete("/api/grupos/" + grupoId)
                         .header("Authorization", "Bearer " + admin.token()))
                 .andExpect(status().isNoContent());
     }
 
     @Test
-    void remover_comPapelDocente_deveRetornar403() throws Exception {
+    void deveRetornar403AoRemoverComPapelDocente() throws Exception {
+        //cenario
         TokenComId docente = criarUsuarioComPapel("DOCENTE");
         Integer grupoId = criarGrupo(docente.token(), docente.id());
 
+        //acao e verificacao
         mockMvc.perform(delete("/api/grupos/" + grupoId)
                         .header("Authorization", "Bearer " + docente.token()))
                 .andExpect(status().isForbidden());

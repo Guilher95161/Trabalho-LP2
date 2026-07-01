@@ -6,7 +6,7 @@ import br.ufma.extensao.model.dto.GrupoEstudantilDTO;
 import br.ufma.extensao.model.dto.GrupoEstudantilResponse;
 import br.ufma.extensao.model.enums.CargoGrupo;
 import br.ufma.extensao.service.GrupoEstudantilService;
-import br.ufma.extensao.service.exceptions.SistemaExtensaoException;
+import br.ufma.extensao.service.exceptions.RegraNegocioRunTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,7 +27,7 @@ public class GrupoEstudantilController {
         try {
             GrupoEstudantil salvo = service.salvar(grupo);
             return new ResponseEntity(GrupoEstudantilResponse.from(salvo), HttpStatus.CREATED);
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -38,7 +38,7 @@ public class GrupoEstudantilController {
         GrupoEstudantil grupo = montar(id, dto);
         try {
             return ResponseEntity.ok(GrupoEstudantilResponse.from(service.atualizar(grupo)));
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -49,7 +49,7 @@ public class GrupoEstudantilController {
         try {
             service.remover(id);
             return ResponseEntity.noContent().build();
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -58,7 +58,7 @@ public class GrupoEstudantilController {
     public ResponseEntity buscarPorId(@PathVariable Integer id) {
         try {
             return ResponseEntity.ok(GrupoEstudantilResponse.from(service.buscarPorId(id)));
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -82,7 +82,7 @@ public class GrupoEstudantilController {
     public ResponseEntity adicionarMembro(@PathVariable Integer id, @RequestParam Integer discenteId) {
         try {
             return ResponseEntity.ok(GrupoEstudantilResponse.from(service.adicionarMembro(id, discenteId)));
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -92,7 +92,7 @@ public class GrupoEstudantilController {
     public ResponseEntity removerMembro(@PathVariable Integer id, @PathVariable Integer discenteId) {
         try {
             return ResponseEntity.ok(GrupoEstudantilResponse.from(service.removerMembro(id, discenteId)));
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -103,7 +103,7 @@ public class GrupoEstudantilController {
                                        @RequestParam CargoGrupo cargo) {
         try {
             return ResponseEntity.ok(GrupoEstudantilResponse.from(service.definirCargo(id, discenteId, cargo)));
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -112,7 +112,7 @@ public class GrupoEstudantilController {
     public ResponseEntity isLider(@PathVariable Integer discenteId) {
         try {
             return ResponseEntity.ok(service.isLider(discenteId));
-        } catch (SistemaExtensaoException e) {
+        } catch (RegraNegocioRunTime e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
